@@ -7,9 +7,10 @@
 
 - name: Setup NVIDIA GPUs on Multiple Servers
   hosts: gpu_servers
+  gather_facts: yes
   become: yes
   serial: 1  # Install one server at a time
-  
+
   roles:
     - role: nvidia-gpu-setup
       # Variables can be set in main_inventory.yml or here

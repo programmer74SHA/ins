@@ -1,5 +1,6 @@
 - name: "APK AI Infrastructure Installer"
   hosts: all
+  gather_facts: yes
   roles:
     # - pre_checks
     # - install_dependencies

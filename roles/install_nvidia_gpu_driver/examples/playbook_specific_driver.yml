@@ -4,8 +4,9 @@
 
 - name: Install NVIDIA GPU Drivers - Specific Version
   hosts: all
+  gather_facts: yes
   become: yes
-  
+
   roles:
     - role: nvidia-gpu-setup
       vars:
