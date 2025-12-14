@@ -13,29 +13,14 @@
     state: directory
     mode: '0755'
 
-- name: Copy certificate generation script
-  ansible.builtin.copy:
-    src: generate_cert.sh
-    dest: "{{ elk_deploy_dir }}/generate_cert.sh"
-    mode: '0755'
+- name: Generate TLS certificates
+  ansible.builtin.include_tasks: generate_certificates.yml
 
 - name: Copy indices setup script
   ansible.builtin.copy:
     src: indice.sh
     dest: "{{ elk_deploy_dir }}/indice.sh"
     mode: '0755'
-
-- name: Generate certificates for customer
-  ansible.builtin.command:
-    cmd: "./generate_cert.sh {{ elk_customer_name }}"
-    chdir: "{{ elk_deploy_dir }}"
-    creates: "{{ elk_deploy_dir }}/certs/{{ elk_customer_name }}/cert.pem"
-  register: cert_generation
-
-- name: Display certificate generation output
-  ansible.builtin.debug:
-    var: cert_generation.stdout_lines
-  when: cert_generation.changed
 
 - name: Create docker network
   community.docker.docker_network:
