@@ -5,7 +5,7 @@ volumes:
   redis_storage:
 x-shared: &shared
   restart: always
-  image: n8nio/n8n:local
+  image: {{ soar_n8n_image }}
   environment:
     - N8N_LICENSE_TOKEN=${license_key}
     - WEB_DRIVER_URL=web_driver
@@ -37,8 +37,8 @@ x-shared: &shared
     - N8N_RUNNERS_ENABLED=true
     - N8N_RUNNERS_MODE=internal
     - N8N_CUSTOM_EXTENSIONS=/home/node/apk
-    - GENERIC_TIMEZONE=Asia/Tehran
-    - TZ=Asia/Tehran
+    - GENERIC_TIMEZONE={{ soar_timezone }}
+    - TZ={{ soar_timezone }}
   links:
     - postgres
     - redis
@@ -63,10 +63,10 @@ x-shared: &shared
     postgres:
       condition: service_healthy
   networks:
-    - esnet
+    - {{ soar_network_name }}
 services:
   postgres:
-    image: registry.apk-group.net/library/postgres:16
+    image: {{ soar_postgres_image }}
     restart: always
     environment:
       - POSTGRES_USER
@@ -84,13 +84,13 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - esnet
+      - {{ soar_network_name }}
   redis:
-    image: registry.apk-group.net/library/redis:6-alpine
+    image: {{ soar_redis_image }}
     restart: always
     environment:
-      - GENERIC_TIMEZONE=Asia/Tehran
-      - TZ=Asia/Tehran
+      - GENERIC_TIMEZONE={{ soar_timezone }}
+      - TZ={{ soar_timezone }}
     volumes:
       - redis_storage:/data
     healthcheck:
@@ -99,7 +99,7 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - esnet
+      - {{ soar_network_name }}
   apksoar:
     <<: *shared
     container_name: "apksoar-main"
@@ -112,7 +112,7 @@ services:
     depends_on:
       - apksoar
   nginx:
-    image: registry.apk-group.net/automation/nginx:alpine
+    image: {{ soar_nginx_image }}
     restart: always
     ports:
       - "80:80"
@@ -124,7 +124,7 @@ services:
       - ./nginx-data/ssl_certs:/certs
       - ./nginx.conf:/etc/nginx/nginx.conf
     networks:
-      - esnet
+      - {{ soar_network_name }}
     depends_on:
       - apksoar
     healthcheck:
@@ -136,14 +136,16 @@ services:
   web_driver:
     profiles: ["web_driver"]
     restart: always
-    image: registry.apk-group.net/automation/zenika/alpine-chrome:with-selenoid
+    image: {{ soar_web_driver_image }}
     ports:
       - "127.0.0.1:4444:4444"
     shm_size: "2gb"
     container_name: "web_driver"
     networks:
-      - esnet
+      - {{ soar_network_name }}
 networks:
-  esnet:
+  {{ soar_network_name }}:
+{% if soar_network_external %}
     external: true
-    name: esnet
+    name: {{ soar_network_name }}
+{% endif %}
