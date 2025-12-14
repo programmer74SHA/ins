@@ -1,0 +1,43 @@
+---
+# ELK Stack Configuration
+# Default variables for ELK role
+
+# Version of Elastic products
+elk_stack_version: "8.15.5"
+
+# Elasticsearch configuration
+elk_elasticsearch_password: "P@ssw0rdM@t@6810"
+elk_elasticsearch_port: 9200
+elk_es_java_heap: "1g"
+
+# Kibana configuration
+elk_kibana_password: "changeme"
+elk_kibana_port: 5601
+elk_kibana_service_account_token: "AAEAAWVsYXN0aWMva2liYW5hL2tpYmFuYS10b2tlbjp0MTBSRktJWlEtbUhUVDlBb3ZNQ0xR"
+elk_kibana_public_base_url: "https://kibana.ai.local"
+elk_kibana_encryption_key: "min-32-char-encryption-key-here-change-this-value"
+
+# Network configuration
+elk_network_name: "esnet"
+elk_network_external: true
+
+# Deployment directory
+elk_deploy_dir: "/opt/elk"
+
+# Customer name for certificate generation
+elk_customer_name: "APK"
+
+# Certificate details
+elk_cert_country: "IR"
+elk_cert_state: "Tehran"
+elk_cert_locality: "Tehran"
+elk_cert_organization: "APK-Group"
+elk_cert_organizational_unit: "DevOps"
+
+# Whether to run the indices setup script
+elk_setup_indices: true
+
+# Elasticsearch connection for indices setup
+elk_es_host: "localhost:9200"
+elk_es_user: "elastic"
+elk_es_protocol: "http"
