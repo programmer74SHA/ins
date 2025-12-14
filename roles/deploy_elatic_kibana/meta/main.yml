@@ -1,0 +1,22 @@
+---
+# Role dependencies and metadata
+
+galaxy_info:
+  author: DevOps Team
+  description: Deploy Elasticsearch and Kibana stack with Docker Compose
+  company: APK-Group
+  license: MIT
+  min_ansible_version: '2.9'
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+
+collections:
+  - community.docker
+  - community.crypto

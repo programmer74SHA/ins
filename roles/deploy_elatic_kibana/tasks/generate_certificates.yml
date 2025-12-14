@@ -1,0 +1,79 @@
+---
+# Certificate generation tasks
+# Replaces generate_cert.sh script with native Ansible tasks
+
+- name: Ensure customer certificate directory exists
+  ansible.builtin.file:
+    path: "{{ elk_deploy_dir }}/certs/{{ elk_customer_name }}"
+    state: directory
+    mode: '0755'
+
+- name: Create OpenSSL configuration file
+  ansible.builtin.copy:
+    dest: "{{ elk_deploy_dir }}/certs/{{ elk_customer_name }}/openssl.cnf"
+    mode: '0644'
+    content: |
+      [ req ]
+      default_bits = 2048
+      distinguished_name = req_distinguished_name
+      req_extensions = req_ext
+      prompt = no
+      [ req_distinguished_name ]
+      C = {{ elk_cert_country }}
+      ST = {{ elk_cert_state }}
+      L = {{ elk_cert_locality }}
+      O = {{ elk_cert_organization }}
+      OU = {{ elk_cert_organizational_unit }}
+      CN = elasticsearch-{{ elk_customer_name }}
+      [ req_ext ]
+      subjectAltName = @alt_names
+      keyUsage = critical, digitalSignature, keyEncipherment
+      extendedKeyUsage = serverAuth, clientAuth
+      [ alt_names ]
+      DNS.1 = elasticsearch
+
+- name: Generate RSA private key
+  community.crypto.openssl_privatekey:
+    path: "{{ elk_deploy_dir }}/certs/{{ elk_customer_name }}/key.pem"
+    size: 2048
+    type: RSA
+    mode: '0600'
+
+- name: Generate Certificate Signing Request (CSR)
+  community.crypto.openssl_csr:
+    path: "{{ elk_deploy_dir }}/certs/{{ elk_customer_name }}/csr.pem"
+    privatekey_path: "{{ elk_deploy_dir }}/certs/{{ elk_customer_name }}/key.pem"
+    country_name: "{{ elk_cert_country }}"
+    state_or_province_name: "{{ elk_cert_state }}"
+    locality_name: "{{ elk_cert_locality }}"
+    organization_name: "{{ elk_cert_organization }}"
+    organizational_unit_name: "{{ elk_cert_organizational_unit }}"
+    common_name: "elasticsearch-{{ elk_customer_name }}"
+    subject_alt_name:
+      - "DNS:elasticsearch"
+    key_usage:
+      - digitalSignature
+      - keyEncipherment
+    key_usage_critical: true
+    extended_key_usage:
+      - serverAuth
+      - clientAuth
+    mode: '0644'
+
+- name: Generate self-signed certificate
+  community.crypto.x509_certificate:
+    path: "{{ elk_deploy_dir }}/certs/{{ elk_customer_name }}/cert.pem"
+    privatekey_path: "{{ elk_deploy_dir }}/certs/{{ elk_customer_name }}/key.pem"
+    csr_path: "{{ elk_deploy_dir }}/certs/{{ elk_customer_name }}/csr.pem"
+    provider: selfsigned
+    selfsigned_not_after: "+365d"
+    mode: '0644'
+
+- name: Display certificate generation completion
+  ansible.builtin.debug:
+    msg:
+      - "TLS certificate generated for customer: {{ elk_customer_name }}"
+      - "Files saved in: {{ elk_deploy_dir }}/certs/{{ elk_customer_name }}"
+      - " - Key: {{ elk_deploy_dir }}/certs/{{ elk_customer_name }}/key.pem"
+      - " - CSR: {{ elk_deploy_dir }}/certs/{{ elk_customer_name }}/csr.pem"
+      - " - Certificate: {{ elk_deploy_dir }}/certs/{{ elk_customer_name }}/cert.pem"
