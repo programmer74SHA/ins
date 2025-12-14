@@ -1,0 +1,38 @@
+---
+# SOAR Platform Configuration
+# Default variables for deploy_soar_platform role
+
+# Deployment directory
+soar_deploy_dir: "/opt/soar"
+
+# Network configuration
+soar_network_name: "esnet"
+soar_network_external: true
+
+# PostgreSQL configuration
+soar_postgres_user: "APKAIDBUSERSU"
+soar_postgres_password: "Ygr3iEl7nx81xqwMl3qCpIav"
+soar_postgres_db: "apksoar"
+
+# SOAR admin configuration
+soar_admin_email: "apksoar@apk-group.net"
+soar_admin_first_name: "admin"
+soar_admin_last_name: "admin"
+soar_admin_password: "P@ssw0rd"
+
+# License configuration
+soar_license_key: "ct3+bAHhAynI7JDy/bqsPAMNeSt+4eICNJau92cBRv4ZuJL1YJjjWCoBw0Gt68NK8xkwyr3/8mJCPQtwU4n3RA=="
+
+# Timezone and host configuration
+soar_timezone: "Asia/Tehran"
+soar_host: "200.200.201.253"
+
+# ApkGatev5 node configuration
+soar_enable_apkgatev5_node: "no"
+
+# Docker image configuration
+soar_n8n_image: "n8nio/n8n:local"
+soar_postgres_image: "registry.apk-group.net/library/postgres:16"
+soar_redis_image: "registry.apk-group.net/library/redis:6-alpine"
+soar_nginx_image: "registry.apk-group.net/automation/nginx:alpine"
+soar_web_driver_image: "registry.apk-group.net/automation/zenika/alpine-chrome:with-selenoid"

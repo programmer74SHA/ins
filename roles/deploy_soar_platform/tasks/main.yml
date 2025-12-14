@@ -1,0 +1,54 @@
+---
+# SOAR Platform deployment tasks
+
+- name: Ensure deployment directory exists
+  ansible.builtin.file:
+    path: "{{ soar_deploy_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Ensure nginx data directories exist
+  ansible.builtin.file:
+    path: "{{ soar_deploy_dir }}/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - nginx-data/nginx_logs
+    - nginx-data/ssl_certs
+
+- name: Copy nginx configuration
+  ansible.builtin.copy:
+    src: nginx.conf
+    dest: "{{ soar_deploy_dir }}/nginx.conf"
+    mode: '0644'
+  notify: Restart SOAR platform
+
+- name: Template docker-compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ soar_deploy_dir }}/docker-compose.yml"
+    mode: '0644'
+  notify: Restart SOAR platform
+
+- name: Template .env file
+  ansible.builtin.template:
+    src: .env.j2
+    dest: "{{ soar_deploy_dir }}/.env"
+    mode: '0644'
+  notify: Restart SOAR platform
+
+- name: Create docker network
+  community.docker.docker_network:
+    name: "{{ soar_network_name }}"
+    state: present
+  when: soar_network_external
+
+- name: Deploy SOAR platform with Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ soar_deploy_dir }}"
+    state: present
+  register: soar_deployment
+
+- name: Display deployment status
+  ansible.builtin.debug:
+    var: soar_deployment

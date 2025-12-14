@@ -1,0 +1,7 @@
+---
+# SOAR Platform handlers
+
+- name: Restart SOAR platform
+  community.docker.docker_compose_v2:
+    project_src: "{{ soar_deploy_dir }}"
+    state: restarted
