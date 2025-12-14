@@ -18,7 +18,6 @@
 
 - name: Select driver version
   include_tasks: select_driver.yml
-  when: nvidia_driver_interactive | bool
 
 - name: Install NVIDIA driver
   include_tasks: install_driver.yml
