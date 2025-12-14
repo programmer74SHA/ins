@@ -21,7 +21,7 @@ Edit `main_inventory.yml` and update with your server details:
 ```yaml
 all:
   children:
-    gpu_servers:
+    servers:
       hosts:
         gpu-server-01:
           ansible_host: 172.25.7.99    # Your server IP
@@ -31,7 +31,7 @@ all:
 ### 2. Test Connection
 
 ```bash
-ansible -i main_inventory.yml gpu_servers -m ping
+ansible -i main_inventory.yml servers -m ping
 ```
 
 ### 3. Run a Playbook
@@ -56,12 +56,12 @@ ansible-playbook -i main_inventory.yml playbook_multi_server.yml
 The inventory includes default variables for all GPU servers:
 
 ```yaml
-gpu_servers:
+servers:
   vars:
     # Ansible connection settings
     ansible_python_interpreter: /usr/bin/python3
     ansible_become: yes
-    
+
     # NVIDIA driver settings
     nvidia_driver_interactive: false          # Set to true for interactive selection
     nvidia_driver_version: ""                 # Empty = recommended, or specify version
@@ -75,13 +75,13 @@ gpu_servers:
 You can override settings per host:
 
 ```yaml
-gpu_servers:
+servers:
   hosts:
     gpu-server-01:
       ansible_host: 172.25.7.99
       ansible_user: root
       nvidia_driver_version: "nvidia-driver-580-open"  # Specific driver for this host
-    
+
     gpu-server-02:
       ansible_host: 172.25.7.100
       ansible_user: ubuntu
@@ -95,7 +95,7 @@ Separate development and production:
 ```yaml
 all:
   children:
-    gpu_servers:
+    servers:
       children:
         production:
           hosts:
@@ -103,7 +103,7 @@ all:
               ansible_host: 172.25.7.99
           vars:
             nvidia_reboot_after_install: true
-            
+
         development:
           hosts:
             gpu-dev-01:
@@ -280,29 +280,29 @@ ansible-playbook -i main_inventory.yml playbook_auto_recommended.yml --limit gpu
 ansible-inventory -i main_inventory.yml --list
 
 # Show specific group
-ansible-inventory -i main_inventory.yml --graph gpu_servers
+ansible-inventory -i main_inventory.yml --graph servers
 
 # Verify connection to all hosts
 ansible -i main_inventory.yml all -m ping
 
 # Check specific group
-ansible -i main_inventory.yml gpu_servers -m ping
+ansible -i main_inventory.yml servers -m ping
 
 # Test sudo access
-ansible -i main_inventory.yml gpu_servers -m shell -a "whoami" --become
+ansible -i main_inventory.yml servers -m shell -a "whoami" --become
 ```
 
 ### Gather Facts
 
 ```bash
 # Gather all facts
-ansible -i main_inventory.yml gpu_servers -m setup
+ansible -i main_inventory.yml servers -m setup
 
 # Check GPU info
-ansible -i main_inventory.yml gpu_servers -m shell -a "lspci | grep -i nvidia"
+ansible -i main_inventory.yml servers -m shell -a "lspci | grep -i nvidia"
 
 # Check OS version
-ansible -i main_inventory.yml gpu_servers -m shell -a "cat /etc/os-release"
+ansible -i main_inventory.yml servers -m shell -a "cat /etc/os-release"
 ```
 
 ---
@@ -319,17 +319,17 @@ ssh root@172.25.7.99
 ssh -i ~/.ssh/id_rsa root@172.25.7.99
 
 # Debug Ansible connection
-ansible -i main_inventory.yml gpu_servers -m ping -vvv
+ansible -i main_inventory.yml servers -m ping -vvv
 ```
 
 ### Permission Issues
 
 ```bash
 # Check sudo
-ansible -i main_inventory.yml gpu_servers -m shell -a "sudo whoami"
+ansible -i main_inventory.yml servers -m shell -a "sudo whoami"
 
 # Check Python
-ansible -i main_inventory.yml gpu_servers -m shell -a "which python3"
+ansible -i main_inventory.yml servers -m shell -a "which python3"
 ```
 
 ### Inventory Issues

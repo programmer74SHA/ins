@@ -74,7 +74,7 @@ cat > main_inventory.yml <<'EOF'
 ---
 all:
   children:
-    gpu_servers:
+    servers:
       hosts:
         your-server:
           ansible_host: 172.25.7.99
@@ -105,7 +105,7 @@ cat > main_inventory.yml <<'EOF'
 ---
 all:
   children:
-    gpu_servers:
+    servers:
       hosts:
         gpu-node-1:
           ansible_host: 172.25.7.101
@@ -204,12 +204,12 @@ nvidia-smi -q
 
 ### Check Ansible can connect
 ```bash
-ansible -i main_inventory.yml gpu_servers -m ping
+ansible -i main_inventory.yml servers -m ping
 ```
 
 ### Check sudo works
 ```bash
-ansible -i main_inventory.yml gpu_servers -m shell -a "whoami" --become
+ansible -i main_inventory.yml servers -m shell -a "whoami" --become
 ```
 
 ### View detailed output

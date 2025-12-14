@@ -78,7 +78,7 @@ nvidia-gpu-setup/
 ```yaml
 ---
 - name: Install NVIDIA GPU Drivers - Interactive
-  hosts: gpu_servers
+  hosts: servers
   become: yes
   roles:
     - nvidia-gpu-setup
@@ -89,7 +89,7 @@ nvidia-gpu-setup/
 ```yaml
 ---
 - name: Install NVIDIA GPU Drivers - Auto Recommended
-  hosts: gpu_servers
+  hosts: servers
   become: yes
   roles:
     - role: nvidia-gpu-setup
@@ -104,7 +104,7 @@ nvidia-gpu-setup/
 ```yaml
 ---
 - name: Install NVIDIA GPU Drivers - Specific Version
-  hosts: gpu_servers
+  hosts: servers
   become: yes
   roles:
     - role: nvidia-gpu-setup
@@ -121,7 +121,7 @@ nvidia-gpu-setup/
 ```yaml
 ---
 - name: Install NVIDIA GPU Drivers - No CUDA
-  hosts: gpu_servers
+  hosts: servers
   become: yes
   roles:
     - role: nvidia-gpu-setup
@@ -136,7 +136,7 @@ nvidia-gpu-setup/
 ---
 all:
   children:
-    gpu_servers:
+    servers:
       hosts:
         gpu-node-1:
           ansible_host: 172.25.7.99
@@ -153,7 +153,7 @@ all:
 ```yaml
 ---
 - name: Setup NVIDIA GPUs on Multiple Servers
-  hosts: gpu_servers
+  hosts: servers
   roles:
     - role: nvidia-gpu-setup
       vars:
@@ -197,7 +197,7 @@ ansible-playbook -i main_inventory.yml playbook.yml
 
    # Non-interactive mode
    ansible-playbook install_nvidia.yml -e "nvidia_driver_interactive=false"
-   
+
    # With specific driver
    ansible-playbook install_nvidia.yml -e "nvidia_driver_interactive=false nvidia_driver_version=nvidia-driver-580-open"
    ```

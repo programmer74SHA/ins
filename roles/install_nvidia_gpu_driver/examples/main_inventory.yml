@@ -4,7 +4,7 @@
 
 all:
   children:
-    gpu_servers:
+    servers:
       hosts:
         gpu-server-01:
           ansible_host: 172.25.7.99
@@ -19,7 +19,7 @@ all:
         ansible_python_interpreter: /usr/bin/python3
         ansible_become: yes
         app_environment: production
-        
+
         # NVIDIA Driver Configuration
         nvidia_driver_interactive: false
         nvidia_driver_version: ""  # Empty for recommended driver

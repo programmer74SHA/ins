@@ -87,19 +87,19 @@ roles:
     vars:
       # Interactive driver selection
       nvidia_driver_interactive: true          # true/false
-      
+
       # Specific driver (when interactive=false)
       nvidia_driver_version: ""                # Empty for recommended, or specify version
-      
+
       # CUDA installation
       nvidia_install_cuda: true                # true/false
-      
+
       # Persistence mode
       nvidia_enable_persistence: true          # true/false
-      
+
       # Auto-reboot
       nvidia_reboot_after_install: false       # true/false
-      
+
       # Reboot timeout
       nvidia_reboot_timeout: 600               # seconds
 ```
@@ -201,25 +201,25 @@ ansible-playbook install.yml --ask-vault-pass
 ---
 - hosts: all
   become: yes
-  
+
   pre_tasks:
     - name: Check disk space
       shell: df -h /
       register: disk_space
-    
+
     - name: Display disk space
       debug:
         var: disk_space.stdout_lines
-  
+
   roles:
     - nvidia-gpu-setup
-  
+
   post_tasks:
     - name: Verify installation
       command: nvidia-smi
       register: nvidia_check
       changed_when: false
-      
+
     - name: Send notification
       debug:
         msg: "NVIDIA drivers installed successfully"
@@ -231,11 +231,11 @@ ansible-playbook install.yml --ask-vault-pass
 ---
 - hosts: ml_servers
   become: yes
-  
+
   roles:
     # Install NVIDIA drivers first
     - nvidia-gpu-setup
-    
+
     # Then install other tools
     - docker
     - nvidia-docker
@@ -253,7 +253,7 @@ ansible-playbook install.yml --ask-vault-pass
 ---
 all:
   children:
-    gpu_servers:
+    servers:
       hosts:
         ml-server-1:
           ansible_host: 172.25.7.101
@@ -263,13 +263,13 @@ all:
         ansible_user: root
         ansible_become: yes
         ansible_python_interpreter: /usr/bin/python3
-    
+
     development:
       hosts:
         dev-gpu:
           ansible_host: 172.25.7.200
           ansible_user: ubuntu
-    
+
     production:
       hosts:
         prod-gpu-1:
@@ -386,7 +386,7 @@ ansible-playbook install.yml -vvvv
 ```groovy
 pipeline {
     agent any
-    
+
     stages {
         stage('Install NVIDIA Drivers') {
             steps {

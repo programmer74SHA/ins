@@ -6,7 +6,7 @@
 #   ansible-playbook -i main_inventory.yml playbook_multi_server.yml
 
 - name: Setup NVIDIA GPUs on Multiple Servers
-  hosts: gpu_servers
+  hosts: servers
   gather_facts: yes
   become: yes
   serial: 1  # Install one server at a time
