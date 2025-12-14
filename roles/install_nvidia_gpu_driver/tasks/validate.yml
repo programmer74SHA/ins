@@ -6,7 +6,7 @@
     that:
       - ansible_distribution == "Ubuntu"
     fail_msg: "This role only supports Ubuntu"
-    success_msg: "Running on Ubuntu {{ ansible_distribution_version }}"
+    success_msg: "Running on Ubuntu {{ ansible_distribution_version | default('unknown version') }}"
 
 - name: Check if running with sudo/root privileges
   assert:
