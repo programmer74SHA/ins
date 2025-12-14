@@ -1,0 +1,16 @@
+---
+# vars file for nvidia-gpu-setup
+
+# These variables can be overridden but are set here as role-specific vars
+
+# Supported Ubuntu versions
+nvidia_supported_ubuntu_versions:
+  - "20.04"
+  - "22.04"
+  - "24.04"
+
+# Package requirements
+nvidia_required_packages:
+  - ubuntu-drivers-common
+  - dkms
+  - build-essential

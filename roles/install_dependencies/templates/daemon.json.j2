@@ -1,0 +1,11 @@
+{
+  "log-driver": "{{ docker_log_driver }}",
+  "log-opts": {
+    "max-size": "{{ docker_log_max_size }}",
+    "max-file": "{{ docker_log_max_file }}"
+  },
+  "storage-driver": "{{ docker_storage_driver }}"{% if docker_registry_mirrors | length > 0 %},
+  "registry-mirrors": {{ docker_registry_mirrors | to_json }}{% endif %}{% if docker_ipv6_enabled %},
+  "ipv6": true,
+  "fixed-cidr-v6": "2001:db8:1::/64"{% endif %}
+}

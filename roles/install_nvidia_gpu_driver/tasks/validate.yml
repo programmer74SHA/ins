@@ -1,0 +1,24 @@
+---
+# Validate variables and prerequisites
+
+- name: Check if running on Ubuntu
+  assert:
+    that:
+      - ansible_distribution == "Ubuntu"
+    fail_msg: "This role only supports Ubuntu"
+    success_msg: "Running on Ubuntu {{ ansible_distribution_version }}"
+
+- name: Check if running with sudo/root privileges
+  assert:
+    that:
+      - ansible_user_id == "root" or ansible_become
+    fail_msg: "This role requires root/sudo privileges"
+
+- name: Display configuration
+  debug:
+    msg:
+      - "NVIDIA GPU Setup Configuration:"
+      - "  Interactive mode: {{ nvidia_driver_interactive }}"
+      - "  Install CUDA: {{ nvidia_install_cuda }}"
+      - "  Enable persistence mode: {{ nvidia_enable_persistence }}"
+      - "  Reboot after install: {{ nvidia_reboot_after_install }}"

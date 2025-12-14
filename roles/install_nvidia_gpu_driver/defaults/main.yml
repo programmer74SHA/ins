@@ -1,0 +1,22 @@
+---
+# defaults file for nvidia-gpu-setup
+
+# Interactive mode: prompt user to select driver version
+nvidia_driver_interactive: true
+
+# Specific driver version (used when nvidia_driver_interactive is false)
+# Leave empty to use recommended driver
+# Examples: nvidia-driver-580-open, nvidia-driver-570, nvidia-driver-550-server
+nvidia_driver_version: ""
+
+# Install CUDA toolkit
+nvidia_install_cuda: true
+
+# Enable NVIDIA persistence mode (recommended for servers)
+nvidia_enable_persistence: true
+
+# Automatically reboot after installation if required
+nvidia_reboot_after_install: false
+
+# Reboot timeout in seconds
+nvidia_reboot_timeout: 600

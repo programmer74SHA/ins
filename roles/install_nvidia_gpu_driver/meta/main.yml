@@ -1,0 +1,27 @@
+---
+# meta file for nvidia-gpu-setup
+
+galaxy_info:
+  author: Your Name
+  description: Install and configure NVIDIA GPU drivers and CUDA toolkit on Ubuntu Server
+  company: Your Company
+  license: MIT
+  min_ansible_version: "2.10"
+  
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal    # 20.04
+        - jammy    # 22.04
+        - noble    # 24.04
+  
+  galaxy_tags:
+    - nvidia
+    - gpu
+    - cuda
+    - driver
+    - ubuntu
+    - machine-learning
+    - deep-learning
+
+dependencies: []

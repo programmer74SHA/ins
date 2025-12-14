@@ -1,0 +1,24 @@
+---
+# Example playbook for install_dependencies role
+
+- name: Install dependencies and Docker on Ubuntu servers
+  hosts: all
+  become: true
+
+  # Optional: Override default variables
+  vars:
+    # Add users to docker group
+    docker_users:
+      - apk
+
+
+    # Perform full system upgrade
+    perform_full_upgrade: false
+
+    # Docker daemon configuration
+    docker_log_max_size: "50m"
+    docker_log_max_file: "5"
+
+  roles:
+    - install_dependencies
+

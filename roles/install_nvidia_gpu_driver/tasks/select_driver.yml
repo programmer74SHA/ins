@@ -1,0 +1,54 @@
+---
+# Interactive driver selection
+
+- name: Present driver options
+  pause:
+    prompt: |
+      
+      ╔═══════════════════════════════════════════════════════════╗
+      ║          NVIDIA Driver Selection                          ║
+      ╚═══════════════════════════════════════════════════════════╝
+      
+      Recommended driver: {{ nvidia_recommended_driver | default('Not detected') }}
+      
+      Available drivers:
+      {% for driver in nvidia_available_drivers %}
+        {{ loop.index }}. {{ driver }}{% if driver == nvidia_recommended_driver %} (recommended){% endif %}
+      {% endfor %}
+      
+      Enter your choice:
+        - Press ENTER to use recommended driver
+        - Enter driver name (e.g., nvidia-driver-580-open)
+        - Enter number from the list above
+      
+      Your choice
+  register: driver_selection
+  when: nvidia_driver_interactive | bool
+
+- name: Parse driver selection
+  set_fact:
+    selected_driver: >-
+      {%- if driver_selection.user_input == '' -%}
+        {{ nvidia_recommended_driver }}
+      {%- elif driver_selection.user_input | int(-1) > 0 and driver_selection.user_input | int <= nvidia_available_drivers | length -%}
+        {{ nvidia_available_drivers[driver_selection.user_input | int - 1] }}
+      {%- else -%}
+        {{ driver_selection.user_input }}
+      {%- endif -%}
+  when: nvidia_driver_interactive | bool
+
+- name: Set driver to recommended (non-interactive mode)
+  set_fact:
+    selected_driver: "{{ nvidia_driver_version | default(nvidia_recommended_driver) }}"
+  when: not nvidia_driver_interactive | bool
+
+- name: Validate selected driver
+  assert:
+    that:
+      - selected_driver in nvidia_available_drivers
+    fail_msg: "Invalid driver selection: {{ selected_driver }}"
+    success_msg: "Selected driver: {{ selected_driver }}"
+
+- name: Display selected driver
+  debug:
+    msg: "Installing: {{ selected_driver }}"

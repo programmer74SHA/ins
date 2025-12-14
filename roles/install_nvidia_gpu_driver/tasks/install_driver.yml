@@ -1,0 +1,30 @@
+---
+# Install NVIDIA driver
+
+- name: Extract driver version for utils package
+  set_fact:
+    driver_version_number: "{{ selected_driver | regex_replace('^nvidia-driver-(\\d+).*$', '\\1') }}"
+
+- name: Install NVIDIA driver and utilities
+  apt:
+    name:
+      - "{{ selected_driver }}"
+      - "nvidia-utils-{{ driver_version_number }}"
+    state: present
+  become: yes
+  register: driver_install
+  notify:
+    - reboot system
+
+- name: Display installation result
+  debug:
+    msg: "Driver installation {{ 'completed' if driver_install.changed else 'already installed' }}"
+
+- name: Check if reboot is required
+  stat:
+    path: /var/run/reboot-required
+  register: reboot_required_file
+
+- name: Set reboot fact
+  set_fact:
+    nvidia_needs_reboot: "{{ reboot_required_file.stat.exists or driver_install.changed }}"

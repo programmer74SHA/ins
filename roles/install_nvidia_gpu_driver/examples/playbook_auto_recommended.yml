@@ -1,0 +1,28 @@
+---
+# Example 2: Non-Interactive Mode - Recommended Driver
+# This playbook will automatically install the recommended driver
+
+- name: Install NVIDIA GPU Drivers - Auto Recommended
+  hosts: all
+  become: yes
+  
+  roles:
+    - role: nvidia-gpu-setup
+      vars:
+        # Non-interactive mode - no prompts
+        nvidia_driver_interactive: false
+        
+        # Leave empty to use recommended driver
+        nvidia_driver_version: ""
+        
+        # Install CUDA toolkit
+        nvidia_install_cuda: true
+        
+        # Enable persistence mode
+        nvidia_enable_persistence: true
+        
+        # Automatically reboot after installation
+        nvidia_reboot_after_install: true
+        
+        # Reboot timeout
+        nvidia_reboot_timeout: 600

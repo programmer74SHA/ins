@@ -1,0 +1,23 @@
+---
+# Detect NVIDIA GPU
+
+- name: Check for NVIDIA GPU
+  shell: lspci | grep -i nvidia
+  register: nvidia_gpu_check
+  changed_when: false
+  failed_when: false
+
+- name: Fail if no NVIDIA GPU detected
+  fail:
+    msg: "No NVIDIA GPU detected on this system"
+  when: nvidia_gpu_check.rc != 0
+
+- name: Display detected GPU(s)
+  debug:
+    msg: "{{ nvidia_gpu_check.stdout_lines }}"
+
+- name: Install ubuntu-drivers-common
+  apt:
+    name: ubuntu-drivers-common
+    state: present
+  become: yes

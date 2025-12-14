@@ -1,0 +1,73 @@
+---
+# defaults file for install_dependencies
+
+# Essential system packages
+essential_packages:
+  - apt-transport-https
+  - ca-certificates
+  - software-properties-common
+  - build-essential
+  - curl
+  - wget
+  - git
+  - vim
+  - nano
+  - tar
+  - gzip
+  - unzip
+  - zip
+  - tree
+  - jq
+
+
+# Development tools
+development_packages:
+  - python3
+  - python3-pip
+  - python3-dev
+  - python3-venv
+
+# Network tools
+network_packages:
+  - net-tools
+  - iputils-ping
+  - traceroute
+  - nmap
+
+# Monitoring and system tools
+monitoring_packages:
+  - htop
+  - iotop
+  - sysstat
+  - lsof
+  - tcpdump
+
+# Security tools
+security_packages:
+  - ufw
+  - fail2ban
+
+
+# Docker configuration
+docker_compose_version: "v2.23.0"
+install_docker_compose_standalone: false
+configure_docker_daemon: true
+
+# Docker users (add users to docker group)
+docker_users: []
+# Example:
+# docker_users:
+#   - username1
+#   - username2
+
+# Docker daemon configuration
+docker_log_driver: "json-file"
+docker_log_max_size: "10m"
+docker_log_max_file: "3"
+docker_storage_driver: "overlay2"
+docker_ipv6_enabled: false
+docker_registry_mirrors: []
+
+# System settings
+perform_full_upgrade: false
+cleanup_apt_cache: true

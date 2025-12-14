@@ -1,0 +1,62 @@
+---
+# Verify NVIDIA installation
+
+- name: Check if nvidia-smi is available
+  command: which nvidia-smi
+  register: nvidia_smi_path
+  changed_when: false
+  failed_when: false
+
+- name: Run nvidia-smi (if not pending reboot)
+  command: nvidia-smi
+  register: nvidia_smi_output
+  changed_when: false
+  failed_when: false
+  when: 
+    - not nvidia_needs_reboot | bool
+    - nvidia_smi_path.rc == 0
+
+- name: Display nvidia-smi output
+  debug:
+    msg: "{{ nvidia_smi_output.stdout_lines }}"
+  when: 
+    - not nvidia_needs_reboot | bool
+    - nvidia_smi_output is defined
+    - nvidia_smi_output.rc == 0
+
+- name: Check loaded NVIDIA kernel modules
+  shell: lsmod | grep nvidia
+  register: nvidia_modules
+  changed_when: false
+  failed_when: false
+  when: not nvidia_needs_reboot | bool
+
+- name: Display loaded NVIDIA modules
+  debug:
+    msg: "{{ nvidia_modules.stdout_lines }}"
+  when: 
+    - not nvidia_needs_reboot | bool
+    - nvidia_modules is defined
+    - nvidia_modules.rc == 0
+
+- name: Display reboot message
+  debug:
+    msg: |
+      ╔═══════════════════════════════════════════════════════════╗
+      ║          REBOOT REQUIRED                                  ║
+      ╚═══════════════════════════════════════════════════════════╝
+      
+      A system reboot is required to load the NVIDIA driver.
+      {% if nvidia_reboot_after_install %}
+      The system will reboot automatically.
+      {% else %}
+      Please reboot the system manually when ready:
+        sudo reboot
+      {% endif %}
+  when: nvidia_needs_reboot | bool
+
+- name: Trigger reboot if configured
+  meta: flush_handlers
+  when: 
+    - nvidia_needs_reboot | bool
+    - nvidia_reboot_after_install | bool

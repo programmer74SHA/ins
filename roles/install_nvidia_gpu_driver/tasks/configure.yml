@@ -1,0 +1,39 @@
+---
+# Configure NVIDIA settings
+
+- name: Enable NVIDIA persistence mode
+  command: nvidia-smi -pm 1
+  become: yes
+  changed_when: true
+  failed_when: false
+  when: 
+    - nvidia_enable_persistence | bool
+    - not nvidia_needs_reboot | bool
+
+- name: Enable nvidia-persistenced service
+  systemd:
+    name: nvidia-persistenced
+    enabled: yes
+    state: started
+  become: yes
+  when: 
+    - nvidia_enable_persistence | bool
+    - not nvidia_needs_reboot | bool
+  failed_when: false
+
+- name: Create systemd override directory for nvidia-persistenced
+  file:
+    path: /etc/systemd/system/nvidia-persistenced.service.d
+    state: directory
+    mode: '0755'
+  become: yes
+  when: nvidia_enable_persistence | bool
+
+- name: Configure nvidia-persistenced to start after reboot
+  template:
+    src: nvidia-persistenced-override.conf.j2
+    dest: /etc/systemd/system/nvidia-persistenced.service.d/override.conf
+    mode: '0644'
+  become: yes
+  when: nvidia_enable_persistence | bool
+  notify: reload systemd

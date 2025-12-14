@@ -1,0 +1,30 @@
+---
+# Install CUDA toolkit
+
+- name: Install CUDA toolkit
+  apt:
+    name:
+      - nvidia-cuda-toolkit
+    state: present
+  become: yes
+  register: cuda_install
+  when: nvidia_install_cuda | bool
+
+- name: Display CUDA installation result
+  debug:
+    msg: "CUDA toolkit installation {{ 'completed' if cuda_install.changed else 'already installed' }}"
+  when: nvidia_install_cuda | bool
+
+- name: Verify CUDA installation
+  shell: nvcc --version
+  register: cuda_version
+  changed_when: false
+  failed_when: false
+  when: nvidia_install_cuda | bool
+
+- name: Display CUDA version
+  debug:
+    msg: "{{ cuda_version.stdout_lines }}"
+  when: 
+    - nvidia_install_cuda | bool
+    - cuda_version.rc == 0

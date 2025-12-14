@@ -1,0 +1,34 @@
+---
+# Example 4: Multi-Server Setup
+# Deploy NVIDIA drivers across multiple GPU servers
+#
+# Usage:
+#   ansible-playbook -i main_inventory.yml playbook_multi_server.yml
+
+- name: Setup NVIDIA GPUs on Multiple Servers
+  hosts: gpu_servers
+  become: yes
+  serial: 1  # Install one server at a time
+  
+  roles:
+    - role: nvidia-gpu-setup
+      # Variables can be set in main_inventory.yml or here
+      # Inventory variables will take precedence
+
+  post_tasks:
+    - name: Wait for server to come back online
+      wait_for_connection:
+        delay: 30
+        timeout: 300
+      when: nvidia_reboot_after_install | default(false) | bool
+
+    - name: Verify installation after reboot
+      command: nvidia-smi
+      register: nvidia_verify
+      changed_when: false
+      failed_when: false
+
+    - name: Display verification
+      debug:
+        msg: "{{ nvidia_verify.stdout_lines }}"
+      when: nvidia_verify.rc == 0

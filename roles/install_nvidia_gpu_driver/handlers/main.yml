@@ -1,0 +1,14 @@
+---
+# handlers file for nvidia-gpu-setup
+
+- name: reload systemd
+  systemd:
+    daemon_reload: yes
+  become: yes
+
+- name: reboot system
+  reboot:
+    msg: "Rebooting to load NVIDIA driver"
+    reboot_timeout: 600
+  become: yes
+  when: nvidia_reboot_after_install | bool

@@ -1,0 +1,42 @@
+---
+# NVIDIA GPU Infrastructure Inventory
+# Update the IP addresses and ansible_user to match your environment
+
+all:
+  children:
+    gpu_servers:
+      hosts:
+        gpu-server-01:
+          ansible_host: 172.25.7.99
+          ansible_user: root
+        # gpu-server-02:
+        #   ansible_host: 172.25.7.100
+        #   ansible_user: root
+        # gpu-server-03:
+        #   ansible_host: 172.25.7.101
+        #   ansible_user: ubuntu
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+        ansible_become: yes
+        app_environment: production
+        
+        # NVIDIA Driver Configuration
+        nvidia_driver_interactive: false
+        nvidia_driver_version: ""  # Empty for recommended driver
+        nvidia_install_cuda: true
+        nvidia_enable_persistence: true
+        nvidia_reboot_after_install: true
+
+    # Optional: Separate development/staging environments
+    # gpu_dev:
+    #   hosts:
+    #     gpu-dev-01:
+    #       ansible_host: 172.25.7.200
+    #       ansible_user: ubuntu
+    #   vars:
+    #     ansible_python_interpreter: /usr/bin/python3
+    #     ansible_become: yes
+    #     app_environment: development
+    #     nvidia_driver_interactive: true
+    #     nvidia_install_cuda: true
+    #     nvidia_reboot_after_install: false

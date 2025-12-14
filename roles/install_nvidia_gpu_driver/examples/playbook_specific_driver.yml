@@ -1,0 +1,29 @@
+---
+# Example 3: Non-Interactive Mode - Specific Driver Version
+# This playbook will install a specific driver version you specify
+
+- name: Install NVIDIA GPU Drivers - Specific Version
+  hosts: all
+  become: yes
+  
+  roles:
+    - role: nvidia-gpu-setup
+      vars:
+        # Non-interactive mode
+        nvidia_driver_interactive: false
+        
+        # Specify exact driver version
+        # Examples: 
+        #   - nvidia-driver-580-open
+        #   - nvidia-driver-580
+        #   - nvidia-driver-550-server
+        nvidia_driver_version: "nvidia-driver-580-open"
+        
+        # Install CUDA toolkit
+        nvidia_install_cuda: true
+        
+        # Enable persistence mode
+        nvidia_enable_persistence: true
+        
+        # Don't auto-reboot
+        nvidia_reboot_after_install: false

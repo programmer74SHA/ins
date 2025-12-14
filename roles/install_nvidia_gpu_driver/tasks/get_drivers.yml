@@ -1,0 +1,28 @@
+---
+# Get available NVIDIA drivers
+
+- name: Get available drivers from ubuntu-drivers
+  shell: ubuntu-drivers devices 2>/dev/null | grep "driver   :" | awk '{print $3}' | sort -u
+  register: available_drivers_raw
+  changed_when: false
+  failed_when: false
+
+- name: Get recommended driver
+  shell: ubuntu-drivers devices 2>/dev/null | grep "recommended" | awk '{print $3}'
+  register: recommended_driver_raw
+  changed_when: false
+  failed_when: false
+
+- name: Set available drivers list
+  set_fact:
+    nvidia_available_drivers: "{{ available_drivers_raw.stdout_lines }}"
+    nvidia_recommended_driver: "{{ recommended_driver_raw.stdout | default('') }}"
+
+- name: Display recommended driver
+  debug:
+    msg: "Recommended driver: {{ nvidia_recommended_driver }}"
+  when: nvidia_recommended_driver | length > 0
+
+- name: Display all available drivers
+  debug:
+    msg: "Available drivers: {{ nvidia_available_drivers }}"

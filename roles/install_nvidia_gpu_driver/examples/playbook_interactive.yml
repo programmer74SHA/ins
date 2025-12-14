@@ -1,0 +1,22 @@
+---
+# Example 1: Interactive Mode
+# This playbook will prompt you to select which driver to install
+
+- name: Install NVIDIA GPU Drivers - Interactive Mode
+  hosts: all
+  become: yes
+  
+  roles:
+    - role: nvidia-gpu-setup
+      vars:
+        # Interactive mode enabled - you will be prompted
+        nvidia_driver_interactive: true
+        
+        # Install CUDA toolkit
+        nvidia_install_cuda: true
+        
+        # Enable persistence mode for better performance
+        nvidia_enable_persistence: true
+        
+        # Don't auto-reboot (you'll need to reboot manually)
+        nvidia_reboot_after_install: false
