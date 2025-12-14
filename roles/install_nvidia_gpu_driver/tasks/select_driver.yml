@@ -39,14 +39,26 @@
 
 - name: Set driver to recommended (non-interactive mode)
   set_fact:
-    selected_driver: "{{ nvidia_driver_version | default(nvidia_recommended_driver) }}"
+    selected_driver: >-
+      {%- if nvidia_driver_version is defined and nvidia_driver_version | length > 0 -%}
+        {{ nvidia_driver_version }}
+      {%- elif nvidia_recommended_driver is defined and nvidia_recommended_driver | length > 0 -%}
+        {{ nvidia_recommended_driver }}
+      {%- elif nvidia_available_drivers | length > 0 -%}
+        {{ nvidia_available_drivers[0] }}
+      {%- else -%}
+
+      {%- endif -%}
   when: not nvidia_driver_interactive | bool
 
 - name: Validate selected driver
   assert:
     that:
+      - selected_driver is defined
+      - selected_driver | length > 0
+      - nvidia_available_drivers | length > 0
       - selected_driver in nvidia_available_drivers
-    fail_msg: "Invalid driver selection: {{ selected_driver }}"
+    fail_msg: "Invalid driver selection: {{ selected_driver | default('undefined') }}. Available drivers: {{ nvidia_available_drivers | join(', ') }}"
     success_msg: "Selected driver: {{ selected_driver }}"
 
 - name: Display selected driver
