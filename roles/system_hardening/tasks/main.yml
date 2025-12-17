@@ -1,0 +1,15 @@
+---
+# System Hardening tasks
+
+- name: Include SSH hardening tasks
+  ansible.builtin.include_tasks: ssh_hardening.yml
+  tags:
+    - ssh
+    - hardening
+
+- name: Include fail2ban configuration tasks
+  ansible.builtin.include_tasks: fail2ban.yml
+  when: fail2ban_enabled
+  tags:
+    - fail2ban
+    - hardening

@@ -1,0 +1,34 @@
+---
+# System Hardening Configuration
+# Default variables for system_hardening role
+
+# SSH Configuration
+ssh_port: 22
+ssh_ciphers: "aes256-ctr,aes128-ctr"
+ssh_kex_algorithms: "ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521"
+ssh_macs: "hmac-sha2-256,hmac-sha2-512"
+ssh_pubkey_accepted_key_types: "rsa-sha2-256,rsa-sha2-512"
+ssh_rekey_limit: "1G 3600s"
+ssh_log_level: "INFO"
+ssh_banner_path: "/etc/ssh/siem_sshd_banner"
+ssh_client_alive_interval: 10
+ssh_client_alive_count_max: 22
+ssh_version_addendum: "none"
+ssh_debian_banner: "no"
+ssh_permit_root_login: "no"
+ssh_password_authentication: "no"
+
+# Fail2ban Configuration
+fail2ban_enabled: true
+fail2ban_bantime: "3600"
+fail2ban_findtime: "600"
+fail2ban_maxretry: "5"
+fail2ban_destemail: "root@localhost"
+fail2ban_sendername: "Fail2Ban"
+fail2ban_action: "%(action_mwl)s"
+
+# SSH Jail Configuration
+fail2ban_ssh_enabled: true
+fail2ban_ssh_port: "{{ ssh_port }}"
+fail2ban_ssh_maxretry: 3
+fail2ban_ssh_bantime: 7200
