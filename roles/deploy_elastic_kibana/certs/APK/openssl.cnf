@@ -1,0 +1,19 @@
+[ req ]
+default_bits = 2048
+distinguished_name = req_distinguished_name
+req_extensions = req_ext
+prompt = no
+[ req_distinguished_name ]
+C = IR
+ST = Tehran
+L = Tehran
+O = APK-Group
+OU = DevOps
+CN = elasticsearch-APK
+[ req_ext ]
+subjectAltName = @alt_names
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth, clientAuth
+[ alt_names ]
+DNS.1 = elasticsearch
+#DNS.2 = .apk-group.net

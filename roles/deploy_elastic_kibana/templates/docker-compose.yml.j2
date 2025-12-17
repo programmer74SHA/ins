@@ -1,0 +1,53 @@
+services:
+  elasticsearch:
+    image: registry.apk-group.net/automation/modules/elasticsearch:{{ elk_stack_version }}
+    restart: unless-stopped
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - ELASTIC_PASSWORD={{ elk_elasticsearch_password }}
+      - ES_JAVA_OPTS=-Xms{{ elk_es_java_heap }} -Xmx{{ elk_es_java_heap }}
+    ports:
+      - "{{ elk_elasticsearch_port }}:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - {{ elk_network_name }}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -u elastic:{{ elk_elasticsearch_password }} http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+
+  kibana:
+    image: registry.apk-group.net/automation/modules/:{{ elk_stack_version }}
+    restart: unless-stopped
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_SERVICEACCOUNTTOKEN={{ elk_kibana_service_account_token }}
+      - SERVER_PUBLICBASEURL={{ elk_kibana_public_base_url }}
+      - XPACK_SECURITY_ENCRYPTIONKEY={{ elk_kibana_encryption_key }}
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY={{ elk_kibana_encryption_key }}
+      - XPACK_REPORTING_ENCRYPTIONKEY={{ elk_kibana_encryption_key }}
+    ports:
+      - "{{ elk_kibana_port }}:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - {{ elk_network_name }}
+
+volumes:
+  es_data:
+
+networks:
+  {{ elk_network_name }}:
+{% if elk_network_external %}
+    external: true
+{% else %}
+    driver: bridge
+{% endif %}

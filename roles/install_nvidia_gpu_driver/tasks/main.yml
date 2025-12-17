@@ -24,7 +24,6 @@
 
 - name: Install CUDA toolkit
   include_tasks: install_cuda.yml
-  when: nvidia_install_cuda | bool
 
 - name: Configure NVIDIA settings
   include_tasks: configure.yml
