@@ -26,19 +26,35 @@ build: download build_repo package upload
 
 download: download_elastic_kibana
 
-download_elastic_search:
-	@$BORDER
-	@echo "$(COLOR_GREEN)Downloading Elastic Search...$(END_COLOR)"
+download_elastic_kibana:
+	@echo "══════════════════════════════════════════════════"
+	@echo "Downloading Elasticsearch $(ELASTICSEARCH_VERSION)..."
 	@mkdir -p roles/deploy_elastic_kibana/files
 	@if [ ! -f roles/deploy_elastic_kibana/files/elasticsearch.tar.gz ]; then \
-		skopeo copy docker://registry.apk-group.net/automation/modules/elasticsearch:$(ELASTICSEARCH_VERSION) docker-archive:roles/deploy_elastic_kibana/files/elasticsearch.tar.gz; \
+		echo "Downloading Elasticsearch..."; \
+		skopeo copy docker://registry.apk-group.net/automation/modules/elasticsearch:$(ELASTICSEARCH_VERSION) \
+			docker-archive:roles/deploy_elastic_kibana/files/elasticsearch.tar.gz || \
+		{ echo "Failed to download Elasticsearch"; exit 1; }; \
+		echo "Elasticsearch downloaded."; \
+	else \
+		echo "Elasticsearch already exists. Skipping."; \
 	fi
-	@$BORDER
-	@echo "$(COLOR_GREEN)Downloading Kibana...$(END_COLOR)"
-	@mkdir -p roles/deploy_elastic_kibana/files
+
+	@echo "══════════════════════════════════════════════════"
+	@echo "Downloading Kibana $(KIBANA_VERSION)..."
 	@if [ ! -f roles/deploy_elastic_kibana/files/kibana.tar.gz ]; then \
-		skopeo copy docker://registry.apk-group.net/automation/modules/kibana:$(KIBANA_VERSION) docker-archive:roles/deploy_elastic_kibana/files/kibana.tar.gz; \
+		echo "Downloading Kibana..."; \
+		skopeo copy docker://registry.apk-group.net/automation/modules/kibana:$(KIBANA_VERSION) \
+			docker-archive:roles/deploy_elastic_kibana/files/kibana.tar.gz || \
+		{ echo "Failed to download Kibana (maybe tag doesn't exist?)"; exit 1; }; \
+		echo "Kibana downloaded."; \
+	else \
+		echo "Kibana already exists. Skipping."; \
 	fi
+
+	@echo "══════════════════════════════════════════════════"
+	@echo "Download completed."
+
 
 build_repo: init_builder
 	@echo "$(COLOR_GREEN)Building repository...$(END_COLOR)"
@@ -51,19 +67,30 @@ update_version:
 	@echo "$(COLOR_YELLOW)Updating version to $(AI_version)...$(END_COLOR)"
 
 init:
-	@echo "$(COLOR_GREEN)Initializing project...$(END_COLOR)"
+	@$(BORDER)
+	@echo "$(COLOR_GREEN)Initializing directories...$(END_COLOR)"
+	mkdir -p $(BUILD_DIR) $(CACHE_DIR)
 
 clean:
-	@echo "$(COLOR_YELLOW)Cleaning build artifacts...$(END_COLOR)"
+	@$(BORDER)
+	@echo "$(COLOR_GREEN)Cleaning build and cache...$(END_COLOR)"
+	rm -rf $(BUILD_DIR) $(CACHE_DIR)
 
 clean_all: clean
 	@echo "$(COLOR_YELLOW)Performing deep clean (cache and build directories)...$(END_COLOR)"
 
 package:
-	@echo "$(COLOR_GREEN)Packaging application...$(END_COLOR)"
+	@$(BORDER)
+	@echo "$(COLOR_GREEN)Packaging AI version $(COLOR_YELLOW)$(AI_version)$(END_COLOR)...$(END_COLOR)"
+	tar --use-compress-program=pigz -cf $(BUILD_DIR)/ai_$(ai_version)_$(shell date +%Y%m%d%H).tar.gz $(ROLE_DIR) install inventory.yml ansible.cfg main-playbook.yml
 
 generate_md5sum_file:
-	@echo "$(COLOR_GREEN)Generating MD5 checksum file...$(END_COLOR)"
+	@$(BORDER)
+	@echo "$(COLOR_GREEN)Generating md5 sum file...$(END_COLOR)"
+	md5sum $(BUILD_DIR)/ai_$(ai_version)_$(shell date +%Y%m%d%H).tar.gz > $(BUILD_DIR)/ai_$(ai_version)_$(shell date +%Y%m%d%H).tar.gz.md5
 
 upload: generate_md5sum_file
-	@echo "$(COLOR_GREEN)Uploading artifacts...$(END_COLOR)"
+	@$(BORDER)
+	@echo "$(COLOR_GREEN)uploading AI version $(COLOR_YELLOW)$(ai_version)$(END_COLOR)...$(END_COLOR)"
+	./upload.sh $(BUILD_DIR)/ai_$(ai_version)_$(shell date +%Y%m%d%H).tar.gz ai-installer
+	./upload.sh $(BUILD_DIR)/ai_$(ai_version)_$(shell date +%Y%m%d%H).tar.gz.md5 ai-installer

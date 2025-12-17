@@ -7,5 +7,5 @@
     # - install_nvidia_gpu_driver
     - deploy_elastic_kibana
     # - deploy_soar_platform
-    - system_hardening
+    # - system_hardening
     # - os_hardening
