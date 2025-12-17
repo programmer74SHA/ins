@@ -1,0 +1,22 @@
+# Fail2Ban configuration file
+#
+# This file is managed by Ansible. Do not edit manually.
+# Changes will be overwritten on next Ansible run.
+
+[DEFAULT]
+# Ban IP addresses for {{ fail2ban_bantime }} seconds (default: 1 hour)
+bantime = {{ fail2ban_bantime }}
+
+# Time window for counting failures (default: 10 minutes)
+findtime = {{ fail2ban_findtime }}
+
+# Number of failures before a host gets banned
+maxretry = {{ fail2ban_maxretry }}
+
+# Email configuration
+destemail = {{ fail2ban_destemail }}
+sendername = {{ fail2ban_sendername }}
+action = {{ fail2ban_action }}
+
+# Backend
+backend = systemd
