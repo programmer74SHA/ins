@@ -20,7 +20,7 @@ BUILD_DIR:=build
 ROLE_DIR:=roles
 DOWNLOAD_DIR:=$(ROLE_DIR)/download
 KIBANA_VERSION=8.15.5
-ElasticSEARCH_VERSION=8.15.5
+ELASTICSEARCH_VERSION=8.15.5
 
 build: download build_repo package upload
 

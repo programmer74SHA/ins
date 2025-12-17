@@ -1,0 +1,90 @@
+stages:
+  - download
+  - build
+  - package
+  - upload
+
+variables:
+  # Set the temporary path for build artifacts
+  tmp_path: "/tmp/ai_installer/${CI_COMMIT_TAG:-latest}"
+  MakeTarget: "download"
+  # Registry configuration
+  REGISTRY_URL: "registry.apk-group.net"
+
+# Template for registry authentication
+.registry_auth: &registry_auth
+  before_script:
+    - echo "Authenticating to private registry..."
+    # Create auth directory for skopeo if it doesn't exist
+    - mkdir -p ~/.config/containers
+    # Authenticate to the private registry using GitLab CI variables
+    # REGISTRY_USERNAME and REGISTRY_PASSWORD should be set in GitLab CI/CD settings
+    - |
+      if [ -n "$REGISTRY_USERNAME" ] && [ -n "$REGISTRY_PASSWORD" ]; then
+        echo "Logging in to $REGISTRY_URL..."
+        skopeo login --username "$REGISTRY_USERNAME" --password "$REGISTRY_PASSWORD" "$REGISTRY_URL"
+      else
+        echo "WARNING: REGISTRY_USERNAME or REGISTRY_PASSWORD not set. Registry authentication may fail."
+        echo "Please configure these variables in GitLab: Settings -> CI/CD -> Variables"
+      fi
+
+# Download job - pulls Docker images from private registry
+download:
+  stage: download
+  <<: *registry_auth
+  script:
+    - echo "Running make file with $MakeTarget target"
+    - make $MakeTarget
+  artifacts:
+    paths:
+      - roles/deploy_elastic_kibana/files/*.tar.gz
+    expire_in: 1 week
+  tags:
+    - shell
+  only:
+    - tags
+    - branches
+
+# Build repository
+build:
+  stage: build
+  script:
+    - echo "Building repository..."
+    - make build_repo
+  dependencies:
+    - download
+  tags:
+    - shell
+  only:
+    - tags
+
+# Package the installer
+package:
+  stage: package
+  script:
+    - echo "Packaging installer..."
+    - make package
+  artifacts:
+    paths:
+      - build/*.tar.gz
+    expire_in: 1 month
+  dependencies:
+    - build
+  tags:
+    - shell
+  only:
+    - tags
+
+# Upload artifacts
+upload:
+  stage: upload
+  script:
+    - echo "Uploading artifacts..."
+    - make upload
+  dependencies:
+    - package
+  tags:
+    - shell
+  only:
+    - tags
+  when: manual
