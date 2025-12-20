@@ -72,7 +72,25 @@ build_repo: init_builder
 
 	@echo "$(COLOR_GREEN)Creating Ubuntu repository structure...$(END_COLOR)"
 	mkdir -p $(CACHE_DIR)/ubuntu-repo/pool/main
-	cp -v $(CACHE_DIR)/ubuntu-repo-deb-files/*.deb $(CACHE_DIR)/ubuntu-repo/pool/main/ 2>/dev/null || echo "No packages downloaded"
+
+	@echo "$(COLOR_YELLOW)Copying downloaded packages...$(END_COLOR)"
+	@PKG_COUNT=$$(ls -1 $(CACHE_DIR)/ubuntu-repo-deb-files/*.deb 2>/dev/null | wc -l); \
+	if [ $$PKG_COUNT -eq 0 ]; then \
+		echo "$(COLOR_YELLOW)ERROR: No .deb packages were downloaded!$(END_COLOR)"; \
+		echo "$(COLOR_YELLOW)This usually means:$(END_COLOR)"; \
+		echo "  1. Network/proxy connectivity issues"; \
+		echo "  2. Repository URLs are not accessible"; \
+		echo "  3. Authentication problems"; \
+		echo ""; \
+		echo "$(COLOR_YELLOW)The build will continue, but the repository will be empty.$(END_COLOR)"; \
+		echo "$(COLOR_YELLOW)To fix this, ensure network connectivity to:$(END_COLOR)"; \
+		echo "  - https://repo.apk-group.net/repository/ubuntu/"; \
+		echo "  - https://repo.apk-group.net/repository/ubuntu-security/"; \
+		echo ""; \
+	else \
+		echo "$(COLOR_GREEN)Found $$PKG_COUNT package(s) to copy$(END_COLOR)"; \
+		cp -v $(CACHE_DIR)/ubuntu-repo-deb-files/*.deb $(CACHE_DIR)/ubuntu-repo/pool/main/; \
+	fi
 
 	@echo "$(COLOR_GREEN)Generating Packages index...$(END_COLOR)"
 	cd $(CACHE_DIR)/ubuntu-repo && dpkg-scanpackages pool/main /dev/null | gzip -9c > pool/main/Packages.gz
