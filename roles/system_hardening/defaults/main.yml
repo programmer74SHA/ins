@@ -32,3 +32,17 @@ fail2ban_ssh_enabled: true
 fail2ban_ssh_port: "{{ ssh_port }}"
 fail2ban_ssh_maxretry: 3
 fail2ban_ssh_bantime: 7200
+
+# GRUB Security Configuration
+grub_password_enabled: true
+grub_superuser: "grubadmin"
+grub_password: "ChangeMe123!"  # Should be changed in production
+grub_timeout: 5
+grub_disable_recovery: "true"
+grub_disable_submenu: true
+grub_remove_backups: true
+
+# Kernel hardening parameters
+grub_kernel_hardening_enabled: true
+grub_cmdline_linux: "audit=1 audit_backlog_limit=8192"
+grub_cmdline_linux_default: "quiet splash apparmor=1 security=apparmor ipv6.disable=1 slab_nomerge slub_debug=FZ page_poison=1 vsyscall=none"

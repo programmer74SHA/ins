@@ -13,3 +13,9 @@
   tags:
     - fail2ban
     - hardening
+
+- name: Include GRUB hardening tasks
+  ansible.builtin.include_tasks: grub_hardening.yml
+  tags:
+    - grub
+    - hardening
