@@ -1,6 +1,6 @@
 # System Hardening Role
 
-This Ansible role hardens the system by configuring SSH and fail2ban with security best practices.
+This Ansible role hardens the system by configuring SSH, fail2ban, GRUB, and lshell with security best practices.
 
 ## Features
 
@@ -21,6 +21,20 @@ This Ansible role hardens the system by configuring SSH and fail2ban with securi
 - Configurable ban times and retry limits
 - Email notifications for security events
 
+### GRUB Security Hardening
+- Password protection for GRUB bootloader
+- Kernel hardening parameters
+- Disables recovery mode and submenus
+- Audit logging configuration
+
+### lshell (Limited Shell)
+- Installs and configures lshell for restricted shell access
+- Restricts commands and paths available to users
+- Configures command logging for audit purposes
+- Provides role-based access control (default, support, admin)
+- Session timeout and idle timeout enforcement
+- Command aliasing and execution monitoring
+
 ## Variables
 
 See `defaults/main.yml` for all configurable variables.
@@ -38,6 +52,11 @@ See `defaults/main.yml` for all configurable variables.
 - `fail2ban_maxretry`: Max retries before ban (default: 5)
 - `fail2ban_ssh_maxretry`: SSH-specific max retries (default: 3)
 
+### Key lshell Variables:
+- `lshell_enabled`: Enable lshell installation (default: true)
+- `lshell_log_path`: Path for lshell logs (default: /var/log/siem/shell/)
+- `lshell_config_path`: Path to lshell configuration (default: /etc/lshell.conf)
+
 ## Usage
 
 The role is included in the main playbook:
@@ -54,6 +73,9 @@ The role is included in the main playbook:
 
 - `ssh`: Run only SSH hardening tasks
 - `fail2ban`: Run only fail2ban tasks
+- `grub`: Run only GRUB hardening tasks
+- `lshell`: Run only lshell installation and configuration tasks
+- `shell`: Shell-related hardening tasks
 - `hardening`: Run all hardening tasks
 
 ## Security Notes

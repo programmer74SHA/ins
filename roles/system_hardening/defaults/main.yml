@@ -46,3 +46,8 @@ grub_remove_backups: true
 grub_kernel_hardening_enabled: true
 grub_cmdline_linux: "audit=1 audit_backlog_limit=8192"
 grub_cmdline_linux_default: "quiet splash apparmor=1 security=apparmor ipv6.disable=1 slab_nomerge slub_debug=FZ page_poison=1 vsyscall=none"
+
+# lshell Configuration
+lshell_enabled: true
+lshell_log_path: "/var/log/siem/shell/"
+lshell_config_path: "/etc/lshell.conf"
