@@ -19,3 +19,11 @@
   tags:
     - grub
     - hardening
+
+- name: Include lshell installation and configuration tasks
+  ansible.builtin.include_tasks: lshell.yml
+  when: lshell_enabled
+  tags:
+    - lshell
+    - hardening
+    - shell
