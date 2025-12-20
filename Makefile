@@ -59,34 +59,65 @@ download_elastic_kibana:
 build_repo: init_builder
 	@$(BORDER)
 	@echo "$(COLOR_GREEN)Building Ubuntu repository from remote sources...$(END_COLOR)"
+	@echo "$(COLOR_YELLOW)This target replaces download_deb_packages.sh functionality$(END_COLOR)"
 	rm -rf $(CACHE_DIR)/ubuntu-repo $(CACHE_DIR)/ubuntu-repo-deb-files
 	mkdir -p $(CACHE_DIR)/ubuntu-repo-deb-files
 
+	@echo ""
+	@echo "$(COLOR_PURPLE)========================================$(END_COLOR)"
 	@echo "$(COLOR_YELLOW)Downloading .deb packages from ubuntu repository...$(END_COLOR)"
+	@echo "$(COLOR_PURPLE)========================================$(END_COLOR)"
 	@wget -r -np -nd -A "*.deb" -P $(CACHE_DIR)/ubuntu-repo-deb-files \
 		-l 15 --timeout=60 --tries=3 --waitretry=5 -e robots=off \
-		https://repo.apk-group.net/repository/ubuntu/packages/ || echo "Some packages may have failed to download from ubuntu repo"
+		https://repo.apk-group.net/repository/ubuntu/packages/ 2>&1 | grep -E '(^Saving|^Downloaded|^--.*--$$)' || true
+	@UBUNTU_COUNT=$$(find $(CACHE_DIR)/ubuntu-repo-deb-files -name "*.deb" 2>/dev/null | wc -l); \
+	UBUNTU_SIZE=$$(du -sh $(CACHE_DIR)/ubuntu-repo-deb-files 2>/dev/null | cut -f1); \
+	echo "$(COLOR_GREEN)Ubuntu repository: $$UBUNTU_COUNT files downloaded ($$UBUNTU_SIZE)$(END_COLOR)"
 
+	@echo ""
+	@echo "$(COLOR_PURPLE)========================================$(END_COLOR)"
 	@echo "$(COLOR_YELLOW)Downloading .deb packages from ubuntu-security repository...$(END_COLOR)"
-	@wget -r -np -nd -A "*.deb" -P $(CACHE_DIR)/ubuntu-repo-deb-files \
+	@echo "$(COLOR_PURPLE)========================================$(END_COLOR)"
+	@BEFORE_COUNT=$$(find $(CACHE_DIR)/ubuntu-repo-deb-files -name "*.deb" 2>/dev/null | wc -l); \
+	wget -r -np -nd -A "*.deb" -P $(CACHE_DIR)/ubuntu-repo-deb-files \
 		-l 15 --timeout=60 --tries=3 --waitretry=5 -e robots=off \
-		https://repo.apk-group.net/repository/ubuntu-security/packages/ || echo "Some packages may have failed to download from ubuntu-security repo"
+		https://repo.apk-group.net/repository/ubuntu-security/packages/ 2>&1 | grep -E '(^Saving|^Downloaded|^--.*--$$)' || true; \
+	AFTER_COUNT=$$(find $(CACHE_DIR)/ubuntu-repo-deb-files -name "*.deb" 2>/dev/null | wc -l); \
+	SECURITY_COUNT=$$((AFTER_COUNT - BEFORE_COUNT)); \
+	echo "$(COLOR_GREEN)Ubuntu-security repository: $$SECURITY_COUNT files downloaded$(END_COLOR)"
 
+	@echo ""
+	@TOTAL_COUNT=$$(find $(CACHE_DIR)/ubuntu-repo-deb-files -name "*.deb" 2>/dev/null | wc -l); \
+	TOTAL_SIZE=$$(du -sh $(CACHE_DIR)/ubuntu-repo-deb-files 2>/dev/null | cut -f1); \
+	echo "$(COLOR_GREEN)Total .deb files downloaded: $$TOTAL_COUNT ($$TOTAL_SIZE)$(END_COLOR)"; \
+	if [ $$TOTAL_COUNT -eq 0 ]; then \
+		echo "$(COLOR_YELLOW)WARNING: No packages were downloaded!$(END_COLOR)"; \
+		exit 1; \
+	fi
+
+	@echo ""
 	@echo "$(COLOR_GREEN)Creating Ubuntu repository structure...$(END_COLOR)"
 	mkdir -p $(CACHE_DIR)/ubuntu-repo/pool/main
-	cp -v $(CACHE_DIR)/ubuntu-repo-deb-files/*.deb $(CACHE_DIR)/ubuntu-repo/pool/main/ 2>/dev/null || echo "No packages downloaded"
+	@cp $(CACHE_DIR)/ubuntu-repo-deb-files/*.deb $(CACHE_DIR)/ubuntu-repo/pool/main/ 2>/dev/null || \
+		{ echo "$(COLOR_YELLOW)ERROR: Failed to copy .deb files$(END_COLOR)"; exit 1; }
+	@COPIED_COUNT=$$(find $(CACHE_DIR)/ubuntu-repo/pool/main -name "*.deb" 2>/dev/null | wc -l); \
+	echo "$(COLOR_GREEN)Copied $$COPIED_COUNT packages to repository pool$(END_COLOR)"
 
-	@echo "$(COLOR_GREEN)Generating Packages index...$(END_COLOR)"
-	cd $(CACHE_DIR)/ubuntu-repo && dpkg-scanpackages pool/main /dev/null | gzip -9c > pool/main/Packages.gz
-	cd $(CACHE_DIR)/ubuntu-repo && dpkg-scanpackages pool/main /dev/null > pool/main/Packages
+	@echo "$(COLOR_GREEN)Generating Packages index files...$(END_COLOR)"
+	@cd $(CACHE_DIR)/ubuntu-repo && dpkg-scanpackages pool/main /dev/null | gzip -9c > pool/main/Packages.gz
+	@cd $(CACHE_DIR)/ubuntu-repo && dpkg-scanpackages pool/main /dev/null > pool/main/Packages
+	@echo "$(COLOR_GREEN)Repository metadata generated$(END_COLOR)"
 
-	@echo "$(COLOR_GREEN)Packaging repository...$(END_COLOR)"
-	tar --use-compress-program=pigz -cvf $(ROLE_DIR)/deploy_apt_repository/files/ubuntu-repository.tar.gz -C $(CACHE_DIR)/ubuntu-repo .
+	@echo "$(COLOR_GREEN)Packaging repository archive...$(END_COLOR)"
+	@tar --use-compress-program=pigz -cf $(ROLE_DIR)/deploy_apt_repository/files/ubuntu-repository.tar.gz -C $(CACHE_DIR)/ubuntu-repo .
+	@ARCHIVE_SIZE=$$(du -sh $(ROLE_DIR)/deploy_apt_repository/files/ubuntu-repository.tar.gz 2>/dev/null | cut -f1); \
+	echo "$(COLOR_GREEN)Archive created: ubuntu-repository.tar.gz ($$ARCHIVE_SIZE)$(END_COLOR)"
 
 	@echo "$(COLOR_GREEN)Cleaning up temporary files...$(END_COLOR)"
-	rm -rf $(CACHE_DIR)/ubuntu-repo $(CACHE_DIR)/ubuntu-repo-deb-files
+	@rm -rf $(CACHE_DIR)/ubuntu-repo $(CACHE_DIR)/ubuntu-repo-deb-files
 	@$(BORDER)
-	@echo "$(COLOR_GREEN)Ubuntu repository build completed!$(END_COLOR)"
+	@echo "$(COLOR_GREEN)Ubuntu repository build completed successfully!$(END_COLOR)"
+	@$(BORDER)
 
 
 init_builder:
