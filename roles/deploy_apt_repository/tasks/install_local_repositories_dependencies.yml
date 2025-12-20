@@ -1,0 +1,48 @@
+- name: Create temporary directory
+  file:
+    path: "{{ Installer_tmp_directory_path }}"
+    state: directory
+    mode: '0755'
+
+- name: Remove Current Repositories from apt source list file
+  block:
+    - name: Register old sources.list file exist or not
+      stat:
+        path: "{{ apt_sources_list_file_path }}"
+      register: old_sources_list_file
+    - name: This block will be run if sources.list file exists
+      block:
+        - name: Make backup from current sources.list file
+          copy:
+            src: "{{ apt_sources_list_file_path }}"
+            dest: "{{ apt_sources_list_file_path }}.back"
+            remote_src: yes
+
+        - name: Remove Current sources.list file
+          file:
+            path: "{{ apt_sources_list_file_path }}"
+            state: absent
+
+        - name: Create new empty sources.list file
+          file:
+            path: "{{ apt_sources_list_file_path }}"
+            state: touch
+            mode: '0644'
+      when: "old_sources_list_file.stat.exists is defined and old_sources_list_file.stat.exists"
+
+- name: Install APT Repository dependencies
+  block:
+    - name: Copy Dependencies debian packages
+      synchronize:
+        src: "{{ repository_archive_file_source }}/{{ dependencies_repo_archive_file_name }}"
+        dest: "{{ Installer_tmp_directory_path }}/{{ dependencies_repo_archive_file_name }}"
+        compress: yes
+        delete: yes
+        recursive: yes
+
+    - name: Extraxt Dependencies debian packages
+      unarchive:
+        src: "{{ Installer_tmp_directory_path }}/{{ dependencies_repo_archive_file_name }}"
+        dest: "{{ Installer_tmp_directory_path }}"
+        remote_src: yes
+  when: "inventory_hostname == groups['AI'][0]"

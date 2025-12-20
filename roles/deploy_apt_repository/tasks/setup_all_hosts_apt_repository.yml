@@ -1,0 +1,15 @@
+- name: Check sources.list file exist
+  file:
+    path: "{{ apt_sources_list_file_path }}"
+    state: touch
+    mode: '0644'
+
+- name: Setup hosts Apt sources.list
+  lineinfile:
+    dest: "{{ apt_sources_list_file_path }}"
+    regexp: "deb [trusted=yes] http://{{ main_repository_ip_address }} ai main"
+    line: "deb [trusted=yes] http://{{ main_repository_ip_address }} ai main"
+
+- name: Update Apt source list
+  apt:
+    update_cache: yes

@@ -1,0 +1,31 @@
+- name: Deploy APT repository
+  block:
+    - name:  Generate local domains
+      import_tasks: config_hostfile.yml
+
+    - name: Install local repository dependencies
+      import_tasks: install_local_repositories_dependencies.yml
+
+    - name: Deploy local repository on the first hosts
+      import_tasks: deploy_local_apt_repository.yml
+
+    - name: Setup All hosts APT sources list file
+      import_tasks: setup_all_hosts_apt_repository.yml
+  tags: [cluster, simple]
+
+- name: Deploy APT repository on new nodes
+  block:
+    - name: Install local repository dependencies
+      import_tasks: install_local_repositories_dependencies.yml
+
+    - name: Deploy local repository on the first hosts
+      import_tasks: deploy_local_apt_repository.yml
+
+    - name: Setup All hosts APT sources list file
+      import_tasks: setup_all_hosts_apt_repository.yml
+
+
+- name: Setup APT sources list file in the scanner node
+  import_tasks: setup_all_hosts_apt_repository.yml
+
+

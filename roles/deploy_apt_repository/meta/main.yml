@@ -1,0 +1,14 @@
+galaxy_info:
+  author: "APK platform team"
+  description: "Deploy local APT repository on the ai"
+  company: "APK-group.net"
+
+  license: license (GPL-2.0-or-later, MIT, etc)
+
+  min_ansible_version: "2.1"
+
+  galaxy_tags:
+    []
+
+dependencies:
+  []

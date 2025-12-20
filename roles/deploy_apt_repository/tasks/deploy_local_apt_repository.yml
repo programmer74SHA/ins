@@ -1,0 +1,60 @@
+- name: Create temporary directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ Installer_tmp_directory_path }}"
+    - "{{ repository_archive_file_destination }}"
+
+- name: Deploy APT repository
+  block:
+    - name: Prepare and Deploy step
+      block:
+        - name: Copy and compress local APT repository files to destination if different
+          synchronize:
+            src: "{{ repository_archive_file_source }}/{{ repository_archive_file_name }}"
+            dest: "{{ repository_archive_file_destination }}/{{ repository_archive_file_name }}"
+            compress: yes
+            delete: yes
+            recursive: yes
+
+        - name: Create local repository destination path
+          file:
+            path: "{{ local_repository_directory_path }}"
+            state: directory
+            mode: '0755'
+        - name: Extract repository zip files
+          unarchive:
+            src: "{{ repository_archive_file_destination }}/{{ repository_archive_file_name }}"
+            dest: "{{ local_repository_directory_path }}"
+            remote_src: yes
+        - name: config nginx on the hosts
+          template:
+            src: "{{ template_files_source }}/{{ ai_nginx_configuration_template_file_name }}"
+            dest: "{{ ai_nginx_configuration_file_destination }}/{{ ai_nginx_configuration_file_name }}"
+          notify:
+            - Start Nginx
+            - Reload Nginx
+        - name: Make Nginx service available
+          command: systemctl enable --now nginx.service
+        - name: Load Nginx local apt repository configuration
+          command: nginx -s reload
+    - name: Add to source list
+      block:
+        - name: Check sources list file exist
+          file:
+            path: "{{ apt_sources_list_file_path }}"
+            state: touch
+            mode: '0644'
+        - name: Add Local apt source list
+          lineinfile:
+            dest: "{{ apt_sources_list_file_path }}"
+            regexp: "deb [trusted=yes] http://{{ ansible_default_ipv4.address }} ai main"
+            line: "deb [trusted=yes] http://{{ ansible_default_ipv4.address }} ai main"
+  when: "inventory_hostname == groups['AI'][0]"
+
+- name: Register Main repository ip address
+  set_fact:
+    main_repository_ip_address: "{{ hostvars[groups['AI'][0]]['ansible_default_ipv4']['address'] }}"
+    run_once: true

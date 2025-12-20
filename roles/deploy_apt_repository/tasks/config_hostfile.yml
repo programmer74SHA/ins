@@ -1,0 +1,8 @@
+---
+- name: Ensure all inventory hosts are in /etc/hosts with subdomains
+  become: true
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ hostvars[item].ansible_default_ipv4.address }} {{ item }}.{{ top_level_domain }}"
+    state: present
+  with_items: "{{ groups['all'] }}"
