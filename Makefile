@@ -64,11 +64,11 @@ build_repo: init_builder
 
 	@echo "$(COLOR_YELLOW)Downloading .deb packages from ubuntu repository...$(END_COLOR)"
 	@wget -r -np -nd -A "*.deb" -P $(CACHE_DIR)/ubuntu-repo-deb-files \
-		https://repo.apk-group.net/repository/ubuntu/ || echo "Some packages may have failed to download from ubuntu repo"
+		https://repo.apk-group.net/repository/ubuntu/packages/ || echo "Some packages may have failed to download from ubuntu repo"
 
 	@echo "$(COLOR_YELLOW)Downloading .deb packages from ubuntu-security repository...$(END_COLOR)"
 	@wget -r -np -nd -A "*.deb" -P $(CACHE_DIR)/ubuntu-repo-deb-files \
-		https://repo.apk-group.net/repository/ubuntu-security/ || echo "Some packages may have failed to download from ubuntu-security repo"
+		https://repo.apk-group.net/repository/ubuntu-security/packages/ || echo "Some packages may have failed to download from ubuntu-security repo"
 
 	@echo "$(COLOR_GREEN)Creating Ubuntu repository structure...$(END_COLOR)"
 	mkdir -p $(CACHE_DIR)/ubuntu-repo/pool/main
