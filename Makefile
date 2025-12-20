@@ -59,22 +59,51 @@ download_elastic_kibana:
 build_repo: init_builder
 	@$(BORDER)
 	@echo "$(COLOR_GREEN)Building Ubuntu repository from remote sources...$(END_COLOR)"
+	@echo "This target replaces download_deb_packages.sh functionality"
 	rm -rf $(CACHE_DIR)/ubuntu-repo $(CACHE_DIR)/ubuntu-repo-deb-files
 	mkdir -p $(CACHE_DIR)/ubuntu-repo-deb-files
 
+	@$(BORDER)
 	@echo "$(COLOR_YELLOW)Downloading .deb packages from ubuntu repository...$(END_COLOR)"
+	@$(BORDER)
 	@wget -r -np -nd -A "*.deb" -P $(CACHE_DIR)/ubuntu-repo-deb-files \
 		-l 15 --timeout=60 --tries=3 --waitretry=5 -e robots=off \
-		https://repo.apk-group.net/repository/ubuntu/packages/ || echo "Some packages may have failed to download from ubuntu repo"
+		https://repo.apk-group.net/repository/ubuntu/packages/ 2>&1 | tail -1 || echo "Some packages may have failed to download from ubuntu repo"
 
+	@$(BORDER)
 	@echo "$(COLOR_YELLOW)Downloading .deb packages from ubuntu-security repository...$(END_COLOR)"
+	@$(BORDER)
 	@wget -r -np -nd -A "*.deb" -P $(CACHE_DIR)/ubuntu-repo-deb-files \
 		-l 15 --timeout=60 --tries=3 --waitretry=5 -e robots=off \
-		https://repo.apk-group.net/repository/ubuntu-security/packages/ || echo "Some packages may have failed to download from ubuntu-security repo"
+		https://repo.apk-group.net/repository/ubuntu-security/packages/ 2>&1 | tail -1 || echo "Some packages may have failed to download from ubuntu-security repo"
+
+	@# Validate that packages were downloaded
+	@DEB_COUNT=$$(find $(CACHE_DIR)/ubuntu-repo-deb-files -name "*.deb" 2>/dev/null | wc -l); \
+	DEB_SIZE=$$(du -sh $(CACHE_DIR)/ubuntu-repo-deb-files 2>/dev/null | cut -f1); \
+	echo "Total .deb files downloaded: $$DEB_COUNT ($$DEB_SIZE)"; \
+	if [ $$DEB_COUNT -eq 0 ]; then \
+		echo "$(COLOR_YELLOW)========================================$(END_COLOR)"; \
+		echo "$(COLOR_YELLOW)WARNING: No packages were downloaded!$(END_COLOR)"; \
+		echo "$(COLOR_YELLOW)========================================$(END_COLOR)"; \
+		echo ""; \
+		echo "Possible causes:"; \
+		echo "  1. Repository URL is not accessible from this network"; \
+		echo "  2. DNS resolution failed for repo.apk-group.net"; \
+		echo "  3. GitLab runner needs VPN or network access"; \
+		echo "  4. Repository requires authentication"; \
+		echo ""; \
+		echo "Solutions:"; \
+		echo "  1. Ensure GitLab runner has network access to repo.apk-group.net"; \
+		echo "  2. Configure DNS to resolve repo.apk-group.net"; \
+		echo "  3. Use a different repository URL"; \
+		echo "  4. Pre-populate packages manually"; \
+		echo ""; \
+		exit 1; \
+	fi
 
 	@echo "$(COLOR_GREEN)Creating Ubuntu repository structure...$(END_COLOR)"
 	mkdir -p $(CACHE_DIR)/ubuntu-repo/pool/main
-	cp -v $(CACHE_DIR)/ubuntu-repo-deb-files/*.deb $(CACHE_DIR)/ubuntu-repo/pool/main/ 2>/dev/null || echo "No packages downloaded"
+	cp -v $(CACHE_DIR)/ubuntu-repo-deb-files/*.deb $(CACHE_DIR)/ubuntu-repo/pool/main/
 
 	@echo "$(COLOR_GREEN)Generating Packages index...$(END_COLOR)"
 	cd $(CACHE_DIR)/ubuntu-repo && dpkg-scanpackages pool/main /dev/null | gzip -9c > pool/main/Packages.gz

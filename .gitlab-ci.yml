@@ -1,0 +1,161 @@
+---
+# GitLab CI/CD Configuration for AI Installer
+# This pipeline builds the AI installer package with all dependencies
+
+variables:
+  # Temporary directory for builds (set by GitLab runner)
+  tmp_path: "/tmp/ai_installer/$CI_COMMIT_TAG"
+  # Make target to execute (build_repo, download, etc.)
+  MakeTarget: "build_repo"
+
+stages:
+  - build
+  - test
+  - package
+  - deploy
+
+# Build repository with .deb packages
+build_repository:
+  stage: build
+  tags:
+    - shell  # Requires shell executor
+  before_script:
+    # Validate network access to repository
+    - echo "Checking network access to repository..."
+    - |
+      if ! curl -s -I https://repo.apk-group.net/repository/ubuntu/packages/ | grep -q "200 OK"; then
+        echo "WARNING: Cannot access repo.apk-group.net"
+        echo "Please ensure:"
+        echo "  1. GitLab runner has network access to repo.apk-group.net"
+        echo "  2. DNS is configured to resolve repo.apk-group.net"
+        echo "  3. VPN is connected if required"
+        echo "  4. Firewall allows access to the repository"
+        echo ""
+        echo "You can test access with: curl -I https://repo.apk-group.net/repository/ubuntu/packages/"
+        exit 1
+      fi
+
+    # Create temporary build directory
+    - mkdir -p "$tmp_path"
+
+    # Verify required tools are installed
+    - echo "Verifying required tools..."
+    - command -v wget || (echo "ERROR: wget not installed" && exit 1)
+    - command -v dpkg-scanpackages || (echo "ERROR: dpkg-dev not installed" && exit 1)
+    - command -v pigz || (echo "ERROR: pigz not installed" && exit 1)
+    - command -v tar || (echo "ERROR: tar not installed" && exit 1)
+
+  script:
+    - echo "Running make file with $MakeTarget target"
+    - make -C "$tmp_path" "$MakeTarget"
+
+  artifacts:
+    paths:
+      - roles/deploy_apt_repository/files/ubuntu-repository.tar.gz
+    expire_in: 1 week
+
+  only:
+    - tags
+    - main
+    - develop
+    - /^claude\/.*$/  # Allow builds on claude/ branches
+
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+
+# Download Docker images (Elasticsearch and Kibana)
+download_images:
+  stage: build
+  tags:
+    - shell
+  variables:
+    MakeTarget: "download"
+
+  before_script:
+    - mkdir -p "$tmp_path"
+    - command -v skopeo || (echo "ERROR: skopeo not installed" && exit 1)
+
+  script:
+    - echo "Downloading Docker images..."
+    - make -C "$tmp_path" download
+
+  artifacts:
+    paths:
+      - roles/deploy_elastic_kibana/files/elasticsearch.tar.gz
+      - roles/deploy_elastic_kibana/files/kibana.tar.gz
+    expire_in: 1 week
+
+  only:
+    - tags
+    - main
+    - develop
+    - /^claude\/.*$/
+
+# Package the installer
+package_installer:
+  stage: package
+  tags:
+    - shell
+
+  dependencies:
+    - build_repository
+    - download_images
+
+  before_script:
+    - mkdir -p "$tmp_path/build"
+
+  script:
+    - echo "Packaging AI installer version $CI_COMMIT_TAG"
+    - make -C "$tmp_path" package
+
+  artifacts:
+    paths:
+      - build/ai_*.tar.gz
+    expire_in: 1 month
+
+  only:
+    - tags
+
+# Verify build artifacts
+verify_build:
+  stage: test
+  tags:
+    - shell
+
+  dependencies:
+    - build_repository
+    - download_images
+
+  script:
+    - echo "Verifying build artifacts..."
+    - make -C "$tmp_path" verify
+
+  only:
+    - tags
+    - main
+    - develop
+    - /^claude\/.*$/
+
+# Deploy/Upload the package
+deploy_package:
+  stage: deploy
+  tags:
+    - shell
+
+  dependencies:
+    - package_installer
+
+  before_script:
+    - test -f ./upload.sh || (echo "ERROR: upload.sh not found" && exit 1)
+
+  script:
+    - echo "Uploading AI installer version $CI_COMMIT_TAG"
+    - make -C "$tmp_path" upload
+
+  only:
+    - tags
+
+  when: manual  # Require manual trigger for deployments
