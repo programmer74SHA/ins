@@ -1,0 +1,6 @@
+---
+# Default variables for deploy_apt_repository role
+
+# Top-level domain to use for /etc/hosts entries
+# This creates entries like: <ip> <hostname>.<top_level_domain>
+top_level_domain: "local"
