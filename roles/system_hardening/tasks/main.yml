@@ -13,17 +13,3 @@
   tags:
     - fail2ban
     - hardening
-
-- name: Include GRUB hardening tasks
-  ansible.builtin.include_tasks: grub_hardening.yml
-  tags:
-    - grub
-    - hardening
-
-- name: Include lshell installation and configuration tasks
-  ansible.builtin.include_tasks: lshell.yml
-  when: lshell_enabled
-  tags:
-    - lshell
-    - hardening
-    - shell

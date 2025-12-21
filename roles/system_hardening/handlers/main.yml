@@ -12,13 +12,3 @@
     name: fail2ban
     state: restarted
   listen: Restart fail2ban
-
-- name: Update GRUB
-  ansible.builtin.command: update-grub
-  listen: Update GRUB
-  when: ansible_os_family == "Debian"
-
-- name: Update GRUB (RHEL)
-  ansible.builtin.command: grub2-mkconfig -o /boot/grub2/grub.cfg
-  listen: Update GRUB
-  when: ansible_os_family == "RedHat"

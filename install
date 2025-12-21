@@ -1,0 +1,230 @@
+#!/bin/bash
+set -e
+AI_VERSION=0.0.1
+INSTALLER_TMP_PATH="/var/ai/tmp/installer"
+LOCAL_REPOSITORY_DESTINATION_PATH="$INSTALLER_TMP_PATH/repository"
+INSTALLER_PATH=$(pwd)
+INVENTORY_FILE_NAME="inventory.yml"
+SSH_KEY_PATH="$HOME/.ssh/id_rsa"
+LOCAL_REPOSITORY_ARCHIVE_FILE_PATH="roles/deploy_apt_repository/files"
+LOCAL_REPOSITORY_ARCHIVE_FILE_NAME="ubuntu-repository.tar.gz"
+LOCAL_REPOSITORY_DIRECTORY_NAME="pool/main"
+
+function RedLinePrinter() {
+    echo -e "\033[31;40m $1 \033[0m"
+}
+
+function YellowLinePrinter() {
+    echo -e "\033[7;49;93m $1 \033[0m"
+}
+
+function GreenLinePrinter() {
+    echo -e "\033[32;40m $1 \033[0m"
+}
+
+function separator() {
+    echo -e '\033[36;40m ******************************************************************\033[0m'
+}
+
+function PStatus() {
+    if [ $? == 0 ]; then
+        echo -e '\033[32;40m ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ \033[0m'
+        echo -e "\033[32;40m $1 \033[0m"
+        echo -e '\033[32;40m ============================================ \033[0m'
+    else
+        echo -e '\033[31;40m ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ \033[0m'
+        echo -e "\033[31;40m !!!!!!!!______ $2 ______!!!!!!! \033[0m"
+        echo -e '\033[31;40m ============================================ \033[0m'
+        exit 1
+    fi
+}
+
+if [[ $EUID -ne 0 ]]; then
+    RedLinePrinter "This installer must be run as root"
+    exit 1
+fi
+
+function Helper() {
+    GreenLinePrinter "Now you can configure your Ansible and START it to install AI V$AI_VERSION"
+}
+
+function START() {
+    GreenLinePrinter "START process ......"
+    separator
+}
+
+function CreateDirectory() {
+    DirectoryPath=$1
+    mkdir -p $DirectoryPath
+    PStatus "Directory was created" "Failed to create $DirectoryPath"
+    chmod 0755 $DirectoryPath
+    PStatus "Permission Configured" "Failed to set permission on $DirectoryPath"
+}
+
+function COPY_REPOSITORY_ARCHIVE_FILE() {
+    YellowLinePrinter "Prepare Dependencies..."
+    CreateDirectory $INSTALLER_TMP_PATH
+    CreateDirectory $LOCAL_REPOSITORY_DESTINATION_PATH
+    
+    # Check if archive file exists
+    if [ ! -f "${INSTALLER_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_NAME}" ]; then
+        RedLinePrinter "ERROR: Repository archive not found at ${INSTALLER_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_NAME}"
+        exit 1
+    fi
+    
+    cp ${INSTALLER_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_NAME} ${LOCAL_REPOSITORY_DESTINATION_PATH}
+    PStatus "Local repository archive copied" "Failed to copy repository file"
+    separator
+    YellowLinePrinter "Extract local Repository"
+    tar -xzf ${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_NAME} -C ${LOCAL_REPOSITORY_DESTINATION_PATH}
+    PStatus "Local repository archive extracted" "Failed to extract local repository archive"
+    separator
+}
+
+function INSTALL_ANSIBLE_DEPENDENCIES() {
+    YellowLinePrinter "Install Dependencies"
+    
+    # Check if .deb files exist
+    DEB_COUNT=$(find ${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_DIRECTORY_NAME} -name "*.deb" 2>/dev/null | wc -l)
+    if [ $DEB_COUNT -eq 0 ]; then
+        RedLinePrinter "ERROR: No .deb packages found in ${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_DIRECTORY_NAME}"
+        exit 1
+    fi
+    
+    GreenLinePrinter "Found $DEB_COUNT .deb packages to install"
+    
+    # Clear existing sources
+    echo "" >/etc/apt/sources.list
+    
+    # Install only .deb files (not Packages or Packages.gz)
+    apt-get install -y ${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_DIRECTORY_NAME}/*.deb
+    PStatus "Dependencies Installed" "Failed to install Dependencies"
+    separator
+}
+
+function FINISH() {
+    GreenLinePrinter "FINISH process ..."
+    Helper
+}
+
+function COPY_SSH_ID() {
+    YellowLinePrinter "Copy ssh key to destination hosts"
+    while IFS= read -r line; do
+        if [[ -z "$line" || $line == \#* ]]; then
+            continue
+        fi
+        if [[ $line == \[* ]]; then
+            continue
+        fi
+        HOST=$(echo $line | grep -oP 'ansible_host=\K\S+')
+        USERNAME=$(echo $line | grep -oP 'ansible_user=\K\S+')
+        PASSWORD=$(echo $line | grep -oP 'ansible_ssh_pass=\K\S+' | tr -d \'\")
+        
+        if [[ -z "$HOST" || $HOST == "localhost" ]]; then
+            continue
+        fi
+        
+        GreenLinePrinter "Copying SSH key to $USERNAME@$HOST"
+        sshpass -p $PASSWORD ssh-copy-id -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa.pub "$USERNAME@$HOST"
+        SetupPythonModule $USERNAME $HOST &
+    done <"$INVENTORY_FILE_NAME"
+    wait
+    separator
+}
+
+function SetupPythonModule() {
+    local USERNAME=$1
+    local HOST=$2
+    local LOG_FILE="/var/log/$HOST.log"
+    
+    YellowLinePrinter "Setting up Python modules on $HOST..."
+    
+    ssh $USERNAME@$HOST "mkdir -p ${LOCAL_REPOSITORY_DESTINATION_PATH}" < /dev/null 2>&1 | tee -a $LOG_FILE
+    
+    scp ${INSTALLER_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_NAME} $USERNAME@$HOST:${LOCAL_REPOSITORY_DESTINATION_PATH}/ < /dev/null 2>&1 | tee -a $LOG_FILE
+    
+    ssh $USERNAME@$HOST "echo '' > /etc/apt/sources.list" < /dev/null 2>&1 | tee -a $LOG_FILE
+    
+    ssh $USERNAME@$HOST "tar -xzf ${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_NAME} -C ${LOCAL_REPOSITORY_DESTINATION_PATH}" < /dev/null 2>&1 | tee -a $LOG_FILE
+    
+    # Install only .deb files on remote host
+    ssh $USERNAME@$HOST "apt-get install -y ${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_DIRECTORY_NAME}/*.deb" < /dev/null 2>&1 | tee -a $LOG_FILE
+    
+    GreenLinePrinter "Python modules setup completed on $HOST"
+}
+
+function CREATE_SSH_KEY() {
+    YellowLinePrinter "Creating SSH key"
+    : "${SSH_KEY_PATH:=$HOME/.ssh/id_rsa}"
+    
+    if [ -f "$SSH_KEY_PATH" ]; then
+        YellowLinePrinter "SSH key already exists at $SSH_KEY_PATH"
+        read -p "Do you want to overwrite it? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            GreenLinePrinter "Keeping existing SSH key"
+            separator
+            return
+        fi
+        rm -f "$SSH_KEY_PATH" "$SSH_KEY_PATH.pub"
+    fi
+    
+    ssh-keygen -t rsa -b 4096 -f "$SSH_KEY_PATH" -N ''
+    PStatus "SSH key created" "Failed to create SSH key"
+    separator
+}
+
+function CheckHostsAvailability() {
+    YellowLinePrinter "Checking hosts availability..."
+    local all_hosts_available=true
+
+    while IFS= read -r line; do
+        if [[ -z "$line" || $line == \#* ]]; then
+            continue
+        fi
+        if [[ $line == \[* ]]; then
+            continue
+        fi
+        HOST=$(echo "$line" | grep -oP 'ansible_host=\K\S+')
+        USER=$(echo "$line" | grep -oP 'ansible_user=\K\S+')
+        PASS=$(echo "$line" | grep -oP 'ansible_ssh_pass=\K\S+' | tr -d \'\")
+        CONNECTION=$(echo "$line" | grep -oP 'ansible_connection=\K\S+')
+
+        if [[ -z "$HOST" || "$HOST" == "localhost" ]]; then
+            continue
+        fi
+
+        if [[ "$CONNECTION" == "local" ]]; then
+            GreenLinePrinter "Skipping local connection for $HOST"
+            continue
+        fi
+
+        YellowLinePrinter "Checking connectivity to $HOST as $USER..."
+        if sshpass -p "$PASS" ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no "$USER@$HOST" echo ok >/dev/null 2>&1; then
+            GreenLinePrinter "$HOST is reachable."
+        else
+            RedLinePrinter "ERROR: $HOST is unreachable."
+            all_hosts_available=false
+        fi
+    done < "$INVENTORY_FILE_NAME"
+
+    if ! $all_hosts_available; then
+        RedLinePrinter "One or more hosts are unreachable. Exiting."
+        exit 1
+    else
+        GreenLinePrinter "All hosts are reachable. Proceeding..."
+    fi
+    separator
+}
+
+function MAIN() {
+    START
+    COPY_REPOSITORY_ARCHIVE_FILE
+    INSTALL_ANSIBLE_DEPENDENCIES
+    CheckHostsAvailability
+    CREATE_SSH_KEY
+    COPY_SSH_ID
+    FINISH
+}
+
+MAIN

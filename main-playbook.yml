@@ -3,9 +3,10 @@
   gather_facts: yes
   roles:
     # - pre_checks
-    # - install_dependencies
-    # - install_nvidia_gpu_driver
-    - deploy_elastic_kibana
-    # - deploy_soar_platform
-    # - system_hardening
+    - deploy_apt_repository
+    - install_dependencies
+    #- install_nvidia_gpu_driver
+    #- deploy_elastic_kibana
+    #- deploy_soar_platform
+    #- system_hardening
     # - os_hardening

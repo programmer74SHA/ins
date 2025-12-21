@@ -8,7 +8,7 @@
 
 - name: Deploy SSH banner
   ansible.builtin.copy:
-    src: siem_sshd_banner
+    src: ai_sshd_banner
     dest: "{{ ssh_banner_path }}"
     owner: root
     group: root

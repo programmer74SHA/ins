@@ -25,7 +25,7 @@ soar_license_key: "ct3+bAHhAynI7JDy/bqsPAMNeSt+4eICNJau92cBRv4ZuJL1YJjjWCoBw0Gt6
 
 # Timezone and host configuration
 soar_timezone: "Asia/Tehran"
-soar_host: "200.200.201.253"
+soar_host: "172.25.7.99"
 
 # ApkGatev5 node configuration
 soar_enable_apkgatev5_node: "no"

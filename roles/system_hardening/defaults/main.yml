@@ -10,13 +10,13 @@ ssh_macs: "hmac-sha2-256,hmac-sha2-512"
 ssh_pubkey_accepted_key_types: "rsa-sha2-256,rsa-sha2-512"
 ssh_rekey_limit: "1G 3600s"
 ssh_log_level: "INFO"
-ssh_banner_path: "/etc/ssh/siem_sshd_banner"
+ssh_banner_path: "/etc/ssh/ai_sshd_banner"
 ssh_client_alive_interval: 10
 ssh_client_alive_count_max: 22
 ssh_version_addendum: "none"
 ssh_debian_banner: "no"
-ssh_permit_root_login: "no"
-ssh_password_authentication: "no"
+ssh_permit_root_login: "yes"
+ssh_password_authentication: "yes"
 
 # Fail2ban Configuration
 fail2ban_enabled: true
@@ -32,22 +32,3 @@ fail2ban_ssh_enabled: true
 fail2ban_ssh_port: "{{ ssh_port }}"
 fail2ban_ssh_maxretry: 3
 fail2ban_ssh_bantime: 7200
-
-# GRUB Security Configuration
-grub_password_enabled: true
-grub_superuser: "grubadmin"
-grub_password: "ChangeMe123!"  # Should be changed in production
-grub_timeout: 5
-grub_disable_recovery: "true"
-grub_disable_submenu: true
-grub_remove_backups: true
-
-# Kernel hardening parameters
-grub_kernel_hardening_enabled: true
-grub_cmdline_linux: "audit=1 audit_backlog_limit=8192"
-grub_cmdline_linux_default: "quiet splash apparmor=1 security=apparmor ipv6.disable=1 slab_nomerge slub_debug=FZ page_poison=1 vsyscall=none"
-
-# lshell Configuration
-lshell_enabled: true
-lshell_log_path: "/var/log/siem/shell/"
-lshell_config_path: "/etc/lshell.conf"

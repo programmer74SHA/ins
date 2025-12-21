@@ -1,7 +1,0 @@
----
-# ELK Stack handlers
-
-- name: Restart ELK stack
-  community.docker.docker_compose_v2:
-    project_src: "{{ elk_deploy_dir }}"
-    state: restarted
