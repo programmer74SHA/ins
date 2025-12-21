@@ -1,0 +1,105 @@
+{
+  "description": "Local APT repository package list for AI infrastructure deployment",
+  "version": "1.0.0",
+  "packages": {
+    "essential": [
+      "apt-transport-https",
+      "ca-certificates",
+      "software-properties-common",
+      "build-essential",
+      "curl",
+      "wget",
+      "git",
+      "vim",
+      "nano",
+      "tar",
+      "gzip",
+      "unzip",
+      "zip",
+      "tree",
+      "jq",
+      "gnupg",
+      "lsb-release"
+    ],
+    "development": [
+      "python3",
+      "python3-pip",
+      "python3-dev",
+      "python3-venv"
+    ],
+    "network": [
+      "net-tools",
+      "iputils-ping",
+      "traceroute",
+      "nmap"
+    ],
+    "monitoring": [
+      "htop",
+      "iotop",
+      "sysstat",
+      "lsof",
+      "tcpdump"
+    ],
+    "security": [
+      "ufw",
+      "fail2ban"
+    ],
+    "docker": [
+      "docker-ce",
+      "docker-ce-cli",
+      "containerd.io",
+      "docker-buildx-plugin",
+      "docker-compose-plugin"
+    ],
+    "nvidia_gpu": [
+      "ubuntu-drivers-common",
+      "nvidia-driver-550",
+      "nvidia-driver-550-server",
+      "nvidia-driver-560",
+      "nvidia-driver-560-open",
+      "nvidia-driver-565",
+      "nvidia-driver-565-open",
+      "nvidia-driver-570",
+      "nvidia-driver-570-open",
+      "nvidia-driver-580",
+      "nvidia-driver-580-open",
+      "nvidia-utils-550",
+      "nvidia-utils-550-server",
+      "nvidia-utils-560",
+      "nvidia-utils-565",
+      "nvidia-utils-570",
+      "nvidia-utils-580",
+      "nvidia-cuda-toolkit"
+    ],
+    "repository_infrastructure": [
+      "nginx",
+      "nginx-common",
+      "nginx-core",
+      "dpkg-dev",
+      "pigz"
+    ]
+  },
+  "package_groups": {
+    "base_system": [
+      "essential",
+      "development",
+      "network",
+      "monitoring",
+      "security"
+    ],
+    "container_platform": [
+      "docker"
+    ],
+    "gpu_support": [
+      "nvidia_gpu"
+    ],
+    "local_repository": [
+      "repository_infrastructure"
+    ]
+  },
+  "notes": {
+    "docker": "Docker packages require Docker GPG key and repository to be configured",
+    "nvidia": "NVIDIA driver versions should match available packages. Multiple versions included for compatibility",
+    "repository": "These packages are needed to host and manage the local APT repository"
+  }
+}
