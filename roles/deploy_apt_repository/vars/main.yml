@@ -13,4 +13,4 @@ ai_nginx_configuration_template_file_name: "ai_repository.conf.j2"
 ai_nginx_configuration_file_name: "main.conf"
 template_files_source: 'templates'
 apt_sources_list_file_path: '/etc/apt/sources.list'
-main_repository_ip_address: "{{ hostvars[groups['AI'][0]]['ansible_default_ipv4']['address'] }}"
+main_repository_ip_address: "{{ hostvars[groups['servers'][0]]['ansible_default_ipv4']['address'] }}"
