@@ -36,7 +36,7 @@ KIBANA_VERSION=8.15.5
 
 PACKAGE_NAME := ai_$(ai_version)_$(shell date +%Y%m%d%H)
 
-build:  clean clean_all update_version download build_repo package upload
+build:  clean clean_all update_version download build_ansible_repo build_repo package upload
 
 init:
 	@$(BORDER)
@@ -101,14 +101,11 @@ build_ansible_repo: init_builder
 		echo "Skip build $(APT_ANSIBLE_REPOSITORY_JSON_FILE). Repository Already exists"; \
 	else \
 		sed -i "s@.*repository_path[[:space:]]*:.*@repository_path: $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/@g" $(REPO_BUILDER_CONFIG); \
-		rm -rf $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/ansible-depends $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/*.tar.gz $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/source; \
-		mkdir -p $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/ansible-depends $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/source; \
-		.cache/repo_builder/package-builder -c $(REPO_BUILDER_CONFIG) build -i $(APT_ANSIBLE_REPOSITORY_JSON_FILE); \
-		tar --use-compress-program=pigz -xf $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/*.tar.gz -C $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/ansible-depends; \
-		find $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/ansible-depends -name "*.deb" -exec mv {} $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/source \;; \
+		test -f $(APT_ANSIBLE_REPOSITORY_JSON_FILE) || { echo "Error: $(APT_ANSIBLE_REPOSITORY_JSON_FILE) not found"; exit 1; }; \
+		.cache/repo_builder/package-builder -c $(REPO_BUILDER_CONFIG) build -i $(APT_ANSIBLE_REPOSITORY_JSON_FILE) || { echo "package-builder failed"; exit 1; }; \
 	fi
-
-	tar --use-compress-program=pigz -cf $(ROLE_DIR)/deploy_apt_repository/files/localrepository.tar.gz -C $(APT_ANSIBLE_REPOSITORY_CACHE_PATH) source
+	@test -f $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/*.tar.gz || { echo "Error: No tar.gz found in ansible cache"; exit 1; }
+	cp -rf $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/*.tar.gz $(ROLE_DIR)/deploy_apt_repository/files/localrepository.tar.gz
 
 build_repo: init_builder
 	@$(BORDER)
