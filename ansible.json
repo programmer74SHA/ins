@@ -6,16 +6,13 @@
   "base_system": {
     "repositories": [
       {
-        "url": "deb [trusted=true] https://repo.apk-group.net/repository/ubuntu $(lsb_release -cs) main"
+        "url": "deb https://repo.apk-group.net/repository/ubuntu/ noble main"
       },
       {
-        "url": "deb [trusted=true] https://repo.apk-group.net/repository/ubuntu $(lsb_release -cs)-updates main"
+        "url": "deb https://repo.apk-group.net/repository/ubuntu-security/ noble-security main"
       },
       {
-        "url": "deb [trusted=true] https://repo.apk-group.net/repository/ubuntu-security $(lsb_release -cs)-security main"
-      },
-      {
-        "url": "deb [trusted=true] https://repo.apk-group.net/repository/docker-ubuntu $(lsb_release -cs) stable"
+        "url": "deb https://repo.apk-group.net/repository/docker-ubuntu/ noble stable"
       }
     ]
   },

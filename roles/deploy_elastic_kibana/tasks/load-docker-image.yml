@@ -1,6 +1,6 @@
-- name: Create /var/cache/siem directory on remote hosts
+- name: Create /var/cache/ai directory on remote hosts
   file:
-    path: /var/cache/siem
+    path: /var/cache/ai
     state: directory
     owner: "1000"
     group: "1000"
@@ -9,7 +9,7 @@
 - name: Copy Docker image
   synchronize:
     src: files/elasticsearch.tar.gz
-    dest: /var/cache/siem/elasticsearch.tar.gz
+    dest: /var/cache/ai/elasticsearch.tar.gz
 
 - name: Check if image already exists
   command: docker images -q {{ elasticsearch_docker_image }}:{{ es_version }}
@@ -17,7 +17,7 @@
   changed_when: false
 
 - name: Load Docker image from tar.gz
-  command: docker load -i /var/cache/siem/elasticsearch.tar.gz
+  command: docker load -i /var/cache/ai/elasticsearch.tar.gz
   register: docker_load_result
   changed_when: "'Loaded image' in docker_load_result.stderr or 'Loaded image' in docker_load_result.stdout"
   when: existing_image.stdout == ""

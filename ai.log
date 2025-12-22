@@ -1,0 +1,466 @@
+2025-12-22 13:46:48,322 p=2255836 u=root n=ansible INFO| PLAY [APK AI Infrastructure Installer] ******************************************************************************
+2025-12-22 13:46:48,339 p=2255836 u=root n=ansible INFO| TASK [Gathering Facts] **********************************************************************************************
+2025-12-22 13:46:51,009 p=2255836 u=root n=ansible ERROR| [ERROR]: User interrupted execution
+
+2025-12-22 13:47:05,544 p=2256320 u=root n=ansible INFO| PLAY [APK AI Infrastructure Installer] ******************************************************************************
+2025-12-22 13:47:05,555 p=2256320 u=root n=ansible INFO| TASK [Gathering Facts] **********************************************************************************************
+2025-12-22 13:47:08,080 p=2256320 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:47:08,089 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Update apt cache] **********************************************************************
+2025-12-22 13:47:09,126 p=2256320 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:47:09,141 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Upgrade all packages to the latest version] ********************************************
+2025-12-22 13:47:09,235 p=2256320 u=root n=ansible INFO| skipping: [ai-server-01]
+2025-12-22 13:47:09,239 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Install essential system packages] *****************************************************
+2025-12-22 13:47:10,810 p=2256320 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:47:10,824 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Install development tools] *************************************************************
+2025-12-22 13:47:11,931 p=2256320 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:47:11,945 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Install network tools] *****************************************************************
+2025-12-22 13:47:12,886 p=2256320 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:47:12,895 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Install monitoring and system tools] ***************************************************
+2025-12-22 13:47:13,851 p=2256320 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:47:13,865 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Install security tools] ****************************************************************
+2025-12-22 13:47:14,982 p=2256320 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:47:14,996 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Install prerequisites for Docker] ******************************************************
+2025-12-22 13:47:16,186 p=2256320 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:47:16,199 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Install Docker packages] ***************************************************************
+2025-12-22 13:47:17,771 p=2256320 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:47:17,775 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Ensure Docker service is started and enabled] ******************************************
+2025-12-22 13:47:19,370 p=2256320 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:47:19,382 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Add users to docker group] *************************************************************
+2025-12-22 13:47:19,415 p=2256320 u=root n=ansible INFO| skipping: [ai-server-01]
+2025-12-22 13:47:19,421 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Install Docker Compose (standalone - optional)] ****************************************
+2025-12-22 13:47:19,480 p=2256320 u=root n=ansible INFO| skipping: [ai-server-01]
+2025-12-22 13:47:19,490 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Create Docker daemon configuration] ****************************************************
+2025-12-22 13:47:21,166 p=2256320 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:47:21,185 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Verify Docker installation] ************************************************************
+2025-12-22 13:47:22,129 p=2256320 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:47:22,148 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Display Docker version] ****************************************************************
+2025-12-22 13:47:22,186 p=2256320 u=root n=ansible INFO| ok: [ai-server-01] => {
+    "msg": "Docker installed: Docker version 29.1.3, build f52814d"
+}
+2025-12-22 13:47:22,190 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Verify Docker Compose installation] ****************************************************
+2025-12-22 13:47:23,083 p=2256320 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:47:23,087 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Display Docker Compose version] ********************************************************
+2025-12-22 13:47:23,108 p=2256320 u=root n=ansible INFO| ok: [ai-server-01] => {
+    "msg": "Docker Compose installed: Docker Compose version v5.0.0"
+}
+2025-12-22 13:47:23,112 p=2256320 u=root n=ansible INFO| TASK [install_dependencies : Clean up apt cache] ********************************************************************
+2025-12-22 13:47:24,216 p=2256320 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:47:24,225 p=2256320 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Ensure deployment directory exists] ***************************************************
+2025-12-22 13:47:24,893 p=2256320 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 13:47:24,899 p=2256320 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Ensure certs directory exists] ********************************************************
+2025-12-22 13:47:25,786 p=2256320 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 13:47:25,802 p=2256320 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Copy certificate generation script] ***************************************************
+2025-12-22 13:47:27,385 p=2256320 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 13:47:27,393 p=2256320 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Copy indices setup script] ************************************************************
+2025-12-22 13:47:28,890 p=2256320 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 13:47:28,895 p=2256320 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Generate certificates for customer] ***************************************************
+2025-12-22 13:47:30,136 p=2256320 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 13:47:30,141 p=2256320 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Display certificate generation output] ************************************************
+2025-12-22 13:47:30,167 p=2256320 u=root n=ansible INFO| ok: [ai-server-01] => {
+    "cert_generation.stdout_lines": [
+        "TLS certificate generated for customer: APK",
+        "Files saved in: ./certs/APK",
+        " - Key: ./certs/APK/key.pem",
+        " - CSR: ./certs/APK/csr.pem",
+        " - Certificate: ./certs/APK/cert.pem"
+    ]
+}
+2025-12-22 13:47:30,172 p=2256320 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Create docker network] ****************************************************************
+2025-12-22 13:47:31,565 p=2256320 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:47:31,575 p=2256320 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Template docker-compose file] *********************************************************
+2025-12-22 13:47:33,128 p=2256320 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 13:47:33,132 p=2256320 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Template .env file] *******************************************************************
+2025-12-22 13:47:34,676 p=2256320 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 13:47:34,689 p=2256320 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Load elasticsearch docker image] ******************************************************
+2025-12-22 13:47:34,742 p=2256320 u=root n=ansible INFO| included: /data/develop/ai/gitlab/installer/roles/deploy_elastic_kibana/tasks/load-docker-image.yml for ai-server-01
+2025-12-22 13:47:34,745 p=2256320 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Create /var/cache/siem directory on remote hosts] *************************************
+2025-12-22 13:47:35,382 p=2256320 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 13:47:35,390 p=2256320 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Copy Docker image] ********************************************************************
+2025-12-22 13:47:36,505 p=2256320 u=root n=ansible ERROR| [ERROR]: Task failed: Module failed: Warning: Permanently added '192.168.166.62' (ED25519) to the list of known hosts.
+rsync: [sender] change_dir "/data/develop/ai/gitlab/installer/files" failed: No such file or directory (2)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.4.1]
+
+Origin: /data/develop/ai/gitlab/installer/roles/deploy_elastic_kibana/tasks/load-docker-image.yml:9:3
+
+7     mode: "0755"
+8
+9 - name: Copy Docker image
+    ^ column 3
+
+
+2025-12-22 13:47:36,506 p=2256320 u=root n=ansible INFO| fatal: [ai-server-01]: FAILED! => {"changed": false, "cmd": "/usr/bin/rsync --delay-updates -F --compress --archive --rsh='/usr/bin/ssh -S none -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' --rsync-path='sudo -u root rsync' --out-format='<<CHANGED>>%i %n%L' /data/develop/ai/gitlab/installer/files/elasticsearch.tar.gz root@192.168.166.62:/var/cache/siem/elasticsearch.tar.gz", "msg": "Warning: Permanently added '192.168.166.62' (ED25519) to the list of known hosts.\r\nrsync: [sender] change_dir \"/data/develop/ai/gitlab/installer/files\" failed: No such file or directory (2)\nrsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.4.1]\n", "rc": 23}
+2025-12-22 13:47:36,507 p=2256320 u=root n=ansible INFO| PLAY RECAP **********************************************************************************************************
+2025-12-22 13:47:36,507 p=2256320 u=root n=ansible INFO| ai-server-01               : ok=27   changed=8    unreachable=0    failed=1    skipped=3    rescued=0    ignored=0   
+2025-12-22 13:50:57,321 p=2262947 u=root n=ansible INFO| PLAY [APK AI Infrastructure Installer] ******************************************************************************
+2025-12-22 13:50:57,333 p=2262947 u=root n=ansible INFO| TASK [Gathering Facts] **********************************************************************************************
+2025-12-22 13:51:00,587 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:00,591 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Update apt cache] **********************************************************************
+2025-12-22 13:51:01,768 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:01,773 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Upgrade all packages to the latest version] ********************************************
+2025-12-22 13:51:01,828 p=2262947 u=root n=ansible INFO| skipping: [ai-server-01]
+2025-12-22 13:51:01,832 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Install essential system packages] *****************************************************
+2025-12-22 13:51:03,433 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:03,447 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Install development tools] *************************************************************
+2025-12-22 13:51:04,435 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:04,448 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Install network tools] *****************************************************************
+2025-12-22 13:51:06,461 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:06,465 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Install monitoring and system tools] ***************************************************
+2025-12-22 13:51:07,513 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:07,525 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Install security tools] ****************************************************************
+2025-12-22 13:51:08,549 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:08,562 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Install prerequisites for Docker] ******************************************************
+2025-12-22 13:51:09,457 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:09,461 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Install Docker packages] ***************************************************************
+2025-12-22 13:51:10,782 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:10,795 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Ensure Docker service is started and enabled] ******************************************
+2025-12-22 13:51:12,377 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:12,382 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Add users to docker group] *************************************************************
+2025-12-22 13:51:12,394 p=2262947 u=root n=ansible INFO| skipping: [ai-server-01]
+2025-12-22 13:51:12,399 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Install Docker Compose (standalone - optional)] ****************************************
+2025-12-22 13:51:12,454 p=2262947 u=root n=ansible INFO| skipping: [ai-server-01]
+2025-12-22 13:51:12,459 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Create Docker daemon configuration] ****************************************************
+2025-12-22 13:51:14,293 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:14,308 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Verify Docker installation] ************************************************************
+2025-12-22 13:51:15,273 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:15,279 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Display Docker version] ****************************************************************
+2025-12-22 13:51:15,301 p=2262947 u=root n=ansible INFO| ok: [ai-server-01] => {
+    "msg": "Docker installed: Docker version 29.1.3, build f52814d"
+}
+2025-12-22 13:51:15,304 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Verify Docker Compose installation] ****************************************************
+2025-12-22 13:51:16,144 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:16,157 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Display Docker Compose version] ********************************************************
+2025-12-22 13:51:16,196 p=2262947 u=root n=ansible INFO| ok: [ai-server-01] => {
+    "msg": "Docker Compose installed: Docker Compose version v5.0.0"
+}
+2025-12-22 13:51:16,201 p=2262947 u=root n=ansible INFO| TASK [install_dependencies : Clean up apt cache] ********************************************************************
+2025-12-22 13:51:17,373 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:17,393 p=2262947 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Ensure deployment directory exists] ***************************************************
+2025-12-22 13:51:18,137 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:18,151 p=2262947 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Ensure certs directory exists] ********************************************************
+2025-12-22 13:51:18,890 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:18,905 p=2262947 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Copy certificate generation script] ***************************************************
+2025-12-22 13:51:20,334 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:20,348 p=2262947 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Copy indices setup script] ************************************************************
+2025-12-22 13:51:21,987 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:21,993 p=2262947 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Generate certificates for customer] ***************************************************
+2025-12-22 13:51:22,720 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:22,732 p=2262947 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Display certificate generation output] ************************************************
+2025-12-22 13:51:22,757 p=2262947 u=root n=ansible INFO| skipping: [ai-server-01]
+2025-12-22 13:51:22,762 p=2262947 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Create docker network] ****************************************************************
+2025-12-22 13:51:24,102 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:24,108 p=2262947 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Template docker-compose file] *********************************************************
+2025-12-22 13:51:25,787 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:25,801 p=2262947 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Template .env file] *******************************************************************
+2025-12-22 13:51:27,285 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:27,290 p=2262947 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Load elasticsearch docker image] ******************************************************
+2025-12-22 13:51:27,341 p=2262947 u=root n=ansible INFO| included: /data/develop/ai/gitlab/installer/roles/deploy_elastic_kibana/tasks/load-docker-image.yml for ai-server-01
+2025-12-22 13:51:27,346 p=2262947 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Create /var/cache/siem directory on remote hosts] *************************************
+2025-12-22 13:51:28,168 p=2262947 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:51:28,174 p=2262947 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Copy Docker image] ********************************************************************
+2025-12-22 13:51:40,192 p=2262947 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 13:51:40,197 p=2262947 u=root n=ansible INFO| TASK [deploy_elastic_kibana : Check if image already exists] ********************************************************
+2025-12-22 13:51:40,216 p=2262947 u=root n=ansible ERROR| [ERROR]: Task failed: Finalization of task args for 'ansible.builtin.command' failed: Error while resolving value for '_raw_params': 'elasticsearch_docker_image' is undefined
+
+Task failed.
+Origin: /data/develop/ai/gitlab/installer/roles/deploy_elastic_kibana/tasks/load-docker-image.yml:14:3
+
+12     dest: /var/cache/siem/elasticsearch.tar.gz
+13
+14 - name: Check if image already exists
+     ^ column 3
+
+<<< caused by >>>
+
+Finalization of task args for 'ansible.builtin.command' failed.
+Origin: /data/develop/ai/gitlab/installer/roles/deploy_elastic_kibana/tasks/load-docker-image.yml:15:3
+
+13
+14 - name: Check if image already exists
+15   command: docker images -q {{ elasticsearch_docker_image }}:{{ es_version }}
+     ^ column 3
+
+<<< caused by >>>
+
+Error while resolving value for '_raw_params': 'elasticsearch_docker_image' is undefined
+Origin: /data/develop/ai/gitlab/installer/roles/deploy_elastic_kibana/tasks/load-docker-image.yml:15:12
+
+13
+14 - name: Check if image already exists
+15   command: docker images -q {{ elasticsearch_docker_image }}:{{ es_version }}
+              ^ column 12
+
+
+2025-12-22 13:51:40,216 p=2262947 u=root n=ansible INFO| fatal: [ai-server-01]: FAILED! => {"changed": false, "msg": "Task failed: Finalization of task args for 'ansible.builtin.command' failed: Error while resolving value for '_raw_params': 'elasticsearch_docker_image' is undefined"}
+2025-12-22 13:51:40,217 p=2262947 u=root n=ansible INFO| PLAY RECAP **********************************************************************************************************
+2025-12-22 13:51:40,217 p=2262947 u=root n=ansible INFO| ai-server-01               : ok=27   changed=1    unreachable=0    failed=1    skipped=4    rescued=0    ignored=0   
+2025-12-22 13:53:23,035 p=2266944 u=root n=ansible INFO| PLAY [APK AI Infrastructure Installer] ******************************************************************************
+2025-12-22 13:53:23,064 p=2266944 u=root n=ansible INFO| TASK [Gathering Facts] **********************************************************************************************
+2025-12-22 13:53:24,833 p=2266944 u=root n=ansible ERROR| [ERROR]: Task failed: Failed to connect to the host via ssh: root@192.168.166.62: Permission denied (publickey,password).
+
+2025-12-22 13:53:24,835 p=2266944 u=root n=ansible INFO| fatal: [ai-server-01]: UNREACHABLE! => {"changed": false, "msg": "Task failed: Failed to connect to the host via ssh: root@192.168.166.62: Permission denied (publickey,password).", "unreachable": true}
+2025-12-22 13:53:24,838 p=2266944 u=root n=ansible INFO| PLAY RECAP **********************************************************************************************************
+2025-12-22 13:53:24,838 p=2266944 u=root n=ansible INFO| ai-server-01               : ok=0    changed=0    unreachable=1    failed=0    skipped=0    rescued=0    ignored=0   
+2025-12-22 13:53:41,378 p=2267507 u=root n=ansible INFO| PLAY [APK AI Infrastructure Installer] ******************************************************************************
+2025-12-22 13:53:41,407 p=2267507 u=root n=ansible INFO| TASK [Gathering Facts] **********************************************************************************************
+2025-12-22 13:53:45,307 p=2267507 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:53:45,313 p=2267507 u=root n=ansible INFO| TASK [deploy_apt_repository : Ensure all inventory hosts are in /etc/hosts with subdomains] *************************
+2025-12-22 13:53:45,360 p=2267507 u=root n=ansible ERROR| [ERROR]: Task failed: Finalization of task args for 'ansible.builtin.lineinfile' failed: Error while resolving value for 'line': 'top_level_domain' is undefined
+
+Task failed.
+Origin: /data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/config_hostfile.yml:2:3
+
+1 ---
+2 - name: Ensure all inventory hosts are in /etc/hosts with subdomains
+    ^ column 3
+
+<<< caused by >>>
+
+Finalization of task args for 'ansible.builtin.lineinfile' failed.
+Origin: /data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/config_hostfile.yml:4:3
+
+2 - name: Ensure all inventory hosts are in /etc/hosts with subdomains
+3   become: true
+4   lineinfile:
+    ^ column 3
+
+<<< caused by >>>
+
+Error while resolving value for 'line': 'top_level_domain' is undefined
+Origin: /data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/config_hostfile.yml:6:11
+
+4   lineinfile:
+5     path: /etc/hosts
+6     line: "{{ hostvars[item].ansible_default_ipv4.address }} {{ item }}.{{ top_level_domain }}"
+            ^ column 11
+
+
+2025-12-22 13:53:45,360 p=2267507 u=root n=ansible INFO| failed: [ai-server-01] (item=ai-server-01) => {"ansible_loop_var": "item", "changed": false, "item": "ai-server-01", "msg": "Task failed: Finalization of task args for 'ansible.builtin.lineinfile' failed: Error while resolving value for 'line': 'top_level_domain' is undefined"}
+2025-12-22 13:53:45,363 p=2267507 u=root n=ansible INFO| PLAY RECAP **********************************************************************************************************
+2025-12-22 13:53:45,363 p=2267507 u=root n=ansible INFO| ai-server-01               : ok=1    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+2025-12-22 13:54:19,655 p=2268502 u=root n=ansible INFO| PLAY [APK AI Infrastructure Installer] ******************************************************************************
+2025-12-22 13:54:19,685 p=2268502 u=root n=ansible INFO| TASK [Gathering Facts] **********************************************************************************************
+2025-12-22 13:54:22,230 p=2268502 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:54:22,240 p=2268502 u=root n=ansible INFO| TASK [deploy_apt_repository : Ensure all inventory hosts are in /etc/hosts with subdomains] *************************
+2025-12-22 13:54:23,302 p=2268502 u=root n=ansible INFO| changed: [ai-server-01] => (item=ai-server-01)
+2025-12-22 13:54:23,311 p=2268502 u=root n=ansible INFO| TASK [deploy_apt_repository : Create temporary directory] ***********************************************************
+2025-12-22 13:54:24,171 p=2268502 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 13:54:24,177 p=2268502 u=root n=ansible INFO| TASK [deploy_apt_repository : Register old sources.list file exist or not] ******************************************
+2025-12-22 13:54:25,171 p=2268502 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:54:25,187 p=2268502 u=root n=ansible INFO| TASK [deploy_apt_repository : Make backup from current sources.list file] *******************************************
+2025-12-22 13:54:26,391 p=2268502 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 13:54:26,405 p=2268502 u=root n=ansible INFO| TASK [deploy_apt_repository : Remove Current sources.list file] *****************************************************
+2025-12-22 13:54:27,151 p=2268502 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 13:54:27,157 p=2268502 u=root n=ansible INFO| TASK [deploy_apt_repository : Create new empty sources.list file] ***************************************************
+2025-12-22 13:54:27,991 p=2268502 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 13:54:28,009 p=2268502 u=root n=ansible INFO| TASK [deploy_apt_repository : Copy Dependencies debian packages] ****************************************************
+2025-12-22 13:54:28,047 p=2268502 u=root n=ansible ERROR| [ERROR]: Task failed: Error while evaluating conditional: object of type 'dict' has no attribute 'AI'
+
+Task failed.
+Origin: /data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/install_local_repositories_dependencies.yml:35:7
+
+33 - name: Install APT Repository dependencies
+34   block:
+35     - name: Copy Dependencies debian packages
+         ^ column 7
+
+<<< caused by >>>
+
+Error while evaluating conditional: object of type 'dict' has no attribute 'AI'
+Origin: /data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/install_local_repositories_dependencies.yml:48:9
+
+46         dest: "{{ Installer_tmp_directory_path }}"
+47         remote_src: yes
+48   when: "inventory_hostname == groups['AI'][0]"
+           ^ column 9
+
+
+2025-12-22 13:54:28,048 p=2268502 u=root n=ansible INFO| fatal: [ai-server-01]: FAILED! => {"changed": false, "msg": "Task failed: Error while evaluating conditional: object of type 'dict' has no attribute 'AI'"}
+2025-12-22 13:54:28,049 p=2268502 u=root n=ansible INFO| PLAY RECAP **********************************************************************************************************
+2025-12-22 13:54:28,049 p=2268502 u=root n=ansible INFO| ai-server-01               : ok=7    changed=5    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+2025-12-22 13:59:27,559 p=2276797 u=root n=ansible INFO| PLAY [APK AI Infrastructure Installer] ******************************************************************************
+2025-12-22 13:59:27,590 p=2276797 u=root n=ansible INFO| TASK [Gathering Facts] **********************************************************************************************
+2025-12-22 13:59:31,046 p=2276797 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:59:31,050 p=2276797 u=root n=ansible INFO| TASK [deploy_apt_repository : Ensure all inventory hosts are in /etc/hosts with subdomains] *************************
+2025-12-22 13:59:32,003 p=2276797 u=root n=ansible INFO| ok: [ai-server-01] => (item=ai-server-01)
+2025-12-22 13:59:32,021 p=2276797 u=root n=ansible INFO| TASK [deploy_apt_repository : Create temporary directory] ***********************************************************
+2025-12-22 13:59:32,922 p=2276797 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:59:32,936 p=2276797 u=root n=ansible INFO| TASK [deploy_apt_repository : Register old sources.list file exist or not] ******************************************
+2025-12-22 13:59:33,904 p=2276797 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 13:59:33,909 p=2276797 u=root n=ansible INFO| TASK [deploy_apt_repository : Make backup from current sources.list file] *******************************************
+2025-12-22 13:59:34,777 p=2276797 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 13:59:34,782 p=2276797 u=root n=ansible INFO| TASK [deploy_apt_repository : Remove Current sources.list file] *****************************************************
+2025-12-22 13:59:35,526 p=2276797 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 13:59:35,540 p=2276797 u=root n=ansible INFO| TASK [deploy_apt_repository : Create new empty sources.list file] ***************************************************
+2025-12-22 13:59:36,341 p=2276797 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 13:59:36,365 p=2276797 u=root n=ansible INFO| TASK [deploy_apt_repository : Copy Dependencies debian packages] ****************************************************
+2025-12-22 13:59:36,398 p=2276797 u=root n=ansible ERROR| [ERROR]: Task failed: Error while evaluating conditional: object of type 'dict' has no attribute 'AI'
+
+Task failed.
+Origin: /data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/install_local_repositories_dependencies.yml:35:7
+
+33 - name: Install APT Repository dependencies
+34   block:
+35     - name: Copy Dependencies debian packages
+         ^ column 7
+
+<<< caused by >>>
+
+Error while evaluating conditional: object of type 'dict' has no attribute 'AI'
+Origin: /data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/install_local_repositories_dependencies.yml:48:9
+
+46         dest: "{{ Installer_tmp_directory_path }}"
+47         remote_src: yes
+48   when: "inventory_hostname == groups['AI'][0]"
+           ^ column 9
+
+
+2025-12-22 13:59:36,399 p=2276797 u=root n=ansible INFO| fatal: [ai-server-01]: FAILED! => {"changed": false, "msg": "Task failed: Error while evaluating conditional: object of type 'dict' has no attribute 'AI'"}
+2025-12-22 13:59:36,400 p=2276797 u=root n=ansible INFO| PLAY RECAP **********************************************************************************************************
+2025-12-22 13:59:36,400 p=2276797 u=root n=ansible INFO| ai-server-01               : ok=7    changed=3    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+2025-12-22 14:10:18,801 p=2293543 u=root n=ansible INFO| PLAY [APK AI Infrastructure Installer] ******************************************************************************
+2025-12-22 14:10:18,829 p=2293543 u=root n=ansible INFO| TASK [Gathering Facts] **********************************************************************************************
+2025-12-22 14:10:22,357 p=2293543 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 14:10:22,361 p=2293543 u=root n=ansible INFO| TASK [deploy_apt_repository : Ensure all inventory hosts are in /etc/hosts with subdomains] *************************
+2025-12-22 14:10:23,284 p=2293543 u=root n=ansible INFO| ok: [ai-server-01] => (item=ai-server-01)
+2025-12-22 14:10:23,301 p=2293543 u=root n=ansible INFO| TASK [deploy_apt_repository : Create temporary directory] ***********************************************************
+2025-12-22 14:10:24,278 p=2293543 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 14:10:24,291 p=2293543 u=root n=ansible INFO| TASK [deploy_apt_repository : Register old sources.list file exist or not] ******************************************
+2025-12-22 14:10:25,235 p=2293543 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 14:10:25,243 p=2293543 u=root n=ansible INFO| TASK [deploy_apt_repository : Make backup from current sources.list file] *******************************************
+2025-12-22 14:10:26,159 p=2293543 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 14:10:26,174 p=2293543 u=root n=ansible INFO| TASK [deploy_apt_repository : Remove Current sources.list file] *****************************************************
+2025-12-22 14:10:27,028 p=2293543 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 14:10:27,037 p=2293543 u=root n=ansible INFO| TASK [deploy_apt_repository : Create new empty sources.list file] ***************************************************
+2025-12-22 14:10:27,788 p=2293543 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 14:10:27,804 p=2293543 u=root n=ansible INFO| TASK [deploy_apt_repository : Copy Dependencies debian packages] ****************************************************
+2025-12-22 14:10:28,960 p=2293543 u=root n=ansible ERROR| [ERROR]: Task failed: Module failed: Warning: Permanently added '192.168.166.62' (ED25519) to the list of known hosts.
+rsync: [sender] change_dir "/data/develop/ai/gitlab/installer/files" failed: No such file or directory (2)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.4.1]
+
+Origin: /data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/install_local_repositories_dependencies.yml:35:7
+
+33 - name: Install APT Repository dependencies
+34   block:
+35     - name: Copy Dependencies debian packages
+         ^ column 7
+
+
+2025-12-22 14:10:28,961 p=2293543 u=root n=ansible INFO| fatal: [ai-server-01]: FAILED! => {"changed": false, "cmd": "/usr/bin/rsync --delay-updates -F --compress --delete-after --archive --rsh='/usr/bin/ssh -S none -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' --rsync-path='sudo -u root rsync' --out-format='<<CHANGED>>%i %n%L' /data/develop/ai/gitlab/installer/files/localrepository.tar.gz root@192.168.166.62:/var/ai/tmp/localrepository.tar.gz", "msg": "Warning: Permanently added '192.168.166.62' (ED25519) to the list of known hosts.\r\nrsync: [sender] change_dir \"/data/develop/ai/gitlab/installer/files\" failed: No such file or directory (2)\nrsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.4.1]\n", "rc": 23}
+2025-12-22 14:10:28,962 p=2293543 u=root n=ansible INFO| PLAY RECAP **********************************************************************************************************
+2025-12-22 14:10:28,962 p=2293543 u=root n=ansible INFO| ai-server-01               : ok=7    changed=2    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+2025-12-22 14:15:04,039 p=2300769 u=root n=ansible INFO| PLAY [APK AI Infrastructure Installer] ******************************************************************************
+2025-12-22 14:15:04,068 p=2300769 u=root n=ansible INFO| TASK [Gathering Facts] **********************************************************************************************
+2025-12-22 14:15:07,837 p=2300769 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 14:15:07,841 p=2300769 u=root n=ansible INFO| TASK [deploy_apt_repository : Ensure all inventory hosts are in /etc/hosts with subdomains] *************************
+2025-12-22 14:15:08,777 p=2300769 u=root n=ansible INFO| ok: [ai-server-01] => (item=ai-server-01)
+2025-12-22 14:15:08,794 p=2300769 u=root n=ansible INFO| TASK [deploy_apt_repository : Create temporary directory] ***********************************************************
+2025-12-22 14:15:09,806 p=2300769 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 14:15:09,818 p=2300769 u=root n=ansible INFO| TASK [deploy_apt_repository : Register old sources.list file exist or not] ******************************************
+2025-12-22 14:15:10,779 p=2300769 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 14:15:10,784 p=2300769 u=root n=ansible INFO| TASK [deploy_apt_repository : Make backup from current sources.list file] *******************************************
+2025-12-22 14:15:11,753 p=2300769 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 14:15:11,767 p=2300769 u=root n=ansible INFO| TASK [deploy_apt_repository : Remove Current sources.list file] *****************************************************
+2025-12-22 14:15:12,585 p=2300769 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 14:15:12,589 p=2300769 u=root n=ansible INFO| TASK [deploy_apt_repository : Create new empty sources.list file] ***************************************************
+2025-12-22 14:15:13,405 p=2300769 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 14:15:13,424 p=2300769 u=root n=ansible INFO| TASK [deploy_apt_repository : Copy Dependencies debian packages] ****************************************************
+2025-12-22 14:15:16,353 p=2300769 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 14:15:16,363 p=2300769 u=root n=ansible INFO| TASK [deploy_apt_repository : Extraxt Dependencies debian packages] *************************************************
+2025-12-22 14:15:23,349 p=2300769 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 14:15:23,362 p=2300769 u=root n=ansible INFO| TASK [deploy_apt_repository : Create temporary directories] *********************************************************
+2025-12-22 14:15:24,167 p=2300769 u=root n=ansible INFO| ok: [ai-server-01] => (item=/var/ai/tmp)
+2025-12-22 14:15:24,907 p=2300769 u=root n=ansible INFO| changed: [ai-server-01] => (item=/var/ai/tmp/installer)
+2025-12-22 14:15:24,926 p=2300769 u=root n=ansible INFO| TASK [deploy_apt_repository : Copy and compress local APT repository files to destination if different] *************
+2025-12-22 14:15:24,954 p=2300769 u=root n=ansible ERROR| [ERROR]: Task failed: Error while evaluating conditional: object of type 'dict' has no attribute 'AI'
+
+Task failed.
+Origin: /data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/deploy_local_apt_repository.yml:14:11
+
+12     - name: Prepare and Deploy step
+13       block:
+14         - name: Copy and compress local APT repository files to destination if different
+             ^ column 11
+
+<<< caused by >>>
+
+Error while evaluating conditional: object of type 'dict' has no attribute 'AI'
+Origin: /data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/deploy_local_apt_repository.yml:55:9
+
+53             regexp: "deb [trusted=yes] http://{{ ansible_default_ipv4.address }} ai main"
+54             line: "deb [trusted=yes] http://{{ ansible_default_ipv4.address }} ai main"
+55   when: "inventory_hostname == groups['AI'][0]"
+           ^ column 9
+
+
+2025-12-22 14:15:24,954 p=2300769 u=root n=ansible INFO| fatal: [ai-server-01]: FAILED! => {"changed": false, "msg": "Task failed: Error while evaluating conditional: object of type 'dict' has no attribute 'AI'"}
+2025-12-22 14:15:24,956 p=2300769 u=root n=ansible INFO| PLAY RECAP **********************************************************************************************************
+2025-12-22 14:15:24,956 p=2300769 u=root n=ansible INFO| ai-server-01               : ok=10   changed=5    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+2025-12-22 14:15:48,305 p=2301971 u=root n=ansible INFO| PLAY [APK AI Infrastructure Installer] ******************************************************************************
+2025-12-22 14:15:48,338 p=2301971 u=root n=ansible INFO| TASK [Gathering Facts] **********************************************************************************************
+2025-12-22 14:15:50,815 p=2301971 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 14:15:50,821 p=2301971 u=root n=ansible INFO| TASK [deploy_apt_repository : Ensure all inventory hosts are in /etc/hosts with subdomains] *************************
+2025-12-22 14:15:51,754 p=2301971 u=root n=ansible INFO| ok: [ai-server-01] => (item=ai-server-01)
+2025-12-22 14:15:51,768 p=2301971 u=root n=ansible INFO| TASK [deploy_apt_repository : Create temporary directory] ***********************************************************
+2025-12-22 14:15:52,684 p=2301971 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 14:15:52,698 p=2301971 u=root n=ansible INFO| TASK [deploy_apt_repository : Register old sources.list file exist or not] ******************************************
+2025-12-22 14:15:53,670 p=2301971 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 14:15:53,676 p=2301971 u=root n=ansible INFO| TASK [deploy_apt_repository : Make backup from current sources.list file] *******************************************
+2025-12-22 14:15:54,528 p=2301971 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 14:15:54,532 p=2301971 u=root n=ansible INFO| TASK [deploy_apt_repository : Remove Current sources.list file] *****************************************************
+2025-12-22 14:15:55,292 p=2301971 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 14:15:55,307 p=2301971 u=root n=ansible INFO| TASK [deploy_apt_repository : Create new empty sources.list file] ***************************************************
+2025-12-22 14:15:56,036 p=2301971 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 14:15:56,055 p=2301971 u=root n=ansible INFO| TASK [deploy_apt_repository : Copy Dependencies debian packages] ****************************************************
+2025-12-22 14:15:57,053 p=2301971 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 14:15:57,058 p=2301971 u=root n=ansible INFO| TASK [deploy_apt_repository : Extraxt Dependencies debian packages] *************************************************
+2025-12-22 14:16:02,067 p=2301971 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 14:16:02,079 p=2301971 u=root n=ansible INFO| TASK [deploy_apt_repository : Create temporary directories] *********************************************************
+2025-12-22 14:16:02,785 p=2301971 u=root n=ansible INFO| ok: [ai-server-01] => (item=/var/ai/tmp)
+2025-12-22 14:16:03,527 p=2301971 u=root n=ansible INFO| ok: [ai-server-01] => (item=/var/ai/tmp/installer)
+2025-12-22 14:16:03,542 p=2301971 u=root n=ansible INFO| TASK [deploy_apt_repository : Copy and compress local APT repository files to destination if different] *************
+2025-12-22 14:16:06,246 p=2301971 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 14:16:06,250 p=2301971 u=root n=ansible INFO| TASK [deploy_apt_repository : Create local repository destination path] *********************************************
+2025-12-22 14:16:07,034 p=2301971 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 14:16:07,047 p=2301971 u=root n=ansible INFO| TASK [deploy_apt_repository : Extract repository zip files] *********************************************************
+2025-12-22 14:16:14,217 p=2301971 u=root n=ansible INFO| changed: [ai-server-01]
+2025-12-22 14:16:14,233 p=2301971 u=root n=ansible INFO| TASK [deploy_apt_repository : config nginx on the hosts] ************************************************************
+2025-12-22 14:16:14,402 p=2301971 u=root n=ansible ERROR| [ERROR]: Task failed: Could not find or access 'templates/ai_repository.conf.j2'
+Searched in:
+	/data/develop/ai/gitlab/installer/roles/deploy_apt_repository/templates/templates/ai_repository.conf.j2
+	/data/develop/ai/gitlab/installer/roles/deploy_apt_repository/templates/ai_repository.conf.j2
+	/data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/templates/templates/ai_repository.conf.j2
+	/data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/templates/ai_repository.conf.j2
+	/data/develop/ai/gitlab/installer/templates/templates/ai_repository.conf.j2
+	/data/develop/ai/gitlab/installer/templates/ai_repository.conf.j2 on the Ansible Controller.
+If you are using a module and expect the file to exist on the remote, see the remote_src option
+
+Task failed.
+Origin: /data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/deploy_local_apt_repository.yml:32:11
+
+30             dest: "{{ local_repository_directory_path }}"
+31             remote_src: yes
+32         - name: config nginx on the hosts
+             ^ column 11
+
+<<< caused by >>>
+
+Could not find or access 'templates/ai_repository.conf.j2'
+Searched in:
+	/data/develop/ai/gitlab/installer/roles/deploy_apt_repository/templates/templates/ai_repository.conf.j2
+	/data/develop/ai/gitlab/installer/roles/deploy_apt_repository/templates/ai_repository.conf.j2
+	/data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/templates/templates/ai_repository.conf.j2
+	/data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/templates/ai_repository.conf.j2
+	/data/develop/ai/gitlab/installer/templates/templates/ai_repository.conf.j2
+	/data/develop/ai/gitlab/installer/templates/ai_repository.conf.j2 on the Ansible Controller.
+If you are using a module and expect the file to exist on the remote, see the remote_src option
+
+
+2025-12-22 14:16:14,403 p=2301971 u=root n=ansible INFO| fatal: [ai-server-01]: FAILED! => {"changed": false, "msg": "Could not find or access 'templates/ai_repository.conf.j2'\nSearched in:\n\t/data/develop/ai/gitlab/installer/roles/deploy_apt_repository/templates/templates/ai_repository.conf.j2\n\t/data/develop/ai/gitlab/installer/roles/deploy_apt_repository/templates/ai_repository.conf.j2\n\t/data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/templates/templates/ai_repository.conf.j2\n\t/data/develop/ai/gitlab/installer/roles/deploy_apt_repository/tasks/templates/ai_repository.conf.j2\n\t/data/develop/ai/gitlab/installer/templates/templates/ai_repository.conf.j2\n\t/data/develop/ai/gitlab/installer/templates/ai_repository.conf.j2 on the Ansible Controller.\nIf you are using a module and expect the file to exist on the remote, see the remote_src option"}
+2025-12-22 14:16:14,407 p=2301971 u=root n=ansible INFO| PLAY RECAP **********************************************************************************************************
+2025-12-22 14:16:14,408 p=2301971 u=root n=ansible INFO| ai-server-01               : ok=13   changed=5    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+2025-12-22 14:16:49,621 p=2303730 u=root n=ansible INFO| PLAY [APK AI Infrastructure Installer] ******************************************************************************
+2025-12-22 14:16:49,632 p=2303730 u=root n=ansible INFO| TASK [Gathering Facts] **********************************************************************************************
+2025-12-22 14:16:51,780 p=2303730 u=root n=ansible INFO| ok: [ai-server-01]
+2025-12-22 14:16:51,791 p=2303730 u=root n=ansible INFO| TASK [install_dependencies : Update apt cache] **********************************************************************
+2025-12-22 14:17:56,429 p=2303730 u=root n=ansible ERROR| [ERROR]: User interrupted execution
+
