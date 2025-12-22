@@ -45,4 +45,4 @@
         src: "{{ Installer_tmp_directory_path }}/{{ dependencies_repo_archive_file_name }}"
         dest: "{{ Installer_tmp_directory_path }}"
         remote_src: yes
-  # when: "inventory_hostname == groups['AI'][0]"
+  # when: "inventory_hostname == groups['servers'][0]"
