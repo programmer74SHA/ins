@@ -50,6 +50,10 @@
         {
           "name": "gnupg",
           "version": ""
+        },
+        {
+          "name": "lsb-release",
+          "version": ""
         }
       ]
     },
@@ -405,6 +409,48 @@
         },
         {
           "name": "wireguard-tools",
+          "version": ""
+        }
+      ]
+    },
+    {
+      "description": "Docker - Container platform and tools",
+      "name": "Docker",
+      "order": 9,
+      "packages": [
+        {
+          "name": "docker-ce",
+          "version": ""
+        },
+        {
+          "name": "docker-ce-cli",
+          "version": ""
+        },
+        {
+          "name": "containerd.io",
+          "version": ""
+        },
+        {
+          "name": "docker-buildx-plugin",
+          "version": ""
+        },
+        {
+          "name": "docker-compose-plugin",
+          "version": ""
+        }
+      ]
+    },
+    {
+      "description": "NVIDIA - GPU drivers and CUDA toolkit",
+      "name": "NVIDIA",
+      "order": 10,
+      "packages": [
+        {
+          "name": "ubuntu-drivers-common",
+          "version": ""
+        },
+        {
+          "name": "nvidia-cuda-toolkit",
           "version": ""
         }
       ]
