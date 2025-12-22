@@ -7,7 +7,7 @@ INSTALLER_PATH=$(pwd)
 INVENTORY_FILE_NAME="inventory.ini"
 SSH_KEY_PATH="$HOME/.ssh/id_rsa"
 LOCAL_REPOSITORY_ARCHIVE_FILE_PATH="roles/deploy_apt_repository/files"
-LOCAL_REPOSITORY_ARCHIVE_FILE_NAME="repo.tar.gz"
+LOCAL_REPOSITORY_ARCHIVE_FILE_NAME="localrepository.tar.gz"
 LOCAL_REPOSITORY_DIRECTORY_NAME="repository"
 
 function RedLinePrinter() {
@@ -71,7 +71,7 @@ function COPY_REPOSITORY_ARCHIVE_FILE() {
     YellowLinePrinter "Extract local Repository"
     tar -xzf ${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_NAME} -C ${LOCAL_REPOSITORY_DESTINATION_PATH}
     PStatus "Local repository archive extracted" "Failed to extract local repository archive"
-    mv /var/ai/tmp/installer/repository/repository/dists/siem / /var/ai/tmp/installer/repository/repository/dists/ai
+    mv /var/ai/tmp/installer/repository/repository/dists/siem /var/ai/tmp/installer/repository/repository/dists/ai
     separator
 }
 
