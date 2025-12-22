@@ -78,7 +78,7 @@ function INSTALL_ANSIBLE_DEPENDENCIES() {
     YellowLinePrinter "Install Dependencies"
 
     # Configure local repository as APT source
-    echo "deb [trusted=yes] file://${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_DIRECTORY_NAME} ./" > /etc/apt/sources.list
+    echo "deb [trusted=yes] file://${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_DIRECTORY_NAME} ai main" > /etc/apt/sources.list
 
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
@@ -128,7 +128,7 @@ function SetupPythonModule() {
 
     ssh $1@$2 bash -lc '
         set -e
-        echo "deb [trusted=yes] file:///var/ai/tmp/installer/repository/repository ./" > /etc/apt/sources.list
+        echo "deb [trusted=yes] file:///var/ai/tmp/installer/repository/repository ai main" > /etc/apt/sources.list
         export DEBIAN_FRONTEND=noninteractive
         apt-get update
         apt-get -y --allow-downgrades \
