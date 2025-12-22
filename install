@@ -8,7 +8,7 @@ INVENTORY_FILE_NAME="inventory.ini"
 SSH_KEY_PATH="$HOME/.ssh/id_rsa"
 LOCAL_REPOSITORY_ARCHIVE_FILE_PATH="roles/deploy_apt_repository/files"
 LOCAL_REPOSITORY_ARCHIVE_FILE_NAME="repo.tar.gz"
-LOCAL_REPOSITORY_DIRECTORY_NAME="source"
+LOCAL_REPOSITORY_DIRECTORY_NAME="repository"
 
 function RedLinePrinter() {
     echo -e "\033[31;40m $1 \033[0m"
@@ -76,13 +76,19 @@ function COPY_REPOSITORY_ARCHIVE_FILE() {
 
 function INSTALL_ANSIBLE_DEPENDENCIES() {
     YellowLinePrinter "Install Dependencies"
-    echo "" > /etc/apt/sources.list
+
+    # Configure local repository as APT source
+    echo "deb [trusted=yes] file://${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_DIRECTORY_NAME} ./" > /etc/apt/sources.list
 
     export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    PStatus "Repository configured and updated" "Failed to update repository"
+
+    # Install ansible and dependencies from the local repository
     apt-get -y --allow-downgrades \
       -o Dpkg::Options::="--force-confdef" \
       -o Dpkg::Options::="--force-confold" \
-      install "${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_DIRECTORY_NAME}"/*.deb
+      install ansible
 
     PStatus "Dependencies Installed" "Failed to install Dependencies"
     separator
@@ -118,17 +124,17 @@ function COPY_SSH_ID() {
 function SetupPythonModule() {
     ssh $1@$2 mkdir -p ${LOCAL_REPOSITORY_DESTINATION_PATH} < /dev/null | tee -a /var/log/$2.log
     scp ${INSTALLER_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_NAME} $1@$2:${LOCAL_REPOSITORY_DESTINATION_PATH} < /dev/null | tee -a /var/log/$2.log
-    ssh $1@$2 rm -rf /etc/apt/sources.list < /dev/null | tee -a /var/log/$2.log
-    ssh $1@$2 touch /etc/apt/sources.list < /dev/null | tee -a /var/log/$2.log
     ssh $1@$2 tar -xzf ${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_NAME} -C ${LOCAL_REPOSITORY_DESTINATION_PATH} < /dev/null | tee -a /var/log/$2.log
 
     ssh $1@$2 bash -lc '
         set -e
+        echo "deb [trusted=yes] file:///var/ai/tmp/installer/repository/repository ./" > /etc/apt/sources.list
         export DEBIAN_FRONTEND=noninteractive
+        apt-get update
         apt-get -y --allow-downgrades \
           -o Dpkg::Options::="--force-confdef" \
           -o Dpkg::Options::="--force-confold" \
-          install /var/ai/tmp/installer/repository/source/*.deb
+          install ansible
     ' < /dev/null | tee -a /var/log/$2.log
 }
 
