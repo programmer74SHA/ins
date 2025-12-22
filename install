@@ -89,7 +89,10 @@ function INSTALL_ANSIBLE_DEPENDENCIES() {
 
     # Configure local repository as APT source in sources.list
     # This uses the extracted repo.tar.gz as the local APT repository
-    echo "deb [trusted=yes] file://${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_DIRECTORY_NAME} ai main" > /etc/apt/sources.list
+    # Add to sources.list instead of replacing it to preserve Ubuntu repositories
+    if ! grep -q "deb \[trusted=yes\] file://${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_DIRECTORY_NAME} ai main" /etc/apt/sources.list 2>/dev/null; then
+        echo "deb [trusted=yes] file://${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_DIRECTORY_NAME} ai main" >> /etc/apt/sources.list
+    fi
     PStatus "sources.list configured with local repository" "Failed to configure sources.list"
 
     YellowLinePrinter "Update APT cache from local repository"
@@ -155,7 +158,10 @@ function SetupPythonModule() {
         fi
 
         # Configure sources.list to use local repository from repo.tar.gz
-        echo "deb [trusted=yes] file:///var/ai/tmp/installer/repository/repository ai main" > /etc/apt/sources.list
+        # Add to sources.list instead of replacing it to preserve Ubuntu repositories
+        if ! grep -q "deb \[trusted=yes\] file:///var/ai/tmp/installer/repository/repository ai main" /etc/apt/sources.list 2>/dev/null; then
+            echo "deb [trusted=yes] file:///var/ai/tmp/installer/repository/repository ai main" >> /etc/apt/sources.list
+        fi
 
         # Update APT cache from local repository
         export DEBIAN_FRONTEND=noninteractive

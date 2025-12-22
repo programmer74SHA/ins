@@ -4,31 +4,25 @@
     state: directory
     mode: '0755'
 
-- name: Remove Current Repositories from apt source list file
+- name: Ensure sources.list file exists and backup if needed
   block:
     - name: Register old sources.list file exist or not
       stat:
         path: "{{ apt_sources_list_file_path }}"
       register: old_sources_list_file
-    - name: This block will be run if sources.list file exists
-      block:
-        - name: Make backup from current sources.list file
-          copy:
-            src: "{{ apt_sources_list_file_path }}"
-            dest: "{{ apt_sources_list_file_path }}.back"
-            remote_src: yes
 
-        - name: Remove Current sources.list file
-          file:
-            path: "{{ apt_sources_list_file_path }}"
-            state: absent
+    - name: Make backup from current sources.list file
+      copy:
+        src: "{{ apt_sources_list_file_path }}"
+        dest: "{{ apt_sources_list_file_path }}.back"
+        remote_src: yes
+      when: old_sources_list_file.stat.exists is defined and old_sources_list_file.stat.exists
 
-        - name: Create new empty sources.list file
-          file:
-            path: "{{ apt_sources_list_file_path }}"
-            state: touch
-            mode: '0644'
-      when: "old_sources_list_file.stat.exists is defined and old_sources_list_file.stat.exists"
+    - name: Ensure sources.list file exists
+      file:
+        path: "{{ apt_sources_list_file_path }}"
+        state: touch
+        mode: '0644'
 
 - name: Install APT Repository dependencies
   block:
