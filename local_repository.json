@@ -1,105 +1,413 @@
 {
-  "description": "Local APT repository package list for AI infrastructure deployment",
-  "version": "1.0.0",
-  "packages": {
-    "essential": [
-      "apt-transport-https",
-      "ca-certificates",
-      "software-properties-common",
-      "build-essential",
-      "curl",
-      "wget",
-      "git",
-      "vim",
-      "nano",
-      "tar",
-      "gzip",
-      "unzip",
-      "zip",
-      "tree",
-      "jq",
-      "gnupg",
-      "lsb-release"
-    ],
-    "development": [
-      "python3",
-      "python3-pip",
-      "python3-dev",
-      "python3-venv"
-    ],
-    "network": [
-      "net-tools",
-      "iputils-ping",
-      "traceroute",
-      "nmap"
-    ],
-    "monitoring": [
-      "htop",
-      "iotop",
-      "sysstat",
-      "lsof",
-      "tcpdump"
-    ],
-    "security": [
-      "ufw",
-      "fail2ban"
-    ],
-    "docker": [
-      "docker-ce",
-      "docker-ce-cli",
-      "containerd.io",
-      "docker-buildx-plugin",
-      "docker-compose-plugin"
-    ],
-    "nvidia_gpu": [
-      "ubuntu-drivers-common",
-      "nvidia-driver-550",
-      "nvidia-driver-550-server",
-      "nvidia-driver-560",
-      "nvidia-driver-560-open",
-      "nvidia-driver-565",
-      "nvidia-driver-565-open",
-      "nvidia-driver-570",
-      "nvidia-driver-570-open",
-      "nvidia-driver-580",
-      "nvidia-driver-580-open",
-      "nvidia-utils-550",
-      "nvidia-utils-550-server",
-      "nvidia-utils-560",
-      "nvidia-utils-565",
-      "nvidia-utils-570",
-      "nvidia-utils-580",
-      "nvidia-cuda-toolkit"
-    ],
-    "repository_infrastructure": [
-      "nginx",
-      "nginx-common",
-      "nginx-core",
-      "dpkg-dev",
-      "pigz"
+  "build_number": 1,
+  "code": "0.0.1",
+  "description": "AI-installer for Ubuntu Noble (24.04 LTS)",
+  "product_name": "AI-0.0.1",
+  "base_system": {
+    "os_version": "noble",
+    "repositories": [
+      {
+        "url": "deb https://repo.apk-group.net/repository/ubuntu/ noble main"
+      },
+      {
+        "url": "deb https://repo.apk-group.net/repository/ubuntu-security/ noble-security main"
+      },
+      {
+        "url": "deb https://repo.apk-group.net/repository/docker-ubuntu/ noble stable"
+      }
     ]
   },
-  "package_groups": {
-    "base_system": [
-      "essential",
-      "development",
-      "network",
-      "monitoring",
-      "security"
-    ],
-    "container_platform": [
-      "docker"
-    ],
-    "gpu_support": [
-      "nvidia_gpu"
-    ],
-    "local_repository": [
-      "repository_infrastructure"
-    ]
-  },
-  "notes": {
-    "docker": "Docker packages require Docker GPG key and repository to be configured",
-    "nvidia": "NVIDIA driver versions should match available packages. Multiple versions included for compatibility",
-    "repository": "These packages are needed to host and manage the local APT repository"
-  }
+  "profiles": [
+    {
+      "description": "Preinstall Packages - This profile will be installed always before other profiles",
+      "name": "PreInstall",
+      "order": 0,
+      "packages": [
+        {
+          "name": "nginx",
+          "version": ""
+        },
+        {
+          "name": "sudo",
+          "version": ""
+        },
+        {
+          "name": "curl",
+          "version": ""
+        },
+        {
+          "name": "wget",
+          "version": ""
+        },
+        {
+          "name": "unzip",
+          "version": ""
+        },
+        {
+          "name": "ca-certificates",
+          "version": ""
+        },
+        {
+          "name": "gnupg",
+          "version": ""
+        }
+      ]
+    },
+    {
+      "description": "Core System Packages - Essential utilities and tools",
+      "name": "CoreSystem",
+      "order": 1,
+      "packages": [
+        {
+          "name": "apt-transport-https",
+          "version": ""
+        },
+        {
+          "name": "software-properties-common",
+          "version": ""
+        },
+        {
+          "name": "build-essential",
+          "version": ""
+        },
+        {
+          "name": "git",
+          "version": ""
+        },
+        {
+          "name": "vim",
+          "version": ""
+        },
+        {
+          "name": "nano",
+          "version": ""
+        },
+        {
+          "name": "tar",
+          "version": ""
+        },
+        {
+          "name": "gzip",
+          "version": ""
+        },
+        {
+          "name": "zip",
+          "version": ""
+        },
+        {
+          "name": "tree",
+          "version": ""
+        },
+        {
+          "name": "jq",
+          "version": ""
+        },
+        {
+          "name": "rsync",
+          "version": ""
+        },
+        {
+          "name": "screen",
+          "version": ""
+        },
+        {
+          "name": "tmux",
+          "version": ""
+        }
+      ]
+    },
+    {
+      "description": "Network Tools - Networking utilities and diagnostics",
+      "name": "NetworkTools",
+      "order": 2,
+      "packages": [
+        {
+          "name": "net-tools",
+          "version": ""
+        },
+        {
+          "name": "iputils-ping",
+          "version": ""
+        },
+        {
+          "name": "traceroute",
+          "version": ""
+        },
+        {
+          "name": "dnsutils",
+          "version": ""
+        },
+        {
+          "name": "netcat-openbsd",
+          "version": ""
+        },
+        {
+          "name": "tcpdump",
+          "version": ""
+        },
+        {
+          "name": "iftop",
+          "version": ""
+        },
+        {
+          "name": "iptraf-ng",
+          "version": ""
+        },
+        {
+          "name": "nmap",
+          "version": ""
+        },
+        {
+          "name": "tcpreplay",
+          "version": ""
+        },
+        {
+          "name": "ethtool",
+          "version": ""
+        },
+        {
+          "name": "iproute2",
+          "version": ""
+        },
+        {
+          "name": "bridge-utils",
+          "version": ""
+        }
+      ]
+    },
+    {
+      "description": "Monitoring and Performance - System monitoring and benchmarking tools",
+      "name": "MonitoringPerformance",
+      "order": 3,
+      "packages": [
+        {
+          "name": "htop",
+          "version": ""
+        },
+        {
+          "name": "iotop",
+          "version": ""
+        },
+        {
+          "name": "sysstat",
+          "version": ""
+        },
+        {
+          "name": "lsof",
+          "version": ""
+        },
+        {
+          "name": "atop",
+          "version": ""
+        },
+        {
+          "name": "nethogs",
+          "version": ""
+        },
+        {
+          "name": "ncdu",
+          "version": ""
+        },
+        {
+          "name": "fio",
+          "version": ""
+        },
+        {
+          "name": "sysbench",
+          "version": ""
+        },
+        {
+          "name": "iperf3",
+          "version": ""
+        },
+        {
+          "name": "stress-ng",
+          "version": ""
+        }
+      ]
+    },
+    {
+      "description": "Security Tools - Firewall and security utilities",
+      "name": "SecurityTools",
+      "order": 4,
+      "packages": [
+        {
+          "name": "ufw",
+          "version": ""
+        },
+        {
+          "name": "fail2ban",
+          "version": ""
+        },
+        {
+          "name": "aide",
+          "version": ""
+        },
+        {
+          "name": "rkhunter",
+          "version": ""
+        },
+        {
+          "name": "lynis",
+          "version": ""
+        },
+        {
+          "name": "apparmor",
+          "version": ""
+        },
+        {
+          "name": "apparmor-utils",
+          "version": ""
+        }
+      ]
+    },
+    {
+      "description": "System Utilities - Additional system tools and utilities",
+      "name": "SystemUtilities",
+      "order": 5,
+      "packages": [
+        {
+          "name": "plocate",
+          "version": ""
+        },
+        {
+          "name": "apt-rdepends",
+          "version": ""
+        },
+        {
+          "name": "bash-completion",
+          "version": ""
+        },
+        {
+          "name": "acpid",
+          "version": ""
+        },
+        {
+          "name": "console-setup",
+          "version": ""
+        },
+        {
+          "name": "dbus",
+          "version": ""
+        },
+        {
+          "name": "parted",
+          "version": ""
+        },
+        {
+          "name": "gdisk",
+          "version": ""
+        },
+        {
+          "name": "lvm2",
+          "version": ""
+        },
+        {
+          "name": "cryptsetup",
+          "version": ""
+        },
+        {
+          "name": "cryptsetup-initramfs",
+          "version": ""
+        },
+        {
+          "name": "texinfo",
+          "version": ""
+        },
+        {
+          "name": "dos2unix",
+          "version": ""
+        }
+      ]
+    },
+    {
+      "description": "Development Tools - Programming and development utilities",
+      "name": "DevelopmentTools",
+      "order": 6,
+      "packages": [
+        {
+          "name": "python3",
+          "version": ""
+        },
+        {
+          "name": "python3-pip",
+          "version": ""
+        },
+        {
+          "name": "python3-dev",
+          "version": ""
+        },
+        {
+          "name": "python3-venv",
+          "version": ""
+        },
+        {
+          "name": "python3-setuptools",
+          "version": ""
+        },
+        {
+          "name": "gcc",
+          "version": ""
+        },
+        {
+          "name": "g++",
+          "version": ""
+        },
+        {
+          "name": "make",
+          "version": ""
+        },
+        {
+          "name": "pkg-config",
+          "version": ""
+        }
+      ]
+    },
+    {
+      "description": "Infrastructure Services - Logging, time sync, and virtualization",
+      "name": "InfrastructureServices",
+      "order": 7,
+      "packages": [
+        {
+          "name": "rsyslog",
+          "version": ""
+        },
+        {
+          "name": "logrotate",
+          "version": ""
+        },
+        {
+          "name": "chrony",
+          "version": ""
+        },
+        {
+          "name": "qemu-guest-agent",
+          "version": ""
+        },
+        {
+          "name": "open-vm-tools",
+          "version": ""
+        }
+      ]
+    },
+    {
+      "description": "VPN and Encryption - VPN and encryption tools",
+      "name": "VPNEncryption",
+      "order": 8,
+      "packages": [
+        {
+          "name": "strongswan",
+          "version": ""
+        },
+        {
+          "name": "wireguard",
+          "version": ""
+        },
+        {
+          "name": "wireguard-tools",
+          "version": ""
+        }
+      ]
+    }
+  ]
 }

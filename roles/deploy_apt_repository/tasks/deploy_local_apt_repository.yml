@@ -52,7 +52,7 @@
             dest: "{{ apt_sources_list_file_path }}"
             regexp: "deb [trusted=yes] http://{{ ansible_default_ipv4.address }} ai main"
             line: "deb [trusted=yes] http://{{ ansible_default_ipv4.address }} ai main"
-  when: "inventory_hostname == groups['AI'][0]"
+  # when: "inventory_hostname == groups['AI'][0]"
 
 - name: Register Main repository ip address
   set_fact:

@@ -1,0 +1,50 @@
+- name: Create /var/cache/siem directory on remote hosts
+  file:
+    path: /var/cache/siem
+    state: directory
+    owner: "1000"
+    group: "1000"
+    mode: "0755"
+
+- name: Copy Docker image
+  synchronize:
+    src: files/elasticsearch.tar.gz
+    dest: /var/cache/siem/elasticsearch.tar.gz
+
+- name: Check if image already exists
+  command: docker images -q {{ elasticsearch_docker_image }}:{{ es_version }}
+  register: existing_image
+  changed_when: false
+
+- name: Load Docker image from tar.gz
+  command: docker load -i /var/cache/siem/elasticsearch.tar.gz
+  register: docker_load_result
+  changed_when: "'Loaded image' in docker_load_result.stderr or 'Loaded image' in docker_load_result.stdout"
+  when: existing_image.stdout == ""
+
+- name: Extract image ID from load output
+  set_fact:
+    loaded_image_id: "{{ (docker_load_result.stderr + docker_load_result.stdout) | regex_search('sha256:[a-f0-9]{64}') }}"
+  when: docker_load_result is not skipped and docker_load_result is changed
+
+- name: Get untagged image ID if regex didn't find sha256
+  shell: docker images --filter "dangling=true" --format "{{ '{{' }}.ID{{ '}}' }}" | head -n 1
+  register: untagged_image
+  when:
+    - docker_load_result is not skipped
+    - loaded_image_id is not defined or loaded_image_id == ""
+  changed_when: false
+
+- name: Set image ID from untagged images
+  set_fact:
+    loaded_image_id: "{{ untagged_image.stdout }}"
+  when:
+    - untagged_image is not skipped
+    - untagged_image.stdout != ""
+
+- name: Tag Docker image with desired name
+  command: docker tag {{ loaded_image_id }} {{ elasticsearch_docker_image }}:{{ es_version }}
+  when:
+    - docker_load_result is not skipped
+    - loaded_image_id is defined
+    - loaded_image_id != ""

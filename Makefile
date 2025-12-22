@@ -1,33 +1,49 @@
 ### Colors Vars
-COLOR_GREEN=\033[1;32m
-COLOR_YELLOW=\033[1;33m
-COLOR_PURPLE=\033[1;35m
-END_COLOR=\033[0m
-BORDER= echo "$(COLOR_PURPLE)----------------------------------------$(END_COLOR)"
+BORDER= echo "----------------------------------------"
 ###
-.PHONY: update_version build download build_repo clean clean_all init_builder package help status verify
-
+.PHONY: update_version build download build_repo clean clean_all init_builder package clone_check_script
 ifneq (,$(wildcard ./VERSION))
-	include ./VERSION
-	export
+    include ./VERSION
+    export
 endif
-
+GIT_HOST ?= gitlab.apk-group.net
+TOOLS_PATH ?= support/ai/ai-useful-tools.git
+TOOLS_REPO_SSH ?= git@$(GIT_HOST):$(TOOLS_PATH)
+TOOLS_REPO_HTTPS ?= https://$(GIT_HOST)/$(TOOLS_PATH)
+TOOLS_REPO_HTTPS ?= https://$(GIT_HOST)/$(TOOLS_PATH)
+ifdef CI_JOB_TOKEN
+TOOLS_REPO_CLONE_URL := https://gitlab-ci-token:$(CI_JOB_TOKEN)@$(GIT_HOST)/$(TOOLS_PATH)
+endif
 default_version:=$(AI_VERSION)
 pipeline_commit_tag:=$(or $(CI_COMMIT_TAG),$(default_version))
-AI_version:=$(pipeline_commit_tag)
+ai_version:=$(pipeline_commit_tag)
 CACHE_DIR:=.cache
 BUILD_DIR:=build
 ROLE_DIR:=roles
-DOWNLOAD_DIR:=$(ROLE_DIR)/download
-KIBANA_VERSION=8.15.5
+NEXUS_REPOSITORY_URL:=https://repo.apk-group.net/repository/share-objects
+REPO_BUILDER_CONFIG := $(CACHE_DIR)/repo_builder/local-cache.yml
+
+APT_LOCAL_REPOSITORY_JSON_FILE := ./local_repository.json
+APT_LOCAL_REPOSITORY_JSON_FILE_MD5 := $(shell md5sum $(APT_LOCAL_REPOSITORY_JSON_FILE) | cut -d' ' -f1)
+APT_LOCAL_REPOSITORY_CACHE_PATH := $(HOME)/.cache/ai-installer/apt/$(APT_LOCAL_REPOSITORY_JSON_FILE_MD5)
+
+APT_ANSIBLE_REPOSITORY_JSON_FILE := ./ansible.json
+APT_ANSIBLE_REPOSITORY_JSON_FILE_MD5 := $(shell md5sum $(APT_ANSIBLE_REPOSITORY_JSON_FILE) | cut -d' ' -f1)
+APT_ANSIBLE_REPOSITORY_CACHE_PATH := $(HOME)/.cache/ai-installer/apt/$(APT_ANSIBLE_REPOSITORY_JSON_FILE_MD5)
+
 ELASTICSEARCH_VERSION=8.15.5
+KIBANA_VERSION=8.15.5
 
-# Default target
-.DEFAULT_GOAL := help
+PACKAGE_NAME := ai_$(ai_version)_$(shell date +%Y%m%d%H)
 
-build: download build_repo package upload
+build:  clean clean_all update_version download build_repo package upload
 
-download: download_elastic_kibana
+init:
+	@$(BORDER)
+	@echo "Initializing directories..."
+	mkdir -p $(BUILD_DIR) $(CACHE_DIR)
+
+download: init download_elastic_kibana
 
 download_elastic_kibana:
 	@echo "Downloading Elasticsearch $(ELASTICSEARCH_VERSION)..."
@@ -55,197 +71,88 @@ download_elastic_kibana:
 
 	@echo "Download completed."
 
+# download_Lshell_python_libraries:
+# 	@$(BORDER)
+# 	@echo "Downloading require python packages for Lshell"
+# 	mkdir -p $(CACHE_DIR)/Lshell $(ROLE_DIR)/setup_python_packages/files
+# 	pip3 download limited-shell  --python-version 3.11 --only-binary=:all: -d $(CACHE_DIR)/Lshell
+# 	cd $(CACHE_DIR)/Lshell && tar --use-compress-program=pigz -cf ../../$(ROLE_DIR)/setup_python_packages/files/Lshell.tar.gz *
 
-build_repo: init_builder
-	@$(BORDER)
-	@echo "$(COLOR_GREEN)Building Ubuntu repository from remote sources...$(END_COLOR)"
-	rm -rf $(CACHE_DIR)/ubuntu-repo $(CACHE_DIR)/ubuntu-repo-deb-files
-	mkdir -p $(CACHE_DIR)/ubuntu-repo-deb-files
-
-	@echo "$(COLOR_YELLOW)Downloading .deb packages from ubuntu repository...$(END_COLOR)"
-	@wget -r -np -nd -A "*.deb" -P $(CACHE_DIR)/ubuntu-repo-deb-files \
-		-l 15 --timeout=60 --tries=3 --waitretry=5 -e robots=off \
-		https://repo.apk-group.net/repository/ubuntu/packages/ || echo "Some packages may have failed to download from ubuntu repo"
-
-	@echo "$(COLOR_YELLOW)Downloading .deb packages from ubuntu-security repository...$(END_COLOR)"
-	@wget -r -np -nd -A "*.deb" -P $(CACHE_DIR)/ubuntu-repo-deb-files \
-		-l 15 --timeout=60 --tries=3 --waitretry=5 -e robots=off \
-		https://repo.apk-group.net/repository/ubuntu-security/packages/ || echo "Some packages may have failed to download from ubuntu-security repo"
-
-	@echo "$(COLOR_GREEN)Creating Ubuntu repository structure...$(END_COLOR)"
-	mkdir -p $(CACHE_DIR)/ubuntu-repo/pool/main
-	cp -v $(CACHE_DIR)/ubuntu-repo-deb-files/*.deb $(CACHE_DIR)/ubuntu-repo/pool/main/ 2>/dev/null || echo "No packages downloaded"
-
-	@echo "$(COLOR_GREEN)Generating Packages index...$(END_COLOR)"
-	cd $(CACHE_DIR)/ubuntu-repo && dpkg-scanpackages pool/main /dev/null | gzip -9c > pool/main/Packages.gz
-	cd $(CACHE_DIR)/ubuntu-repo && dpkg-scanpackages pool/main /dev/null > pool/main/Packages
-
-	@echo "$(COLOR_GREEN)Packaging repository...$(END_COLOR)"
-	tar --use-compress-program=pigz -cvf $(ROLE_DIR)/deploy_apt_repository/files/ubuntu-repository.tar.gz -C $(CACHE_DIR)/ubuntu-repo .
-
-	@echo "$(COLOR_GREEN)Cleaning up temporary files...$(END_COLOR)"
-	rm -rf $(CACHE_DIR)/ubuntu-repo $(CACHE_DIR)/ubuntu-repo-deb-files
-	@$(BORDER)
-	@echo "$(COLOR_GREEN)Ubuntu repository build completed!$(END_COLOR)"
+# download_esrally:
+# 	@$(BORDER)
+# 	@echo "Downloading require python packages for esrally"
+# 	mkdir -p $(CACHE_DIR)/esrally $(ROLE_DIR)/setup_python_packages/files
+# 	pip3 download esrally -d $(CACHE_DIR)/esrally
+# 	cd $(CACHE_DIR)/esrally && tar --use-compress-program=pigz -cf ../../$(ROLE_DIR)/setup_python_packages/files/esrally.tar.gz *
 
 
 init_builder:
-	@echo "$(COLOR_GREEN)Initializing builder environment...$(END_COLOR)"
-	@mkdir -p $(CACHE_DIR) $(BUILD_DIR) $(ROLE_DIR)/deploy_apt_repository/files
-	@echo "$(COLOR_YELLOW)Checking required tools...$(END_COLOR)"
-	@command -v wget >/dev/null 2>&1 || { echo "ERROR: wget is required but not installed. Aborting." >&2; exit 1; }
-	@command -v dpkg-scanpackages >/dev/null 2>&1 || { echo "ERROR: dpkg-scanpackages is required but not installed. Install dpkg-dev package. Aborting." >&2; exit 1; }
-	@command -v pigz >/dev/null 2>&1 || { echo "ERROR: pigz is required but not installed. Aborting." >&2; exit 1; }
-	@command -v tar >/dev/null 2>&1 || { echo "ERROR: tar is required but not installed. Aborting." >&2; exit 1; }
-	@command -v skopeo >/dev/null 2>&1 || { echo "WARNING: skopeo is not installed. Docker image downloads will fail." >&2; }
-	@echo "$(COLOR_GREEN)All required tools are available.$(END_COLOR)"
+	@$(BORDER)
+	@echo "Initializing builder environment..."
+	mkdir -p $(BUILD_DIR) $(CACHE_DIR)/repo_builder
+	curl -f -u $(REPO_USERNAME):$(REPO_PASSWORD) -o $(CACHE_DIR)/repo_builder.tar.gz "$(NEXUS_REPOSITORY_URL)/repo_builder.tar.gz"
+	tar --use-compress-program=pigz -xf $(CACHE_DIR)/repo_builder.tar.gz -C $(CACHE_DIR)
+	chmod +x $(CACHE_DIR)/repo_builder/package-builder
+
+build_ansible_repo: init_builder
+	@$(BORDER)
+	@echo "Building ansible repository..."
+	@if [ -d "$(APT_ANSIBLE_REPOSITORY_CACHE_PATH)" ]; then \
+		echo "Skip build $(APT_ANSIBLE_REPOSITORY_JSON_FILE). Repository Already exists"; \
+	else \
+		sed -i "s@.*repository_path[[:space:]]*:.*@repository_path: $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/@g" $(REPO_BUILDER_CONFIG); \
+		rm -rf $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/ansible-depends $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/*.tar.gz $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/source; \
+		mkdir -p $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/ansible-depends $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/source; \
+		.cache/repo_builder/package-builder -c $(REPO_BUILDER_CONFIG) build -i $(APT_ANSIBLE_REPOSITORY_JSON_FILE); \
+		tar --use-compress-program=pigz -xf $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/*.tar.gz -C $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/ansible-depends; \
+		find $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/ansible-depends -name "*.deb" -exec mv {} $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)/source \;; \
+	fi
+
+	tar --use-compress-program=pigz -cf $(ROLE_DIR)/deploy_apt_repository/files/localrepository.tar.gz -C $(APT_ANSIBLE_REPOSITORY_CACHE_PATH) source
+
+build_repo: init_builder
+	@$(BORDER)
+	@echo "Building local repository..."
+	@if [ -d "$(APT_LOCAL_REPOSITORY_CACHE_PATH)" ]; then \
+		echo "Skip build $(APT_LOCAL_REPOSITORY_JSON_FILE). Repository Already exists"; \
+	else \
+		sed -i "s@.*repository_path[[:space:]]*:.*@repository_path: $(APT_LOCAL_REPOSITORY_CACHE_PATH)/@g" $(REPO_BUILDER_CONFIG); \
+		cat $(REPO_BUILDER_CONFIG); \
+		test -f $(APT_LOCAL_REPOSITORY_JSON_FILE) || { echo "Error: $(APT_LOCAL_REPOSITORY_JSON_FILE) not found"; exit 1; }; \
+		.cache/repo_builder/package-builder -c $(REPO_BUILDER_CONFIG) build -i $(APT_LOCAL_REPOSITORY_JSON_FILE) || { echo "package-builder failed"; exit 1; }; \
+	fi
+	@test -f $(APT_LOCAL_REPOSITORY_CACHE_PATH)/*.tar.gz || { echo "Error: No tar.gz found in cache"; exit 1; }
+	cp -rf $(APT_LOCAL_REPOSITORY_CACHE_PATH)/*.tar.gz $(ROLE_DIR)/deploy_apt_repository/files/repo.tar.gz
 
 update_version:
-	@echo "$(COLOR_YELLOW)Updating version to $(AI_version)...$(END_COLOR)"
-	@if [ -z "$(AI_version)" ]; then \
-		echo "$(COLOR_YELLOW)Warning: AI_version is not set. Using default.$(END_COLOR)"; \
-	fi
-	@echo "AI_VERSION=$(AI_version)" > ./VERSION
-	@echo "$(COLOR_GREEN)Version updated: $(AI_version)$(END_COLOR)"
-	@cat ./VERSION
-
-init:
 	@$(BORDER)
-	@echo "$(COLOR_GREEN)Initializing directories...$(END_COLOR)"
-	mkdir -p $(BUILD_DIR) $(CACHE_DIR)
+	@echo "Updating version to $(ai_version)..."
+
 
 clean:
 	@$(BORDER)
-	@echo "$(COLOR_GREEN)Cleaning build and cache...$(END_COLOR)"
+	@echo "Cleaning build and cache..."
 	rm -rf $(BUILD_DIR) $(CACHE_DIR)
 
 clean_all: clean
-	@echo "$(COLOR_YELLOW)Performing deep clean (including downloaded files)...$(END_COLOR)"
-	rm -f $(ROLE_DIR)/deploy_elastic_kibana/files/elasticsearch.tar.gz
-	rm -f $(ROLE_DIR)/deploy_elastic_kibana/files/kibana.tar.gz
-	rm -f $(ROLE_DIR)/deploy_apt_repository/files/ubuntu-repository.tar.gz
-	rm -f $(ROLE_DIR)/deploy_apt_repository/files/*.tar.gz
-	@echo "$(COLOR_GREEN)Deep clean completed.$(END_COLOR)"
+	@$(BORDER)
+	@echo "Cleaning all target files..."
+#	@rm -rf $(ROLE_DIR)/deploy_elastic_kibana/files/* \
+
+	@rm -rf $(APT_LOCAL_REPOSITORY_CACHE_PATH)
+	@rm -rf $(APT_ANSIBLE_REPOSITORY_CACHE_PATH)
 
 package:
 	@$(BORDER)
-	@echo "$(COLOR_GREEN)Packaging AI version $(COLOR_YELLOW)$(AI_version)$(END_COLOR)...$(END_COLOR)"
-	tar --use-compress-program=pigz -cf $(BUILD_DIR)/ai_$(ai_version)_$(shell date +%Y%m%d%H).tar.gz $(ROLE_DIR)
-
+	@echo "Packaging AI version $(ai_version)..."
+	tar --use-compress-program=pigz -cf $(BUILD_DIR)/$(PACKAGE_NAME).tar.gz $(ROLE_DIR) install inventory.yml ansible.cfg main-playbook.yml
 generate_md5sum_file:
 	@$(BORDER)
-	@echo "$(COLOR_GREEN)Generating md5 sum file...$(END_COLOR)"
-	md5sum $(BUILD_DIR)/ai_$(ai_version)_$(shell date +%Y%m%d%H).tar.gz > $(BUILD_DIR)/ai_$(ai_version)_$(shell date +%Y%m%d%H).tar.gz.md5
-
+	@echo "Generating md5 sum file..."
+	md5sum $(BUILD_DIR)/$(PACKAGE_NAME).tar.gz > $(BUILD_DIR)/$(PACKAGE_NAME).tar.gz.md5
 upload: generate_md5sum_file
 	@$(BORDER)
-	@echo "$(COLOR_GREEN)uploading AI version $(COLOR_YELLOW)$(ai_version)$(END_COLOR)...$(END_COLOR)"
-	./upload.sh $(BUILD_DIR)/ai_$(ai_version)_$(shell date +%Y%m%d%H).tar.gz siem-installer
-	./upload.sh $(BUILD_DIR)/ai_$(ai_version)_$(shell date +%Y%m%d%H).tar.gz.md5 siem-installer
+	@echo "uploading AI version $(ai_version)..."
+	./upload.sh $(BUILD_DIR)/$(PACKAGE_NAME).tar.gz siem-installer
+	./upload.sh $(BUILD_DIR)/$(PACKAGE_NAME).tar.gz.md5 siem-installer
 
-help:
-	@$(BORDER)
-	@echo "$(COLOR_GREEN)Available targets:$(END_COLOR)"
-	@echo "  $(COLOR_YELLOW)build$(END_COLOR)              - Complete build process (download, build_repo, package, upload)"
-	@echo "  $(COLOR_YELLOW)download$(END_COLOR)           - Download Elasticsearch and Kibana Docker images"
-	@echo "  $(COLOR_YELLOW)build_repo$(END_COLOR)         - Build Ubuntu repository from remote .deb packages"
-	@echo "  $(COLOR_YELLOW)package$(END_COLOR)            - Create tarball package of roles directory"
-	@echo "  $(COLOR_YELLOW)upload$(END_COLOR)             - Upload package and MD5 checksum"
-	@echo "  $(COLOR_YELLOW)clean$(END_COLOR)              - Remove build and cache directories"
-	@echo "  $(COLOR_YELLOW)clean_all$(END_COLOR)          - Deep clean including downloaded files"
-	@echo "  $(COLOR_YELLOW)init$(END_COLOR)               - Initialize build and cache directories"
-	@echo "  $(COLOR_YELLOW)init_builder$(END_COLOR)       - Check dependencies and initialize environment"
-	@echo "  $(COLOR_YELLOW)update_version$(END_COLOR)     - Update VERSION file"
-	@echo "  $(COLOR_YELLOW)status$(END_COLOR)             - Show status of downloaded files and builds"
-	@echo "  $(COLOR_YELLOW)verify$(END_COLOR)             - Verify integrity of downloaded and built files"
-	@echo "  $(COLOR_YELLOW)help$(END_COLOR)               - Show this help message"
-	@$(BORDER)
-
-status:
-	@$(BORDER)
-	@echo "$(COLOR_GREEN)Build Status:$(END_COLOR)"
-	@echo ""
-	@echo "$(COLOR_PURPLE)Version Information:$(END_COLOR)"
-	@if [ -f ./VERSION ]; then \
-		cat ./VERSION; \
-	else \
-		echo "  No VERSION file found"; \
-	fi
-	@echo ""
-	@echo "$(COLOR_PURPLE)Downloaded Docker Images:$(END_COLOR)"
-	@if [ -f $(ROLE_DIR)/deploy_elastic_kibana/files/elasticsearch.tar.gz ]; then \
-		echo "  $(COLOR_GREEN)✓$(END_COLOR) Elasticsearch ($(ELASTICSEARCH_VERSION)) - $$(du -h $(ROLE_DIR)/deploy_elastic_kibana/files/elasticsearch.tar.gz | cut -f1)"; \
-	else \
-		echo "  $(COLOR_YELLOW)✗$(END_COLOR) Elasticsearch - Not downloaded"; \
-	fi
-	@if [ -f $(ROLE_DIR)/deploy_elastic_kibana/files/kibana.tar.gz ]; then \
-		echo "  $(COLOR_GREEN)✓$(END_COLOR) Kibana ($(KIBANA_VERSION)) - $$(du -h $(ROLE_DIR)/deploy_elastic_kibana/files/kibana.tar.gz | cut -f1)"; \
-	else \
-		echo "  $(COLOR_YELLOW)✗$(END_COLOR) Kibana - Not downloaded"; \
-	fi
-	@echo ""
-	@echo "$(COLOR_PURPLE)Repository Files:$(END_COLOR)"
-	@if [ -f $(ROLE_DIR)/deploy_apt_repository/files/ubuntu-repository.tar.gz ]; then \
-		echo "  $(COLOR_GREEN)✓$(END_COLOR) Ubuntu Repository - $$(du -h $(ROLE_DIR)/deploy_apt_repository/files/ubuntu-repository.tar.gz | cut -f1)"; \
-	else \
-		echo "  $(COLOR_YELLOW)✗$(END_COLOR) Ubuntu Repository - Not built"; \
-	fi
-	@echo ""
-	@echo "$(COLOR_PURPLE)Build Artifacts:$(END_COLOR)"
-	@if [ -d $(BUILD_DIR) ] && [ "$$(ls -A $(BUILD_DIR) 2>/dev/null)" ]; then \
-		ls -lh $(BUILD_DIR)/ | tail -n +2 | awk '{printf "  %s - %s\n", $$9, $$5}'; \
-	else \
-		echo "  No build artifacts found"; \
-	fi
-	@$(BORDER)
-
-verify:
-	@$(BORDER)
-	@echo "$(COLOR_GREEN)Verifying files...$(END_COLOR)"
-	@echo ""
-	@ERRORS=0; \
-	if [ -f $(ROLE_DIR)/deploy_elastic_kibana/files/elasticsearch.tar.gz ]; then \
-		echo -n "Checking Elasticsearch archive... "; \
-		if tar -tzf $(ROLE_DIR)/deploy_elastic_kibana/files/elasticsearch.tar.gz >/dev/null 2>&1; then \
-			echo "$(COLOR_GREEN)OK$(END_COLOR)"; \
-		else \
-			echo "$(COLOR_YELLOW)CORRUPTED$(END_COLOR)"; \
-			ERRORS=$$((ERRORS + 1)); \
-		fi; \
-	fi; \
-	if [ -f $(ROLE_DIR)/deploy_elastic_kibana/files/kibana.tar.gz ]; then \
-		echo -n "Checking Kibana archive... "; \
-		if tar -tzf $(ROLE_DIR)/deploy_elastic_kibana/files/kibana.tar.gz >/dev/null 2>&1; then \
-			echo "$(COLOR_GREEN)OK$(END_COLOR)"; \
-		else \
-			echo "$(COLOR_YELLOW)CORRUPTED$(END_COLOR)"; \
-			ERRORS=$$((ERRORS + 1)); \
-		fi; \
-	fi; \
-	if [ -f $(ROLE_DIR)/deploy_apt_repository/files/ubuntu-repository.tar.gz ]; then \
-		echo -n "Checking Ubuntu repository archive... "; \
-		if tar -tzf $(ROLE_DIR)/deploy_apt_repository/files/ubuntu-repository.tar.gz >/dev/null 2>&1; then \
-			echo "$(COLOR_GREEN)OK$(END_COLOR)"; \
-		else \
-			echo "$(COLOR_YELLOW)CORRUPTED$(END_COLOR)"; \
-			ERRORS=$$((ERRORS + 1)); \
-		fi; \
-	fi; \
-	if [ -f $(BUILD_DIR)/ai_*.tar.gz ]; then \
-		for file in $(BUILD_DIR)/ai_*.tar.gz; do \
-			echo -n "Checking $$file... "; \
-			if tar -tzf $$file >/dev/null 2>&1; then \
-				echo "$(COLOR_GREEN)OK$(END_COLOR)"; \
-			else \
-				echo "$(COLOR_YELLOW)CORRUPTED$(END_COLOR)"; \
-				ERRORS=$$((ERRORS + 1)); \
-			fi; \
-		done; \
-	fi; \
-	echo ""; \
-	if [ $$ERRORS -eq 0 ]; then \
-		echo "$(COLOR_GREEN)All files verified successfully!$(END_COLOR)"; \
-	else \
-		echo "$(COLOR_YELLOW)Found $$ERRORS corrupted file(s)$(END_COLOR)"; \
-	fi
-	@$(BORDER)

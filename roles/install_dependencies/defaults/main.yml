@@ -10,7 +10,7 @@ essential_packages:
   - curl
   - wget
   - git
-  - vim
+  # - vim
   - nano
   - tar
   - gzip
@@ -71,3 +71,4 @@ docker_registry_mirrors: []
 # System settings
 perform_full_upgrade: false
 cleanup_apt_cache: true
+top_level_domain: "ai.local"

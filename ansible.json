@@ -1,0 +1,311 @@
+{
+  "build_number": 1,
+  "code": "0.0.1",
+  "description": "Ansible",
+  "product_name": "Ansible",
+  "base_system": {
+    "repositories": [
+      {
+        "url": "deb [trusted=true] https://repo.apk-group.net/repository/ubuntu $(lsb_release -cs) main"
+      },
+      {
+        "url": "deb [trusted=true] https://repo.apk-group.net/repository/ubuntu $(lsb_release -cs)-updates main"
+      },
+      {
+        "url": "deb [trusted=true] https://repo.apk-group.net/repository/ubuntu-security $(lsb_release -cs)-security main"
+      },
+      {
+        "url": "deb [trusted=true] https://repo.apk-group.net/repository/docker-ubuntu $(lsb_release -cs) stable"
+      }
+    ]
+  },
+  "profiles": [
+    {
+      "description": "AI Ansible",
+      "name": "Ansible",
+      "order": 2,
+      "packages": [
+        {
+          "name": "nginx",
+          "version": ""
+        },
+        {
+          "name": "python3",
+          "version": ""
+        },
+        {
+          "name": "vim",
+          "version": ""
+        },
+        {
+          "name": "python3-apt",
+          "version": ""
+        },
+        {
+          "name": "sshpass",
+          "version": ""
+        },
+        {
+          "name": "python3-minimal",
+          "version": ""
+        },
+        {
+          "name": "sudo",
+          "version": ""
+        },
+        {
+          "name": "ansible",
+          "version": ""
+        },
+        {
+          "name": "base-files",
+          "version": ""
+        },
+        {
+          "name": "bsdutils",
+          "version": ""
+        },
+        {
+          "name": "dbus-bin",
+          "version": ""
+        },
+        {
+          "name": "dbus-daemon",
+          "version": ""
+        },
+        {
+          "name": "dbus-session-bus-common",
+          "version": ""
+        },
+        {
+          "name": "dbus-system-bus-common",
+          "version": ""
+        },
+        {
+          "name": "dbus-user-session",
+          "version": ""
+        },
+        {
+          "name": "dbus",
+          "version": ""
+        },
+        {
+          "name": "debian-archive-keyring",
+          "version": ""
+        },
+        {
+          "name": "debianutils",
+          "version": ""
+        },
+        {
+          "name": "eject",
+          "version": ""
+        },
+        {
+          "name": "fdisk",
+          "version": ""
+        },
+        {
+          "name": "grub-common",
+          "version": ""
+        },
+        {
+          "name": "grub-pc-bin",
+          "version": ""
+        },
+        {
+          "name": "grub-pc",
+          "version": ""
+        },
+        {
+          "name": "grub2-common",
+          "version": ""
+        },
+        {
+          "name": "less",
+          "version": ""
+        },
+        {
+          "name": "libblkid1",
+          "version": ""
+        },
+        {
+          "name": "libc-bin",
+          "version": ""
+        },
+        {
+          "name": "libc-l10n",
+          "version": ""
+        },
+        {
+          "name": "libc6",
+          "version": ""
+        },
+        {
+          "name": "libcryptsetup12",
+          "version": ""
+        },
+        {
+          "name": "libdbus-1-3",
+          "version": ""
+        },
+        {
+          "name": "libfdisk1",
+          "version": ""
+        },
+        {
+          "name": "libgnutls30",
+          "version": ""
+        },
+        {
+          "name": "libgssapi-krb5-2",
+          "version": ""
+        },
+        {
+          "name": "libk5crypto3",
+          "version": ""
+        },
+        {
+          "name": "libkrb5-3",
+          "version": ""
+        },
+        {
+          "name": "libkrb5support0",
+          "version": ""
+        },
+        {
+          "name": "libmount1",
+          "version": ""
+        },
+        {
+          "name": "libnftables1",
+          "version": ""
+        },
+        {
+          "name": "libpam-modules-bin",
+          "version": ""
+        },
+        {
+          "name": "libpam-modules",
+          "version": ""
+        },
+        {
+          "name": "libpam-runtime",
+          "version": ""
+        },
+        {
+          "name": "libpam-systemd",
+          "version": ""
+        },
+        {
+          "name": "libpam0g",
+          "version": ""
+        },
+        {
+          "name": "libsmartcols1",
+          "version": ""
+        },
+        {
+          "name": "libssl3",
+          "version": ""
+        },
+        {
+          "name": "libsystemd-shared",
+          "version": ""
+        },
+        {
+          "name": "libsystemd0",
+          "version": ""
+        },
+        {
+          "name": "libudev1",
+          "version": ""
+        },
+        {
+          "name": "libuuid1",
+          "version": ""
+        },
+        {
+          "name": "libx11-6",
+          "version": ""
+        },
+        {
+          "name": "libx11-data",
+          "version": ""
+        },
+        {
+          "name": "linux-image-amd64",
+          "version": ""
+        },
+        {
+          "name": "locales",
+          "version": ""
+        },
+        {
+          "name": "mount",
+          "version": ""
+        },
+        {
+          "name": "nftables",
+          "version": ""
+        },
+        {
+          "name": "openssh-client",
+          "version": ""
+        },
+        {
+          "name": "openssh-server",
+          "version": ""
+        },
+        {
+          "name": "openssh-sftp-server",
+          "version": ""
+        },
+        {
+          "name": "perl-base",
+          "version": ""
+        },
+        {
+          "name": "systemd-sysv",
+          "version": ""
+        },
+        {
+          "name": "systemd",
+          "version": ""
+        },
+        {
+          "name": "tar",
+          "version": ""
+        },
+        {
+          "name": "tzdata",
+          "version": ""
+        },
+        {
+          "name": "udev",
+          "version": ""
+        },
+        {
+          "name": "usr-is-merged",
+          "version": ""
+        },
+        {
+          "name": "util-linux-extra",
+          "version": ""
+        },
+        {
+          "name": "util-linux-locales",
+          "version": ""
+        },
+        {
+          "name": "util-linux",
+          "version": ""
+        },
+        {
+          "name": "rsync",
+          "version": ""
+        }
+      ]
+    }
+  ]
+}

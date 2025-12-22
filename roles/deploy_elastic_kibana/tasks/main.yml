@@ -57,6 +57,9 @@
     mode: '0644'
   notify: Restart ELK stack
 
+- name: Load elasticsearch docker image
+  include_tasks: load-docker-image.yml
+
 - name: Deploy ELK stack with Docker Compose
   community.docker.docker_compose_v2:
     project_src: "{{ elk_deploy_dir }}"

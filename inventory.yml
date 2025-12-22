@@ -6,7 +6,7 @@ all:
   children:
     servers:
       hosts:
-        gpu-server-01:
+        ai-server-01:
           ansible_host: 192.168.166.62
           ansible_user: root
 

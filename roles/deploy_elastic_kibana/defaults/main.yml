@@ -22,7 +22,7 @@ elk_network_name: "esnet"
 elk_network_external: true
 
 # Deployment directory
-elk_deploy_dir: "/data/ai"
+elk_deploy_dir: "/data/ai/elk"
 
 # Customer name for certificate generation
 elk_customer_name: "APK"
