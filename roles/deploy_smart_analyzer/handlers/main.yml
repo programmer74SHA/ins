@@ -1,0 +1,38 @@
+---
+# Smart Analyzer handlers
+
+- name: Restart Smart Analyzer
+  community.docker.docker_container:
+    name: smart-analyzer
+    state: started
+    restart: true
+
+- name: Restart Qdrant
+  community.docker.docker_container:
+    name: qdrant
+    state: started
+    restart: true
+
+- name: Restart HAProxy
+  community.docker.docker_container:
+    name: haproxy
+    state: started
+    restart: true
+
+- name: Restart AI Launcher 1
+  community.docker.docker_container:
+    name: ai-launcher-1
+    state: started
+    restart: true
+
+- name: Restart AI Launcher 2
+  community.docker.docker_container:
+    name: ai-launcher-2
+    state: started
+    restart: true
+
+- name: Restart Text Embeddings
+  community.docker.docker_container:
+    name: text-embeddings-inference
+    state: started
+    restart: true
