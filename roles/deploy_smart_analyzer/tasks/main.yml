@@ -1,0 +1,289 @@
+---
+# Smart Analyzer deployment tasks
+
+- name: Ensure deployment directory exists
+  ansible.builtin.file:
+    path: "{{ smart_analyzer_deploy_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Ensure prompts directory exists
+  ansible.builtin.file:
+    path: "{{ smart_analyzer_prompts_volume }}"
+    state: directory
+    mode: '0755'
+
+- name: Ensure qdrant storage directory exists
+  ansible.builtin.file:
+    path: "{{ smart_analyzer_qdrant_volume }}"
+    state: directory
+    mode: '0755'
+
+- name: Ensure models directory exists
+  ansible.builtin.file:
+    path: "{{ smart_analyzer_deploy_dir }}/models"
+    state: directory
+    mode: '0755'
+
+- name: Ensure haproxy config directory exists
+  ansible.builtin.file:
+    path: "{{ smart_analyzer_deploy_dir }}/infra_config/haproxy"
+    state: directory
+    mode: '0755'
+
+- name: Copy haproxy configuration files
+  ansible.builtin.copy:
+    src: "{{ smart_analyzer_haproxy_config_path }}/"
+    dest: "{{ smart_analyzer_deploy_dir }}/infra_config/haproxy/"
+    mode: '0644'
+  when: smart_analyzer_haproxy_config_path is defined
+
+- name: Create smart-analyzer network
+  community.docker.docker_network:
+    name: "{{ smart_analyzer_network_name }}"
+    state: present
+  when: smart_analyzer_network_external
+
+- name: Create esnet network
+  community.docker.docker_network:
+    name: "{{ smart_analyzer_esnet_name }}"
+    state: present
+  when: smart_analyzer_esnet_external
+
+- name: Template .env file
+  ansible.builtin.template:
+    src: .env.j2
+    dest: "{{ smart_analyzer_deploy_dir }}/.env"
+    mode: '0644'
+  when: not smart_analyzer_use_project_env
+
+- name: Deploy Qdrant container
+  community.docker.docker_container:
+    name: qdrant
+    image: "{{ smart_analyzer_qdrant_image }}"
+    state: started
+    restart_policy: always
+    ports:
+      - "{{ smart_analyzer_qdrant_port }}:6333"
+    volumes:
+      - "{{ smart_analyzer_qdrant_volume }}:/qdrant/storage"
+    networks:
+      - name: "{{ smart_analyzer_network_name }}"
+    log_driver: "{{ smart_analyzer_log_driver }}"
+    log_options:
+      max-size: "{{ smart_analyzer_log_max_size }}"
+      max-file: "{{ smart_analyzer_log_max_file }}"
+
+- name: Deploy HAProxy container
+  community.docker.docker_container:
+    name: haproxy
+    image: "{{ smart_analyzer_haproxy_image }}"
+    state: started
+    restart_policy: always
+    ports:
+      - "{{ smart_analyzer_haproxy_port }}:5002"
+    volumes:
+      - "{{ smart_analyzer_deploy_dir }}/infra_config/haproxy:/usr/local/etc/haproxy:ro"
+    networks:
+      - name: "{{ smart_analyzer_network_name }}"
+    log_driver: "{{ smart_analyzer_log_driver }}"
+    log_options:
+      max-size: "{{ smart_analyzer_log_max_size }}"
+      max-file: "{{ smart_analyzer_log_max_file }}"
+
+- name: Deploy AI Launcher 1 container
+  community.docker.docker_container:
+    name: ai-launcher-1
+    image: "{{ smart_analyzer_vllm_image }}"
+    state: started
+    restart_policy: always
+    ports:
+      - "{{ smart_analyzer_ai_launcher_1_port }}:5004"
+    env:
+      CUDA_VISIBLE_DEVICES: "0"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - "{{ smart_analyzer_deploy_dir }}/models:/models"
+    working_dir: "/models"
+    command: >
+      --model {{ smart_analyzer_ai_model_path }}
+      --tensor-parallel-size {{ smart_analyzer_ai_tensor_parallel_size }}
+      --gpu-memory-utilization {{ smart_analyzer_ai_gpu_memory_utilization }}
+      --max-model-len {{ smart_analyzer_ai_max_model_len }}
+      --max-num-seqs {{ smart_analyzer_ai_max_num_seqs }}
+      --max-num-batched-tokens {{ smart_analyzer_ai_max_num_batched_tokens }}
+      --host 0.0.0.0
+      --port 5004
+      --enable-auto-tool-choice
+      --tool-call-parser {{ smart_analyzer_ai_tool_call_parser }}
+    ipc_mode: host
+    runtime: nvidia
+    networks:
+      - name: "{{ smart_analyzer_network_name }}"
+    log_driver: "{{ smart_analyzer_log_driver }}"
+    log_options:
+      max-size: "{{ smart_analyzer_log_max_size }}"
+      max-file: "{{ smart_analyzer_log_max_file }}"
+
+- name: Deploy AI Launcher 2 container
+  community.docker.docker_container:
+    name: ai-launcher-2
+    image: "{{ smart_analyzer_vllm_image }}"
+    state: started
+    restart_policy: always
+    ports:
+      - "{{ smart_analyzer_ai_launcher_2_port }}:5004"
+    env:
+      CUDA_VISIBLE_DEVICES: "1"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - "{{ smart_analyzer_deploy_dir }}/models:/models"
+    working_dir: "/models"
+    command: >
+      --model {{ smart_analyzer_ai_model_path }}
+      --tensor-parallel-size {{ smart_analyzer_ai_tensor_parallel_size }}
+      --gpu-memory-utilization {{ smart_analyzer_ai_gpu_memory_utilization }}
+      --max-model-len {{ smart_analyzer_ai_max_model_len }}
+      --max-num-seqs {{ smart_analyzer_ai_max_num_seqs }}
+      --max-num-batched-tokens {{ smart_analyzer_ai_max_num_batched_tokens }}
+      --host 0.0.0.0
+      --port 5004
+      --enable-auto-tool-choice
+      --tool-call-parser {{ smart_analyzer_ai_tool_call_parser }}
+    ipc_mode: host
+    runtime: nvidia
+    networks:
+      - name: "{{ smart_analyzer_network_name }}"
+    log_driver: "{{ smart_analyzer_log_driver }}"
+    log_options:
+      max-size: "{{ smart_analyzer_log_max_size }}"
+      max-file: "{{ smart_analyzer_log_max_file }}"
+
+- name: Deploy Text Embeddings Inference container
+  community.docker.docker_container:
+    name: text-embeddings-inference
+    image: "{{ smart_analyzer_embeddings_image }}"
+    state: started
+    restart_policy: always
+    ports:
+      - "{{ smart_analyzer_embeddings_port }}:80"
+    volumes:
+      - "{{ smart_analyzer_deploy_dir }}/models:/models"
+    working_dir: "/models"
+    command:
+      - "--model-id"
+      - "{{ smart_analyzer_embeddings_model_id }}"
+      - "--dtype"
+      - "{{ smart_analyzer_embeddings_dtype }}"
+    device_requests:
+      - driver: nvidia
+        count: all
+        capabilities:
+          - gpu
+    networks:
+      - name: "{{ smart_analyzer_network_name }}"
+    log_driver: "{{ smart_analyzer_log_driver }}"
+    log_options:
+      max-size: "{{ smart_analyzer_log_max_size }}"
+      max-file: "{{ smart_analyzer_log_max_file }}"
+
+- name: Build AI Service image (if enabled)
+  community.docker.docker_image:
+    name: "{{ smart_analyzer_ai_service_image }}"
+    build:
+      path: "{{ smart_analyzer_dockerfile_path }}"
+      dockerfile: Dockerfile
+    source: build
+    state: present
+  when: smart_analyzer_build_ai_service
+
+- name: Deploy AI Service container
+  community.docker.docker_container:
+    name: smart-analyzer
+    image: "{{ smart_analyzer_ai_service_image }}"
+    state: started
+    restart_policy: unless-stopped
+    stop_timeout: 30
+    ports:
+      - "{{ smart_analyzer_ai_service_port }}:2181"
+    env_file: "{{ smart_analyzer_deploy_dir }}/.env"
+    env:
+      VAULT_ADDR: "{{ smart_analyzer_vault_addr }}"
+      UNSEAL_KEYS: "{{ smart_analyzer_vault_unseal_keys }}"
+      PYTHONUNBUFFERED: "1"
+      APPLICATION_ROOT: "{{ smart_analyzer_application_root }}"
+      SECRET_KEY: "{{ smart_analyzer_secret_key }}"
+      JWT_EXPIRES_DAYS: "{{ smart_analyzer_jwt_expires_days }}"
+      AI_CENTER_HOST: "{{ smart_analyzer_ai_center_host }}"
+      AI_CENTER_PORT: "{{ smart_analyzer_ai_center_port }}"
+      AI_CHAT_URL: "{{ smart_analyzer_ai_chat_url }}"
+      AI_GENERATIVE_MODEL: "{{ smart_analyzer_ai_generative_model }}"
+      SPLUNK_TIME_FIELD: "{{ smart_analyzer_splunk_time_field }}"
+      SPLUNK_ALERT_ID_FIELD: "{{ smart_analyzer_splunk_alert_id_field }}"
+      ELASTIC_TIME_FIELD: "{{ smart_analyzer_elastic_time_field }}"
+      ELASTIC_ALERT_ID_FIELD: "{{ smart_analyzer_elastic_alert_id_field }}"
+      DEFAULT_AI_DEVICE: "{{ smart_analyzer_default_ai_device }}"
+      AI_MODEL_CONTEXT_LENGTH: "{{ smart_analyzer_ai_model_context_length }}"
+      AI_REQ_RETRY: "{{ smart_analyzer_ai_req_retry }}"
+      ELASTICSEARCH_HOST: "{{ smart_analyzer_elasticsearch_host }}"
+      ELASTICSEARCH_PORT: "{{ smart_analyzer_elasticsearch_port }}"
+      ELASTICSEARCH_USERNAME: "{{ smart_analyzer_elasticsearch_username }}"
+      ELASTICSEARCH_PASSWORD: "{{ smart_analyzer_elasticsearch_password }}"
+      JIRA_HOST: "{{ smart_analyzer_jira_host }}"
+      JIRA_USERNAME: "{{ smart_analyzer_jira_username }}"
+      JIRA_PASSWORD: "{{ smart_analyzer_jira_password }}"
+      JIRA_PROJECT_NAME: "{{ smart_analyzer_jira_project_name }}"
+      JIRA_FIELD_OVERAL_DESCRIPTION: "{{ smart_analyzer_jira_field_overal_description }}"
+      JIRA_FIELD_TI_ANALYSIS: "{{ smart_analyzer_jira_field_ti_analysis }}"
+      JIRA_FIELD_KNOWLEDGE_DB_ANALYSIS: "{{ smart_analyzer_jira_field_knowledge_db_analysis }}"
+      JIRA_FIELD_FINAL_ANALYSIS: "{{ smart_analyzer_jira_field_final_analysis }}"
+      JIRA_FIELD_RECOMMENDED_ACTIONS: "{{ smart_analyzer_jira_field_recommended_actions }}"
+      JIRA_FIELD_RESPONSE_ACTIONS: "{{ smart_analyzer_jira_field_response_actions }}"
+      JIRA_FIELD_RESPONSE_SIDE_EFFECTS: "{{ smart_analyzer_jira_field_response_side_effects }}"
+      JIRA_FIELD_ASSET_VALUE: "{{ smart_analyzer_jira_field_asset_value }}"
+      JIRA_FIELD_PLAYBOOK: "{{ smart_analyzer_jira_field_playbook }}"
+      JIRA_FIELD_ATTACKER_IP: "{{ smart_analyzer_jira_field_attacker_ip }}"
+      JIRA_FIELD_TARGET_IP: "{{ smart_analyzer_jira_field_target_ip }}"
+      JIRA_FIELD_SEVERITY: "{{ smart_analyzer_jira_field_severity }}"
+      JIRA_FIELD_MITRE_TACTIC: "{{ smart_analyzer_jira_field_mitre_tactic }}"
+      JIRA_FIELD_MITRE_TECHNIQUE: "{{ smart_analyzer_jira_field_mitre_technique }}"
+      JIRA_FIELD_MITIGATION_ACTIONS: "{{ smart_analyzer_jira_field_mitigation_actions }}"
+      JIRA_FIELD_RESOLVED_TIME: "{{ smart_analyzer_jira_field_resolved_time }}"
+      JIRA_FIELD_OUTCOME_RESULT: "{{ smart_analyzer_jira_field_outcome_result }}"
+      JIRA_FIELD_SOURCE_TYPE: "{{ smart_analyzer_jira_field_source_type }}"
+      JIRA_FIELD_SOURCE_NAME: "{{ smart_analyzer_jira_field_source_name }}"
+      JIRA_FIELD_REASON: "{{ smart_analyzer_jira_field_reason }}"
+      JIRA_FIELD_ORIGINAL_VALUE: "{{ smart_analyzer_jira_field_original_value }}"
+      JIRA_FIELD_QUERY: "{{ smart_analyzer_jira_field_query }}"
+      JIRA_FIELD_URL: "{{ smart_analyzer_jira_field_url }}"
+      JIRA_FIELD_USER_NAME: "{{ smart_analyzer_jira_field_user_name }}"
+      JIRA_FIELD_PROCESS_NAME: "{{ smart_analyzer_jira_field_process_name }}"
+      JIRA_FIELD_PROCESS_PARENT_NAME: "{{ smart_analyzer_jira_field_process_parent_name }}"
+      JIRA_FIELD_HOST_IP: "{{ smart_analyzer_jira_field_host_ip }}"
+      VECTOR_DB_HOST: "{{ smart_analyzer_vector_db_host }}"
+      VECTOR_DB_PORT: "{{ smart_analyzer_vector_db_port }}"
+      VECTOR_DB_ISSUE_COLLECTION: "{{ smart_analyzer_vector_db_issue_collection }}"
+      EMBEDDING_LLM_HOST: "{{ smart_analyzer_embedding_llm_host }}"
+      EMBEDDING_LLM_PORT: "{{ smart_analyzer_embedding_llm_port }}"
+      EMBEDDING_LLM_ROUTE: "{{ smart_analyzer_embedding_llm_route }}"
+      EMBEDDING_LLM_MODEL: "{{ smart_analyzer_embedding_llm_model }}"
+      EMBEDDING_LLM_DIMENSION: "{{ smart_analyzer_embedding_llm_dimension }}"
+    volumes:
+      - "{{ smart_analyzer_prompts_volume }}:/usr/share/mssp/prompts"
+    networks:
+      - name: "{{ smart_analyzer_network_name }}"
+      - name: "{{ smart_analyzer_esnet_name }}"
+    log_driver: "{{ smart_analyzer_log_driver }}"
+    log_options:
+      max-size: "{{ smart_analyzer_log_max_size }}"
+      max-file: "{{ smart_analyzer_log_max_file }}"
+    cpus: "{{ smart_analyzer_ai_service_cpu_limit }}"
+    memory: "{{ smart_analyzer_ai_service_memory_limit }}"
+
+- name: Display deployment information
+  ansible.builtin.debug:
+    msg:
+      - "Smart Analyzer has been deployed successfully!"
+      - "AI Service is accessible at: http://{{ ansible_default_ipv4.address }}:{{ smart_analyzer_ai_service_port }}"
+      - "Qdrant is accessible at: http://{{ ansible_default_ipv4.address }}:{{ smart_analyzer_qdrant_port }}"
+      - "HAProxy is accessible at: http://{{ ansible_default_ipv4.address }}:{{ smart_analyzer_haproxy_port }}"

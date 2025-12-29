@@ -1,0 +1,149 @@
+---
+# Smart Analyzer Configuration
+# Default variables for Smart Analyzer role
+
+# Deployment directory
+smart_analyzer_deploy_dir: "/data/ai/smart-analyzer"
+
+# Docker image registry
+smart_analyzer_registry: "registry.apk-group.net/automation/modules"
+smart_analyzer_vllm_registry: "registry.apk-group.net/automation/vllm"
+
+# Image versions
+smart_analyzer_ai_service_image: "{{ smart_analyzer_registry }}/smart-analyzer-ai:1.0.41"
+smart_analyzer_qdrant_image: "{{ smart_analyzer_registry }}/qdrant:1.14.1"
+smart_analyzer_haproxy_image: "haproxy:alpine"
+smart_analyzer_vllm_image: "{{ smart_analyzer_vllm_registry }}/vllm-openai:latest"
+smart_analyzer_embeddings_image: "ghcr.io/huggingface/text-embeddings-inference:latest"
+
+# Network configuration
+smart_analyzer_network_name: "smart-analyzer-network"
+smart_analyzer_network_external: true
+smart_analyzer_esnet_name: "esnet"
+smart_analyzer_esnet_external: true
+
+# Port mappings
+smart_analyzer_ai_service_port: 2181
+smart_analyzer_qdrant_port: 6333
+smart_analyzer_haproxy_port: 5002
+smart_analyzer_ai_launcher_1_port: 5005
+smart_analyzer_ai_launcher_2_port: 5003
+smart_analyzer_embeddings_port: 3030
+
+# Resource limits - AI Service
+smart_analyzer_ai_service_cpu_limit: "1"
+smart_analyzer_ai_service_memory_limit: "1G"
+smart_analyzer_ai_service_stop_grace_period: "30s"
+
+# AI Launcher configuration
+smart_analyzer_ai_model_path: "/models/Qwen3-30B-A3B-Instruct-2507-FP8"
+smart_analyzer_ai_tensor_parallel_size: 1
+smart_analyzer_ai_gpu_memory_utilization: 0.8
+smart_analyzer_ai_max_model_len: 32768
+smart_analyzer_ai_max_num_seqs: 8
+smart_analyzer_ai_max_num_batched_tokens: 4096
+smart_analyzer_ai_tool_call_parser: "hermes"
+
+# Logging configuration
+smart_analyzer_log_driver: "json-file"
+smart_analyzer_log_max_size: "10m"
+smart_analyzer_log_max_file: "5"
+
+# Volume paths
+smart_analyzer_prompts_volume: "/usr/share/mssp/prompts"
+smart_analyzer_qdrant_volume: "/data/db/issue_database"
+smart_analyzer_models_path: "./models"
+smart_analyzer_haproxy_config_path: "./infra_config/haproxy"
+
+# Embeddings configuration
+smart_analyzer_embeddings_model_id: "bge-base-en-v1.5"
+smart_analyzer_embeddings_dtype: "float32"
+
+# Environment variables for AI Service
+# Vault configuration
+smart_analyzer_vault_addr: ""
+smart_analyzer_vault_unseal_keys: ""
+
+# Application configuration
+smart_analyzer_application_root: ""
+smart_analyzer_secret_key: ""
+smart_analyzer_jwt_expires_days: ""
+
+# AI Center configuration
+smart_analyzer_ai_center_host: ""
+smart_analyzer_ai_center_port: ""
+smart_analyzer_ai_chat_url: ""
+smart_analyzer_ai_generative_model: ""
+
+# Splunk configuration
+smart_analyzer_splunk_time_field: ""
+smart_analyzer_splunk_alert_id_field: ""
+
+# Elastic configuration
+smart_analyzer_elastic_time_field: ""
+smart_analyzer_elastic_alert_id_field: ""
+
+# AI Model configuration
+smart_analyzer_default_ai_device: ""
+smart_analyzer_ai_model_context_length: ""
+smart_analyzer_ai_req_retry: ""
+
+# Elasticsearch configuration
+smart_analyzer_elasticsearch_host: ""
+smart_analyzer_elasticsearch_port: ""
+smart_analyzer_elasticsearch_username: ""
+smart_analyzer_elasticsearch_password: ""
+
+# Jira configuration
+smart_analyzer_jira_host: ""
+smart_analyzer_jira_username: ""
+smart_analyzer_jira_password: ""
+smart_analyzer_jira_project_name: ""
+
+# Jira custom fields
+smart_analyzer_jira_field_overal_description: ""
+smart_analyzer_jira_field_ti_analysis: ""
+smart_analyzer_jira_field_knowledge_db_analysis: ""
+smart_analyzer_jira_field_final_analysis: ""
+smart_analyzer_jira_field_recommended_actions: ""
+smart_analyzer_jira_field_response_actions: ""
+smart_analyzer_jira_field_response_side_effects: ""
+smart_analyzer_jira_field_asset_value: ""
+smart_analyzer_jira_field_playbook: ""
+smart_analyzer_jira_field_attacker_ip: ""
+smart_analyzer_jira_field_target_ip: ""
+smart_analyzer_jira_field_severity: ""
+smart_analyzer_jira_field_mitre_tactic: ""
+smart_analyzer_jira_field_mitre_technique: ""
+smart_analyzer_jira_field_mitigation_actions: ""
+smart_analyzer_jira_field_resolved_time: ""
+smart_analyzer_jira_field_outcome_result: ""
+smart_analyzer_jira_field_source_type: ""
+smart_analyzer_jira_field_source_name: ""
+smart_analyzer_jira_field_reason: ""
+smart_analyzer_jira_field_original_value: ""
+smart_analyzer_jira_field_query: ""
+smart_analyzer_jira_field_url: ""
+smart_analyzer_jira_field_user_name: ""
+smart_analyzer_jira_field_process_name: ""
+smart_analyzer_jira_field_process_parent_name: ""
+smart_analyzer_jira_field_host_ip: ""
+
+# Vector DB configuration
+smart_analyzer_vector_db_host: ""
+smart_analyzer_vector_db_port: ""
+smart_analyzer_vector_db_issue_collection: ""
+
+# Embedding LLM configuration
+smart_analyzer_embedding_llm_host: ""
+smart_analyzer_embedding_llm_port: ""
+smart_analyzer_embedding_llm_route: ""
+smart_analyzer_embedding_llm_model: ""
+smart_analyzer_embedding_llm_dimension: ""
+
+# Whether to use .env file from project root
+smart_analyzer_use_project_env: true
+
+# Whether to build the AI service image locally
+smart_analyzer_build_ai_service: false
+smart_analyzer_dockerfile_path: "."
