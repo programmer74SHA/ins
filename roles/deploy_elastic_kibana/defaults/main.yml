@@ -5,6 +5,21 @@
 # Version of Elastic products
 elk_stack_version: "8.15.5"
 
+# Docker image configuration
+# Set to true to use local pre-loaded images, false to pull from registry
+elk_use_local_images: false
+
+# Docker image registry (can be docker.io, a private registry, or empty for local images)
+elk_docker_registry: "docker.io/elastic"
+
+# Image names (without registry prefix)
+elk_elasticsearch_image_name: "elasticsearch"
+elk_kibana_image_name: "kibana"
+
+# Full image paths (used in docker-compose)
+elk_elasticsearch_image: "{{ elk_docker_registry }}/{{ elk_elasticsearch_image_name }}"
+elk_kibana_image: "{{ elk_docker_registry }}/{{ elk_kibana_image_name }}"
+
 # Elasticsearch configuration
 elk_elasticsearch_password: "P@ssw0rdM@t@6810"
 elk_elasticsearch_port: 9200
