@@ -4,6 +4,10 @@
 
 # Version of Elastic products
 elk_stack_version: "8.15.5"
+es_version: "{{ elk_stack_version }}"
+
+# Docker image configuration
+elasticsearch_docker_image: "registry.apk-group.net/automation/modules/elasticsearch"
 
 # Elasticsearch configuration
 elk_elasticsearch_password: "P@ssw0rdM@t@6810"
