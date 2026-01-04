@@ -23,7 +23,7 @@ services:
       start_period: 30s
 
   kibana:
-    image: registry.apk-group.net/automation/modules/:{{ elk_stack_version }}
+    image: registry.apk-group.net/automation/modules/kibana:{{ elk_stack_version }}
     restart: unless-stopped
     container_name: kibana
     environment:
