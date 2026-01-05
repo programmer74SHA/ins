@@ -1,6 +1,53 @@
 ---
-# This task file loads pre-built Docker images from tar.gz files
-# Only runs when elk_use_local_images is set to true
+# This task file handles Docker image loading
+# - Loads from local tar.gz files when elk_use_local_images is true
+# - Pre-pulls images with retry logic when elk_use_local_images is false
+
+- name: Pull Elasticsearch Docker image with retry logic
+  shell: |
+    set -e
+    for i in 1 2 3 4; do
+      echo "Attempt $i to pull {{ elk_elasticsearch_image }}:{{ elk_stack_version }}"
+      if docker pull {{ elk_elasticsearch_image }}:{{ elk_stack_version }}; then
+        echo "Successfully pulled Elasticsearch image"
+        exit 0
+      fi
+      if [ $i -lt 4 ]; then
+        sleep_time=$((2 ** i))
+        echo "Pull failed, retrying in ${sleep_time} seconds..."
+        sleep ${sleep_time}
+      fi
+    done
+    echo "Failed to pull Elasticsearch image after 4 attempts"
+    exit 1
+  register: pull_elasticsearch_result
+  when: not elk_use_local_images
+  changed_when: "'Downloaded newer image' in pull_elasticsearch_result.stdout or 'Image is up to date' in pull_elasticsearch_result.stdout"
+  retries: 1
+  delay: 0
+
+- name: Pull Kibana Docker image with retry logic
+  shell: |
+    set -e
+    for i in 1 2 3 4; do
+      echo "Attempt $i to pull {{ elk_kibana_image }}:{{ elk_stack_version }}"
+      if docker pull {{ elk_kibana_image }}:{{ elk_stack_version }}; then
+        echo "Successfully pulled Kibana image"
+        exit 0
+      fi
+      if [ $i -lt 4 ]; then
+        sleep_time=$((2 ** i))
+        echo "Pull failed, retrying in ${sleep_time} seconds..."
+        sleep ${sleep_time}
+      fi
+    done
+    echo "Failed to pull Kibana image after 4 attempts"
+    exit 1
+  register: pull_kibana_result
+  when: not elk_use_local_images
+  changed_when: "'Downloaded newer image' in pull_kibana_result.stdout or 'Image is up to date' in pull_kibana_result.stdout"
+  retries: 1
+  delay: 0
 
 - name: Create /var/cache/ai directory on remote hosts
   file:
