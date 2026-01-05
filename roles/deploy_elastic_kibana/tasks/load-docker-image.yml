@@ -17,18 +17,44 @@
     source: pull
   when: not elk_use_local_images
 
-- name: Load Elasticsearch Docker image from file
-  community.docker.docker_image:
-    name: "{{ elk_elasticsearch_image }}"
-    tag: "{{ elk_stack_version }}"
-    source: load
-    load_path: "{{ role_path }}/files/elasticsearch.tar.gz"
+- name: Load Elasticsearch Docker image from tar.gz
+  shell: docker load -i {{ role_path }}/files/elasticsearch.tar.gz
+  register: elasticsearch_load_result
+  changed_when: "'Loaded image' in elasticsearch_load_result.stderr or 'Loaded image' in elasticsearch_load_result.stdout"
   when: elk_use_local_images
 
-- name: Load Kibana Docker image from file
-  community.docker.docker_image:
-    name: "{{ elk_kibana_image }}"
-    tag: "{{ elk_stack_version }}"
-    source: load
-    load_path: "{{ role_path }}/files/kibana.tar.gz"
+- name: Load Kibana Docker image from tar.gz
+  shell: docker load -i {{ role_path }}/files/kibana.tar.gz
+  register: kibana_load_result
+  changed_when: "'Loaded image' in kibana_load_result.stderr or 'Loaded image' in kibana_load_result.stdout"
   when: elk_use_local_images
+
+- name: Extract Elasticsearch image ID from load output
+  set_fact:
+    elasticsearch_image_id: "{{ (elasticsearch_load_result.stderr + elasticsearch_load_result.stdout) | regex_search('sha256:[a-f0-9]{64}') }}"
+  when:
+    - elk_use_local_images
+    - elasticsearch_load_result is changed
+
+- name: Extract Kibana image ID from load output
+  set_fact:
+    kibana_image_id: "{{ (kibana_load_result.stderr + kibana_load_result.stdout) | regex_search('sha256:[a-f0-9]{64}') }}"
+  when:
+    - elk_use_local_images
+    - kibana_load_result is changed
+
+- name: Tag Elasticsearch Docker image with desired name
+  command: docker tag {{ elasticsearch_image_id }} {{ elk_elasticsearch_image }}:{{ elk_stack_version }}
+  when:
+    - elk_use_local_images
+    - elasticsearch_image_id is defined
+    - elasticsearch_image_id != ""
+  changed_when: true
+
+- name: Tag Kibana Docker image with desired name
+  command: docker tag {{ kibana_image_id }} {{ elk_kibana_image }}:{{ elk_stack_version }}
+  when:
+    - elk_use_local_images
+    - kibana_image_id is defined
+    - kibana_image_id != ""
+  changed_when: true
