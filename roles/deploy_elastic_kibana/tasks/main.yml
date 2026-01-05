@@ -65,7 +65,6 @@
     project_src: "{{ elk_deploy_dir }}"
     state: present
     pull: never
-    wait: false
   register: elk_deployment
 
 - name: Wait for Elasticsearch container to be running
