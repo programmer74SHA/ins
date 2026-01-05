@@ -65,3 +65,42 @@ If local image loading fails:
 1. Verify tar.gz files exist in `roles/deploy_elastic_kibana/files/`
 2. Check file permissions
 3. Verify tar.gz files are valid: `gunzip -t elasticsearch.tar.gz`
+
+### Elasticsearch Authentication Issues
+
+On fresh installs, you may encounter authentication errors like:
+```json
+{
+  "error": {
+    "type": "security_exception",
+    "reason": "unable to authenticate user [elastic] for REST request"
+  },
+  "status": 401
+}
+```
+
+The role handles this automatically using a two-step password reset process:
+
+1. **Auto-generate temporary password**: Uses `elasticsearch-reset-password -u elastic -b -a` to generate a temporary password
+2. **Set final password**: Uses the Elasticsearch REST API to change from the temporary password to your configured password
+
+This approach is more reliable than the direct password reset method because:
+- It avoids TTY-related issues with interactive password prompts
+- Works consistently on fresh Elasticsearch installations
+- Uses the auto-generated password immediately before it can become invalid
+
+If you need to manually reset the password:
+```bash
+# Generate a temporary password
+docker exec elasticsearch /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic -b -a
+# Output: New value: <AUTO_GENERATED_PASSWORD>
+
+# Set your desired password
+curl -X POST -u elastic:<AUTO_GENERATED_PASSWORD> \
+  "http://localhost:9200/_security/user/elastic/_password" \
+  -H "Content-Type: application/json" \
+  -d '{"password":"P@ssw0rdM@t@6810"}'
+
+# Verify the password works
+curl -u elastic:P@ssw0rdM@t@6810 http://localhost:9200/_cluster/health?pretty
+```
