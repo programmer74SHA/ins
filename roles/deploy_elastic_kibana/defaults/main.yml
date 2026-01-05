@@ -7,7 +7,7 @@ elk_stack_version: "8.15.5"
 
 # Docker image configuration
 # Set to true to use local pre-loaded images, false to pull from registry
-elk_use_local_images: false
+elk_use_local_images: true
 
 # Docker image registry (can be docker.io, a private registry, or empty for local images)
 elk_docker_registry: "docker.io/elastic"
