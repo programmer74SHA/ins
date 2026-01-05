@@ -64,6 +64,7 @@
   community.docker.docker_compose_v2:
     project_src: "{{ elk_deploy_dir }}"
     state: present
+    pull: never
   register: elk_deployment
 
 - name: Wait for Elasticsearch container to be running
