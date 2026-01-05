@@ -1,165 +1,34 @@
 ---
 # This task file handles Docker image loading
 # - Loads from local tar.gz files when elk_use_local_images is true
-# - Pre-pulls images with retry logic when elk_use_local_images is false
+# - Pulls images from registry when elk_use_local_images is false
 
-- name: Pull Elasticsearch Docker image with retry logic
-  shell: |
-    set -e
-    for i in 1 2 3 4; do
-      echo "Attempt $i to pull {{ elk_elasticsearch_image }}:{{ elk_stack_version }}"
-      if docker pull {{ elk_elasticsearch_image }}:{{ elk_stack_version }}; then
-        echo "Successfully pulled Elasticsearch image"
-        exit 0
-      fi
-      if [ $i -lt 4 ]; then
-        sleep_time=$((2 ** i))
-        echo "Pull failed, retrying in ${sleep_time} seconds..."
-        sleep ${sleep_time}
-      fi
-    done
-    echo "Failed to pull Elasticsearch image after 4 attempts"
-    exit 1
-  register: pull_elasticsearch_result
+- name: Pull Elasticsearch Docker image
+  community.docker.docker_image:
+    name: "{{ elk_elasticsearch_image }}"
+    tag: "{{ elk_stack_version }}"
+    source: pull
   when: not elk_use_local_images
-  changed_when: "'Downloaded newer image' in pull_elasticsearch_result.stdout or 'Image is up to date' in pull_elasticsearch_result.stdout"
-  retries: 1
-  delay: 0
 
-- name: Pull Kibana Docker image with retry logic
-  shell: |
-    set -e
-    for i in 1 2 3 4; do
-      echo "Attempt $i to pull {{ elk_kibana_image }}:{{ elk_stack_version }}"
-      if docker pull {{ elk_kibana_image }}:{{ elk_stack_version }}; then
-        echo "Successfully pulled Kibana image"
-        exit 0
-      fi
-      if [ $i -lt 4 ]; then
-        sleep_time=$((2 ** i))
-        echo "Pull failed, retrying in ${sleep_time} seconds..."
-        sleep ${sleep_time}
-      fi
-    done
-    echo "Failed to pull Kibana image after 4 attempts"
-    exit 1
-  register: pull_kibana_result
+- name: Pull Kibana Docker image
+  community.docker.docker_image:
+    name: "{{ elk_kibana_image }}"
+    tag: "{{ elk_stack_version }}"
+    source: pull
   when: not elk_use_local_images
-  changed_when: "'Downloaded newer image' in pull_kibana_result.stdout or 'Image is up to date' in pull_kibana_result.stdout"
-  retries: 1
-  delay: 0
 
-- name: Create /var/cache/ai directory on remote hosts
-  file:
-    path: /var/cache/ai
-    state: directory
-    owner: "1000"
-    group: "1000"
-    mode: "0755"
+- name: Load Elasticsearch Docker image from file
+  community.docker.docker_image:
+    name: "{{ elk_elasticsearch_image }}"
+    tag: "{{ elk_stack_version }}"
+    source: load
+    load_path: "{{ role_path }}/files/elasticsearch.tar.gz"
   when: elk_use_local_images
 
-- name: Copy Elasticsearch Docker image
-  synchronize:
-    src: files/elasticsearch.tar.gz
-    dest: /var/cache/ai/elasticsearch.tar.gz
+- name: Load Kibana Docker image from file
+  community.docker.docker_image:
+    name: "{{ elk_kibana_image }}"
+    tag: "{{ elk_stack_version }}"
+    source: load
+    load_path: "{{ role_path }}/files/kibana.tar.gz"
   when: elk_use_local_images
-
-- name: Copy Kibana Docker image
-  synchronize:
-    src: files/kibana.tar.gz
-    dest: /var/cache/ai/kibana.tar.gz
-  when: elk_use_local_images
-
-- name: Check if Elasticsearch image already exists
-  command: docker images -q {{ elk_elasticsearch_image }}:{{ elk_stack_version }}
-  register: existing_elasticsearch_image
-  changed_when: false
-  when: elk_use_local_images
-
-- name: Check if Kibana image already exists
-  command: docker images -q {{ elk_kibana_image }}:{{ elk_stack_version }}
-  register: existing_kibana_image
-  changed_when: false
-  when: elk_use_local_images
-
-- name: Load Elasticsearch Docker image from tar.gz
-  command: docker load -i /var/cache/ai/elasticsearch.tar.gz
-  register: elasticsearch_load_result
-  changed_when: "'Loaded image' in elasticsearch_load_result.stderr or 'Loaded image' in elasticsearch_load_result.stdout"
-  when:
-    - elk_use_local_images
-    - existing_elasticsearch_image.stdout == ""
-
-- name: Load Kibana Docker image from tar.gz
-  command: docker load -i /var/cache/ai/kibana.tar.gz
-  register: kibana_load_result
-  changed_when: "'Loaded image' in kibana_load_result.stderr or 'Loaded image' in kibana_load_result.stdout"
-  when:
-    - elk_use_local_images
-    - existing_kibana_image.stdout == ""
-
-- name: Extract Elasticsearch image ID from load output
-  set_fact:
-    loaded_elasticsearch_image_id: "{{ (elasticsearch_load_result.stderr + elasticsearch_load_result.stdout) | regex_search('sha256:[a-f0-9]{64}') }}"
-  when:
-    - elk_use_local_images
-    - elasticsearch_load_result is not skipped
-    - elasticsearch_load_result is changed
-
-- name: Extract Kibana image ID from load output
-  set_fact:
-    loaded_kibana_image_id: "{{ (kibana_load_result.stderr + kibana_load_result.stdout) | regex_search('sha256:[a-f0-9]{64}') }}"
-  when:
-    - elk_use_local_images
-    - kibana_load_result is not skipped
-    - kibana_load_result is changed
-
-- name: Get untagged Elasticsearch image ID if regex didn't find sha256
-  shell: docker images --filter "dangling=true" --format "{{ '{{' }}.ID{{ '}}' }}" | head -n 1
-  register: untagged_elasticsearch_image
-  when:
-    - elk_use_local_images
-    - elasticsearch_load_result is not skipped
-    - loaded_elasticsearch_image_id is not defined or loaded_elasticsearch_image_id == ""
-  changed_when: false
-
-- name: Get untagged Kibana image ID if regex didn't find sha256
-  shell: docker images --filter "dangling=true" --format "{{ '{{' }}.ID{{ '}}' }}" | head -n 1
-  register: untagged_kibana_image
-  when:
-    - elk_use_local_images
-    - kibana_load_result is not skipped
-    - loaded_kibana_image_id is not defined or loaded_kibana_image_id == ""
-  changed_when: false
-
-- name: Set Elasticsearch image ID from untagged images
-  set_fact:
-    loaded_elasticsearch_image_id: "{{ untagged_elasticsearch_image.stdout }}"
-  when:
-    - elk_use_local_images
-    - untagged_elasticsearch_image is not skipped
-    - untagged_elasticsearch_image.stdout != ""
-
-- name: Set Kibana image ID from untagged images
-  set_fact:
-    loaded_kibana_image_id: "{{ untagged_kibana_image.stdout }}"
-  when:
-    - elk_use_local_images
-    - untagged_kibana_image is not skipped
-    - untagged_kibana_image.stdout != ""
-
-- name: Tag Elasticsearch Docker image with desired name
-  command: docker tag {{ loaded_elasticsearch_image_id }} {{ elk_elasticsearch_image }}:{{ elk_stack_version }}
-  when:
-    - elk_use_local_images
-    - elasticsearch_load_result is not skipped
-    - loaded_elasticsearch_image_id is defined
-    - loaded_elasticsearch_image_id != ""
-
-- name: Tag Kibana Docker image with desired name
-  command: docker tag {{ loaded_kibana_image_id }} {{ elk_kibana_image }}:{{ elk_stack_version }}
-  when:
-    - elk_use_local_images
-    - kibana_load_result is not skipped
-    - loaded_kibana_image_id is defined
-    - loaded_kibana_image_id != ""
