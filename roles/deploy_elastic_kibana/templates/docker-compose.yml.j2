@@ -16,7 +16,7 @@ services:
     networks:
       - {{ elk_network_name }}
     healthcheck:
-      test: ["CMD-SHELL", "curl -f -s http://localhost:9200/_cluster/health -o /dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -f -s -u elastic:{{ elk_elasticsearch_password }} http://localhost:9200/_cluster/health -o /dev/null || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 60
