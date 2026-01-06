@@ -67,53 +67,6 @@
     pull: never
   register: elk_deployment
 
-- name: Wait for Elasticsearch container to be running
-  ansible.builtin.command:
-    cmd: docker inspect -f {% raw %}'{{.State.Running}}'{% endraw %} elasticsearch
-  register: es_running
-  until: es_running.stdout == 'true'
-  retries: 30
-  delay: 5
-  changed_when: false
-
-- name: Auto-generate temporary Elasticsearch password
-  ansible.builtin.command:
-    cmd: >
-      docker exec elasticsearch
-      /usr/share/elasticsearch/bin/elasticsearch-reset-password
-      -u elastic
-      -b
-      -a
-  register: auto_password_result
-  changed_when: true
-  failed_when: auto_password_result.rc != 0
-
-- name: Extract auto-generated password
-  ansible.builtin.set_fact:
-    temp_elastic_password: "{{ auto_password_result.stdout | regex_search('New value: (.+)', '\\1') | first }}"
-
-- name: Display auto-generated password (for debugging)
-  ansible.builtin.debug:
-    msg: "Auto-generated temporary password: {{ temp_elastic_password }}"
-
-- name: Set final Elasticsearch password via REST API
-  ansible.builtin.uri:
-    url: "{{ elk_es_protocol }}://{{ elk_es_host }}/_security/user/elastic/_password"
-    method: POST
-    user: "elastic"
-    password: "{{ temp_elastic_password }}"
-    force_basic_auth: yes
-    body_format: json
-    body:
-      password: "{{ elk_elasticsearch_password }}"
-    status_code: 200
-  register: password_change_result
-
-- name: Display password change result
-  ansible.builtin.debug:
-    msg: "Password successfully changed to configured value"
-  when: password_change_result.status == 200
-
 - name: Wait for Elasticsearch to be healthy
   ansible.builtin.uri:
     url: "{{ elk_es_protocol }}://{{ elk_es_host }}/_cluster/health"
