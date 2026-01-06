@@ -15,12 +15,6 @@ services:
       - es_data:/usr/share/elasticsearch/data
     networks:
       - {{ elk_network_name }}
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f -s http://localhost:9200/_cluster/health -o /dev/null || exit 1"]
-      interval: 10s
-      timeout: 10s
-      retries: 60
-      start_period: 60s
 
   kibana:
     image: {{ elk_kibana_image }}:{{ elk_stack_version }}
@@ -36,8 +30,7 @@ services:
     ports:
       - "{{ elk_kibana_port }}:5601"
     depends_on:
-      elasticsearch:
-        condition: service_healthy
+      - elasticsearch
     networks:
       - {{ elk_network_name }}
 
