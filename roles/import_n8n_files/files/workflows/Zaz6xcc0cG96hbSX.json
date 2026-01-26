@@ -1,0 +1,541 @@
+{
+  "id": "Zaz6xcc0cG96hbSX",
+  "name": "ES-AI-5A-Create Time line & Check",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1136,
+        -80
+      ],
+      "id": "e6a36163-6c11-4b04-ac9f-a75321f19d69",
+      "name": "called by ES-AI-Alert-Schaeduler 2h for alerts Check Field"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "0N2npWGntGCky7a3",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/0N2npWGntGCky7a3",
+          "cachedResultName": "ES — ES-AI-Alert-Related Alerts"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        -864
+      ],
+      "id": "9cd35859-8286-40c7-ba34-037172fac9c3",
+      "name": "call ES-AI-Alert-Related Alerts",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ZL1oRFnXzFHRlQGX",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/ZL1oRFnXzFHRlQGX",
+          "cachedResultName": "ES — ES-AI Authentication"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        -688,
+        -80
+      ],
+      "id": "efdccb6d-2a5f-486e-a78c-30906c7028a9",
+      "name": "Token Received",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b6629493-01b4-4313-b821-5f32fabb3964",
+              "name": "Create TimeLine",
+              "value": "={{ $('Create TimeLine').item.json._id }}",
+              "type": "string"
+            },
+            {
+              "id": "b43f8f80-9163-49ec-9dee-f1a01c15ccc3",
+              "name": "Original Rule",
+              "value": "={{ $json['original rule'] }}",
+              "type": "array"
+            },
+            {
+              "id": "8d173422-b8dc-4df5-96e2-d32b26cf7451",
+              "name": "Access Token",
+              "value": "={{ $('Token Received').item.json.access_token }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -240,
+        -80
+      ],
+      "id": "dcbb2baa-2cd9-472c-b466-cb7dfec5538d",
+      "name": "Split To Each A"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "DSqXlzQ7bbIJ37QO",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/DSqXlzQ7bbIJ37QO",
+          "cachedResultName": "ES — ES-AI-TI & AI Analysis"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        -336
+      ],
+      "id": "d762f3b0-2400-4f31-b7a7-45063a92bee8",
+      "name": "Call ES-AI-TI & AI Analysis",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "asLNtMah6gW6lvpY",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/asLNtMah6gW6lvpY",
+          "cachedResultName": "ES — ES-AI-Ticketing & AI Analysis"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        -80
+      ],
+      "id": "1b9be58b-3c3c-44f2-b208-b0efea1d0696",
+      "name": "Call ES-AI-Ticketing & AI Analysis",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "IWKt01I9kg4iDE9d",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/IWKt01I9kg4iDE9d",
+          "cachedResultName": "ES — ES-AI-EI & AI Analysis"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        -608
+      ],
+      "id": "7072bc3e-9bcd-459f-9df5-80cba8c7915f",
+      "name": "Call ES-AI-EI & AI Analysis",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "93R6cLPUn2sMJhsZ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/93R6cLPUn2sMJhsZ",
+          "cachedResultName": "ES — ES-AI-RL & AI Analysis"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        224
+      ],
+      "id": "72328a07-713d-4c13-b9e3-659ced8e1167",
+      "name": "call ES-AI-RL & AI Analysis",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "DsHYPoe6dLh7zuiE",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/DsHYPoe6dLh7zuiE",
+          "cachedResultName": "ES — ES-AL-Aggregation 5A  & Final AI Analysis With Nessus"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        272,
+        560
+      ],
+      "id": "b879efab-5b10-4140-a385-a47841a0ac44",
+      "name": "call ES-AL-Aggregation 5A  & Final AI Analysis",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## Timeline Creation and Data Cleaning Flow\nThis segment creates a timeline entry in Kibana using data from recent alerts, including rule name and severity, via a secured HTTP POST request with authentication. Before that, it receives an access token by triggering an authentication workflow. Then, it processes the incoming alert data by removing redundant fields (like messages and original event details) to clean the dataset. Finally, it prepares and splits the cleaned data along with the timeline and token for further workflow steps.",
+        "height": 360,
+        "width": 1280
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1216,
+        -240
+      ],
+      "typeVersion": 1,
+      "id": "30ccb889-11f1-489d-9e65-894bb08618b1",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Final Aggregation\n\"ES-AL-Aggregation 5A & Final AI Analysis\" compiles all analysis results for final decision making.",
+        "height": 320,
+        "width": 420,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        80,
+        432
+      ],
+      "typeVersion": 1,
+      "id": "aadc13b7-147a-45e5-b70b-1fb941ccceae",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Rule Logic: \"ES-AI-RL & AI Analysis\" for rule-based evaluation",
+        "height": 280,
+        "width": 420,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        80,
+        128
+      ],
+      "typeVersion": 1,
+      "id": "d4f2ea45-98a3-44b7-b7aa-daa7f23465ce",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Parallel Analysis Modules:\nRelated Alerts Check: Calls \"ES-AI-Alert-Related Alerts\" to find correlated alerts",
+        "height": 280,
+        "width": 420,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        80,
+        -976
+      ],
+      "typeVersion": 1,
+      "id": "989a4c4b-9121-44bf-adbf-3eafe6436ffb",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## External Intelligence: \"ES-AI-EI & AI Analysis\" for external threat intel",
+        "height": 240,
+        "width": 420,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        80,
+        -688
+      ],
+      "typeVersion": 1,
+      "id": "daa0082f-21f6-42d5-a5cf-f930f60ab028",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## Threat Intelligence: \"ES-AI-TI & AI Analysis\" for threat analysis",
+        "height": 240,
+        "width": 420,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        80,
+        -416
+      ],
+      "typeVersion": 1,
+      "id": "36d2f65c-fd93-408e-ba73-72ad0955f12e",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## Ticketing System: \"ES-AI-Ticketing & AI Analysis\" for case \nmanagement",
+        "height": 260,
+        "width": 420,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        80,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "0d687a81-67c5-4b93-aaad-bc3040f7dabc",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input array\nconst inputArray = $('called by ES-AI-Alert-Schaeduler 2h for alerts Check Field').all();\n\n// Process each item in the array\nconst processedArray = inputArray.map(item => {\n    // Make a copy of the item to avoid modifying the original\n    const newItem = JSON.parse(JSON.stringify(item));\n    \n    // Check if the path exists before trying to delete\n    if (newItem.json?.latest_doc?.hits?.hits?.[0]?._source) {\n        const source = newItem.json.latest_doc.hits.hits[0]._source;\n        \n        // Delete the specified fields if they exist\n        delete source.message;\n        delete source['event.original'];\n        delete source['event.message'];\n        delete source['kibana.alert.original_event.original'];\n        delete source['kibana.alert.original_event.message'];\n    }\n    \n    return newItem;\n});\n\n// Return the processed array as \"original rule\"\nreturn [{ json: { \"original rule\": processedArray } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        -80
+      ],
+      "id": "41bcc7b6-c640-4751-8ce0-350ad041561c",
+      "name": "delete fields "
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Elastic AI — ES-AI-Alert-Schaeduler 2h",
+        "height": 220,
+        "width": 300,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1328,
+        -480
+      ],
+      "typeVersion": 1,
+      "id": "6b94c785-33e6-4909-8ce8-1e039de9fc8c",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Local}}:9200/timeline/_doc?pipeline=apk-ai",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"RA\": \"\",\n  \"RL\": \"\",\n  \"TI\": \"\",\n  \"EI\": \"\",\n  \"Ticket\": \"\",\n  \"Device\":\"Elastic\",\n  \"AlertID\":\"{{ $('called by ES-AI-Alert-Schaeduler 2h for alerts Check Field').item.json.latest_doc.hits.hits[0]._id }}\",\n  \"namespace\":\"{{ $('called by ES-AI-Alert-Schaeduler 2h for alerts Check Field').first().json.latest_doc.hits.hits[0]._source.data_stream.namespace }}\",\n\"OrgNickname\":\"{{$vars.ES_Org_Nickname}}\"\n}",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -944,
+        -80
+      ],
+      "id": "073bcc9f-8a01-483a-83c9-507da58d46f6",
+      "name": "Create TimeLine",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Zm2ZQ42acv9nDnwz",
+          "name": "Elastic Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: ES-AI-5A-Create Time line & Check\n### Workflow-Version: 1.2.2\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Fixed Bugs\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1328,
+        -800
+      ],
+      "typeVersion": 1,
+      "id": "92e8f707-5e93-4d56-b2fa-20c9d6e64bf3",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "called by ES-AI-Alert-Schaeduler 2h for alerts Check Field": {
+      "main": [
+        [
+          {
+            "node": "Create TimeLine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token Received": {
+      "main": [
+        [
+          {
+            "node": "delete fields ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split To Each A": {
+      "main": [
+        [
+          {
+            "node": "call ES-AI-Alert-Related Alerts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call ES-AI-EI & AI Analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call ES-AI-TI & AI Analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call ES-AI-Ticketing & AI Analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "call ES-AI-RL & AI Analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "call ES-AL-Aggregation 5A  & Final AI Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete fields ": {
+      "main": [
+        [
+          {
+            "node": "Split To Each A",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create TimeLine": {
+      "main": [
+        [
+          {
+            "node": "Token Received",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "e35605ff-5552-463c-ab36-332bff01ccec",
+  "owner": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

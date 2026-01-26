@@ -1,0 +1,3930 @@
+{
+  "id": "XEYG1gfS7MKkJOIC",
+  "name": "SP-AI-RL & AI Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Retrieve the data array from the previous node\nconst data = $input.all();\n\n// Initialize empty arrays to store values\nlet sourceip = [];\nlet destinationIP = [];\nlet username = [];\nlet processname = [];\nlet filepath = [];\nlet hostname = [];\nlet rulename = [];\n\n// Helper function to clean values\nfunction clean(value) {\n  if (value === null || value === undefined || value === \"null\") {\n    return \"\";\n  }\n  return value;\n}\n\n// Helper function to extract hostname without domain\nfunction cleanHostname(host) {\n  if (!host) return \"\";\n  return host.split('.')[0];\n}\n\n// Regular expression for IPv4 and IPv6 addresses\nconst ipRegex = /^(?:(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(?:\\.(?!$)|$)){4}$|^([a-fA-F0-9:]+:+)+[a-fA-F0-9]+$/;\n\n// Loop through each item in the data array\nfor (const item of data) {\n  const originalRule = item.json['Original Rule'] || {};\n\n  let srcIp = clean(originalRule.src_ip);\n\n  // If src_ip is null or empty, try src and validate IP\n  if (!srcIp) {\n    const fallbackSrc = clean(originalRule.src);\n    if (ipRegex.test(fallbackSrc)) {\n      srcIp = fallbackSrc;\n    }\n  }\n\n  sourceip.push(srcIp);\n  rulename.push(clean(originalRule.search_name));\n  hostname.push(cleanHostname(originalRule.dest));\n  destinationIP.push(clean(originalRule.dest_ip));\n  processname.push(clean(originalRule.process_exec));\n  filepath.push(clean(originalRule.file_path));\n  username.push(clean(originalRule._risk_user));\n}\n\n// Join all values into a single string, separated by comma\nconst SourceIP = sourceip.join(\", \");\nconst HostName = hostname.join(\", \");\nconst DestinationIP = destinationIP.join(\", \");\nconst UserName = username.join(\", \");\nconst ProcessName = processname.join(\", \");\nconst FilePath = filepath.join(\", \");\nconst RuleName = rulename.join(\", \");\n\n// Return all the collected data in a single JSON object\nreturn [\n  {\n    json: {\n      SourceIP,\n      HostName,\n      ProcessName,\n      FilePath,\n      UserName,\n      DestinationIP,\n      RuleName,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3728,
+        -576
+      ],
+      "id": "8dc9796a-f795-43a6-82fe-3b7e21c517a8",
+      "name": "Extract Field in Alert"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f234c903-be52-4bbe-bd7b-fa1c58b73406",
+                    "leftValue": "={{ $json.SourceIP }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "XSC"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Field in Alert').item.json.SourceIP }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "83e394b1-074c-4e94-99d3-49c711d8570d"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "SourceIP"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "37385363-b980-4f3a-8160-4f7d1f7c502e",
+                    "leftValue": "={{ $('Extract Field in Alert').item.json.HostName }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "HostName"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "da033ba8-fef6-424c-acf7-e7fa4b392013",
+                    "leftValue": "={{ $('Extract Field in Alert').item.json.ProcessName }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ProcessName"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e74b7a62-11f6-4377-a648-6666daaed5a5",
+                    "leftValue": "={{ $('Extract Field in Alert').item.json.FilePath }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "FilePath"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7ca03f7b-5621-42cf-b848-166c74331beb",
+                    "leftValue": "={{ $('Extract Field in Alert').item.json.UserName }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "UserName"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "97494940-32ce-4b1d-a569-a95c52ddef6d",
+                    "leftValue": "={{ $('Extract Field in Alert').item.json.Destination }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DestinationIP"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1d0b6c6b-97ca-40cf-9862-04c4f061cf0a",
+                    "leftValue": "={{ $('Extract Field in Alert').item.json.RuleName }}",
+                    "rightValue": "=",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Rule"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -3408,
+        -672
+      ],
+      "id": "6eb8e06b-faee-427c-9d71-f323c4a3fff6",
+      "name": "Split to Search on Each Field"
+    },
+    {
+      "parameters": {
+        "jsCode": "const filepath =$('Extract Field in Alert').first().json.FilePath ;\n\nfunction escapeFilePathForJSON(filePath) {\n    return filePath.replace(/\\\\/g, \"\\\\\\\\\");\n}\n\n// Escape the file path\nconst escapedFilePath = escapeFilePathForJSON(filepath);\n\n// Return an array of objects (n8n expected format)\nreturn [{ json: { EscapedFilePath: escapedFilePath } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3200,
+        -528
+      ],
+      "id": "3458379d-da79-4273-b73b-6b08f04cbca0",
+      "name": "Normalize file path"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ai/final_alert_log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer  {{ $('Called by SP-AI-5A-Check').first().json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"alert\": [{{ $('Called by SP-AI-5A-Check').first().json['Original Rule'].toJsonString() }}],\n    \"related_analysis\": {{ $json.result.toJsonString()}},\n    \"device\":\"Splunk\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -128,
+        -560
+      ],
+      "id": "6e40e72f-a17a-4a43-b7e0-fe8f90cb69fd",
+      "name": "AI analysis(RL Info)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1e4db11-8944-403b-a757-a8e1ff7de4cb",
+              "name": "RL_SourceIP",
+              "value": "={{ $json.results.toJsonString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1872,
+        -1536
+      ],
+      "id": "b8d9cb4d-6818-41cb-9961-aadc937c6a8c",
+      "name": "RL_SourceIP"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "67051f8c-c04c-40eb-a4fd-1d952c5bb318",
+              "name": "RL_ProcessName",
+              "value": "={{ $json.results.toJsonString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1888,
+        -1024
+      ],
+      "id": "72b99cd2-9a42-4c4c-9500-9ea395ab80c4",
+      "name": "RL_ProcessName"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8e5f67b2-504d-4742-9166-f08ea083a4b5",
+              "name": "RL_FilePath",
+              "value": "={{ $json.results.toJsonString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1856,
+        -624
+      ],
+      "id": "a427609f-0c4d-4658-a1ae-072486b421c4",
+      "name": "RL_FilePath"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b38a4e5a-2d64-4c5e-8b15-7cf01a1b4745",
+              "name": "RL_UserName",
+              "value": "={{ $json.results.toJsonString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1872,
+        -224
+      ],
+      "id": "780cd5ab-5db0-4f6d-aecf-403524afdc16",
+      "name": "RL_UserName"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ed8ecbd9-7483-4f5d-be00-b67169ff952d",
+              "name": "RL_DestinationIP",
+              "value": "={{ $json.results.toJsonString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1888,
+        192
+      ],
+      "id": "1d6df080-0701-4277-8687-83d6531e4ea8",
+      "name": "RL_DestinationIP"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input items\nconst inputs = $input.all();\n\n// Define the fields you want to check\nconst fields = [\n  'Related_Analysis_SensorIP',\n  'Related_Analysis_ProcessName',\n  'Related_Analysis_FilePath',\n  'Related_Analysis_UserName',\n  'Related_Analysis_RuleEvents',\n  'Related_Analysis_SourceIP',\n  'Related_Analysis_DestinationIP'\n];\n\n// Use a Set to avoid duplicates\nconst resultList = [];\n\nfor (const item of inputs) {\n  const data = item.json\n  const reference = data[\"reference\"];\n  const timeline = data[\"timeline\"];\n  const type = data[\"name\"]\n  const analysis = data[\"analysis\"]\n  if (analysis !== undefined && analysis !== null && analysis !== '') {\n    resultList.push({\n      type: type,\n      analysis: analysis,\n      reference: reference,\n      timeline: timeline\n      \n    });\n  }\n  \n}\n\n// Return a single item containing the full list\nreturn [\n  {\n    json: {\n      result: resultList\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        -560
+      ],
+      "id": "3470a51c-c2bf-4683-bdc2-5b6f5b3e3e95",
+      "name": "Extract Required fields"
+    },
+    {
+      "parameters": {
+        "numberInputs": 8
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        -720,
+        -656
+      ],
+      "id": "b59cf63b-732d-4144-9a25-35a8d3d89c70",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b4cece7f-46e6-4a6a-bf45-8d0c6074e2d0",
+              "name": "5th AI Result",
+              "value": "={{ $('AI analysis(RL Info)').first().json.data }}",
+              "type": "array"
+            },
+            {
+              "id": "77d5bd2b-ba39-4e0f-bc0c-d0bead9424a7",
+              "name": "TimeLine ID",
+              "value": "={{ $('Called by SP-AI-5A-Check').first().json['TimeLine ID'] }}",
+              "type": "string"
+            },
+            {
+              "id": "408a8be8-ddc3-414c-9b48-17f36bc9ca6c",
+              "name": "Alert Timestamp",
+              "value": "={{ $('Called by SP-AI-5A-Check').first().json['Original Rule']._time }}",
+              "type": "string"
+            },
+            {
+              "id": "ebc832f4-9821-4fd2-9ae0-19f9a1e14bff",
+              "name": "TI IP result",
+              "value": "={{ $('Check for existence').first().json.tiIpResult }}",
+              "type": "string"
+            },
+            {
+              "id": "1e59a547-41ad-486c-8c20-8a61906109e5",
+              "name": "EI IP result",
+              "value": "={{ $('Check for existence').first().json.eiIpResult }}",
+              "type": "string"
+            },
+            {
+              "id": "db9e9b34-f95e-45b6-8109-4d9501c136a7",
+              "name": "EI Process result",
+              "value": "={{ $('Check for existence').first().json.eiProcessResult }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2992,
+        -576
+      ],
+      "id": "fe549e67-33a9-4204-b65d-38cd71b084bb",
+      "name": "Collect Required Items",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d3cc17f2-b4b0-4a01-80e6-6be20329688f",
+              "leftValue": "={{ $json.data[0].extraEvidence }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d9798321-64ca-469c-903a-57a298b82942",
+              "leftValue": "={{ $json.data[0].extraEvidence }}",
+              "rightValue": "None",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "7ac6ad1d-9699-4e3c-a04a-e7fcad1c2d40",
+              "leftValue": "={{ $json.data[0].extraEvidence }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        64,
+        -560
+      ],
+      "id": "b8d61719-47a1-43aa-8a3f-ef40e75bfc3a",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input value from the previous node\nconst input = $input.first().json.data[0].extraEvidence;\n\n// Remove the \"Extra Evidences:\" part from the input\nconst cleanedInput = input.replace(/Extra Evidences?:\\s*/, '');\n\n// Regular expression to match key-value pairs in the format \"Key: Value\"\n// Allow the key to contain multiple words (e.g., \"IP\"), and allow the value to include any characters until a comma or end of string\nconst regex = /(\\w+):\\s([^,]+)/g;\nlet matches;\nlet result = {};\nlet counters = {};  // Object to track the counters for each key\n\n// Loop through all matches and store them in the result object\nwhile ((matches = regex.exec(cleanedInput)) !== null) {\n  const key = matches[1].toLowerCase();  // Make the key lowercase\n  let value = matches[2].trim();         // Get the value and trim any extra spaces\n\n  // Remove any text inside parentheses and the parentheses themselves from the value\n  value = value.replace(/\\s*\\(.*?\\)\\s*/, '');\n\n  // If the key is \"ip\", check if the value is a valid IP address\n  if (key === 'ip') {\n    const ipRegex = /^(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)){3}$/;\n    if (!ipRegex.test(value)) {\n      continue; // Skip invalid IP values\n    }\n  }\n\n  // If the key doesn't exist in the result object, initialize it as an empty array\n  if (!result[key]) {\n    result[key] = [];\n  }\n\n  // Add the cleaned value to the corresponding key's array\n  result[key].push(value);\n}\n\n// Returning the result object\nreturn [{ json: result }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        48
+      ],
+      "id": "ca108e40-6703-4b04-8ee4-bfc3752db9c5",
+      "name": "Seprate Extra Evidences"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.ip }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "44927994-377a-4cbe-ac3f-ba9998912b4d"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "IP"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b4188cd0-fde0-450c-88b8-fb6f786bbbbb",
+                    "leftValue": "={{ $json.host }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Host"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0808e582-f3df-46f1-8bf2-b7acea8854ec",
+                    "leftValue": "={{ $json.process }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Process"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        640,
+        48
+      ],
+      "id": "4d8f068c-7786-4d03-8210-6df888026f67",
+      "name": "Switch",
+      "alwaysOutputData": false,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "100e2a45-c348-4031-9ce3-5e469673f290",
+              "name": "ip",
+              "value": "={{ $json.ip }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        -256
+      ],
+      "id": "764341ee-c2ac-4eaa-89c3-7fd59f6c539b",
+      "name": "IP"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d84cacdf-829a-441d-955e-13c3653a62b3",
+              "name": "process",
+              "value": "={{ $json.process }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        352
+      ],
+      "id": "ca8e1a13-ddc4-44a0-b79a-17d62d512728",
+      "name": "process"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "157e49a7-40d8-4b0a-beb4-322b9d025a47",
+              "name": "host",
+              "value": "={{ $json.host }}",
+              "type": "array"
+            },
+            {
+              "id": "af3e9c2a-33a5-4cd4-b690-8e6673f0a77b",
+              "name": "Access Token",
+              "value": "={{ $('Called by SP-AI-5A-Check').first().json['Access Token'] }}",
+              "type": "string"
+            },
+            {
+              "id": "55ed47fb-1b58-48ac-8400-38d0c2521a20",
+              "name": "Summery",
+              "value": "={{ $('AI analysis(RL Info)').item.json.data[0].detailsMarkdown }}",
+              "type": "string"
+            },
+            {
+              "id": "960fdfda-848d-4406-98f3-7da8b3afd894",
+              "name": "Original Rule",
+              "value": "={{ $('Called by SP-AI-5A-Check').first().json['Original Rule'] }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1728,
+        48
+      ],
+      "id": "23dbae72-dbdb-4b6c-8762-d58539aaf432",
+      "name": "Host"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the array of IPs from the input\nconst ips = $input.first().json.ip;\n\n// Function to determine if an IP is public\nfunction isPublicIp(ip) {\n  const privateIpRanges = [\n    /^10\\./,\n    /^172\\.(1[6-9]|2[0-9]|3[0-1])\\./,\n    /^192\\.168\\./,\n    /^127\\./,\n    /^169\\.254\\./,\n  ];\n  return !privateIpRanges.some(range => range.test(ip));\n}\n\n// Separate IPs into public and private\nconst PublicIPs = [];\nconst PrivateIPs = [];\n\nfor (const ip of ips) {\n  if (isPublicIp(ip)) {\n    PublicIPs.push(ip);\n  } else {\n    PrivateIPs.push(ip);\n  }\n}\n\n// Return the result\nreturn [\n  {\n    json: {\n      PublicIPs,\n      PrivateIPs,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        -256
+      ],
+      "id": "bc139d54-df5c-424d-a1ff-ce279f60e1aa",
+      "name": "Extract Public & Private IPs"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.PublicIPs }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "0feb9f7c-1148-4cce-a31d-0682f65f9f16"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Public IP"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5984806b-0fd5-4694-80b5-6d5f288f3284",
+                    "leftValue": "={{ $json.PrivateIPs }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Private IP"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1472,
+        -256
+      ],
+      "id": "a16e1595-d42f-439d-b581-c236711d67db",
+      "name": "Divided Public & Private IPs "
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9e1112f5-3aed-437e-80c6-40fc75463a65",
+              "name": "PublicIPs",
+              "value": "={{ $json.PublicIPs }}",
+              "type": "array"
+            },
+            {
+              "id": "502c8c28-0198-497f-8050-dc701a716a8c",
+              "name": "Access Token",
+              "value": "={{ $('Called by SP-AI-5A-Check').first().json['Access Token'] }}",
+              "type": "string"
+            },
+            {
+              "id": "02ad0555-9d53-4608-9626-b9a880ff08b8",
+              "name": "Original Rule",
+              "value": "={{ $('Called by SP-AI-5A-Check').first().json['Original Rule'] }}",
+              "type": "object"
+            },
+            {
+              "id": "5cad53ed-7fc2-44cf-9901-8c4156aac423",
+              "name": "Summery",
+              "value": "={{ $('AI analysis(RL Info)').item.json.data[0].detailsMarkdown }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1744,
+        -400
+      ],
+      "id": "0f551116-1fef-450d-8811-8ac45e82e466",
+      "name": "Public IP"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bfe09a77-e7ab-46d0-92b8-80b29562975e",
+              "name": "PrivateIPs",
+              "value": "={{ $json.PrivateIPs }}",
+              "type": "array"
+            },
+            {
+              "id": "10511c69-3f9a-4d75-bf2c-4f2a4f46be40",
+              "name": "Access Token",
+              "value": "={{ $('Called by SP-AI-5A-Check').first().json['Access Token'] }}",
+              "type": "string"
+            },
+            {
+              "id": "c5e7178b-52fd-468c-8ac6-6dea81b5750e",
+              "name": "PublicIPs",
+              "value": "={{ $json.PublicIPs }}",
+              "type": "array"
+            },
+            {
+              "id": "a7a93edc-838a-4e25-b7e0-0897dbb94a1d",
+              "name": "Access Token",
+              "value": "={{ $('Called by SP-AI-5A-Check').first().json['Access Token'] }}",
+              "type": "string"
+            },
+            {
+              "id": "19d999a0-b8bd-4ca5-a52c-c34adadd6df6",
+              "name": "Summery",
+              "value": "={{ $('AI analysis(RL Info)').item.json.data[0].detailsMarkdown }}",
+              "type": "string"
+            },
+            {
+              "id": "1521b54b-9d72-4fe5-814a-96d552370f13",
+              "name": "Original Rule",
+              "value": "={{ $('Called by SP-AI-5A-Check').first().json['Original Rule'] }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1728,
+        -96
+      ],
+      "id": "c7448600-ee0b-41d5-b613-4962e2f6ec45",
+      "name": "Private IP"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2048,
+        -48
+      ],
+      "id": "d38413d6-2aba-4038-9924-806bf0092e89",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "157e49a7-40d8-4b0a-beb4-322b9d025a47",
+              "name": "Process",
+              "value": "={{ $json.data.process }}",
+              "type": "object"
+            },
+            {
+              "id": "af3e9c2a-33a5-4cd4-b690-8e6673f0a77b",
+              "name": "Access Token",
+              "value": "={{ $('Called by SP-AI-5A-Check').first().json['Access Token'] }}",
+              "type": "string"
+            },
+            {
+              "id": "55ed47fb-1b58-48ac-8400-38d0c2521a20",
+              "name": "Summery",
+              "value": "={{ $('AI analysis(RL Info)').item.json.data[0].detailsMarkdown }}",
+              "type": "string"
+            },
+            {
+              "id": "960fdfda-848d-4406-98f3-7da8b3afd894",
+              "name": "Original Rule",
+              "value": "={{ $('Called by SP-AI-5A-Check').first().json['Original Rule'] }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1824,
+        368
+      ],
+      "id": "820b9dd0-be80-4807-8245-cfdc79bce5b2",
+      "name": "Process"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2512,
+        -80
+      ],
+      "id": "1f88f5f8-e64e-4074-acfc-37a7748de5f8",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all inputs\nconst input = $input.all();\n\n// Initialize an empty result object\nlet result = {};\n\n// Loop through all the input objects\ninput.forEach(item => {\n  // Check if \"EI IP result\" exists and add it to the result object\n  if (item.json['EI IP result'] !== undefined && item.json['EI IP result'] !== null) {\n    result.eiIpResult = item.json['EI IP result'];\n  }\n\n  // Check if \"EI Process result\" exists and add it to the result object\n  if (item.json['EI Process result'] !== undefined && item.json['EI Process result'] !== null) {\n    result.eiProcessResult = item.json['EI Process result'];\n  }\n\n  // Check if \"TI IP Result \" exists and add it to the result object\n  if (item.json['TI IP Result '] !== undefined && item.json['TI IP Result '] !== null) {\n    result.tiIpResult = item.json['TI IP Result '];\n  }\n});\n\n// Return the merged result as an object inside 'json'\nreturn [\n  {\n    json: result // Return the final result object\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2768,
+        -64
+      ],
+      "id": "0b0dcc93-8b0e-47a0-9acc-be45ff13e44d",
+      "name": "Check for existence"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/enrich_process",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer  {{ $('Called by SP-AI-5A-Check').first().json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"process\":{\"name\":\"{{ $('Seprate Extra Evidences').item.json.process[0].replaceAll('\\\\','\\\\\\\\') }}\"}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1248,
+        352
+      ],
+      "id": "f64f83f5-0c32-4e13-9a23-98e321fc8c3e",
+      "name": "Enrich Process"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8d7c4704-1e7d-460c-87e5-588a6384feae",
+              "leftValue": "={{ $json.data.process.result }}",
+              "rightValue": "Not Found",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1488,
+        352
+      ],
+      "id": "7e7fb99f-d7a8-48c5-93bd-f6d1b908f203",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ai/alert_log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer  {{ $('Called by SP-AI-5A-Check').first().json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"alert\": [{{ $('Called by SP-AI-5A-Check').item.json['Original Rule'].toJsonString() }}],\n    \"related_logs\": [{\"name\":\"source_ip\",\"alerts\":{{ $json.RL_SourceIP }}}],\n    \"device\":\"Splunk\"\n}\n\n ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1424,
+        -1536
+      ],
+      "id": "ac856f5a-b07a-4f08-b637-8f59b7017d6e",
+      "name": "AI analysis(SourceIP)"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ai/alert_log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer  {{ $('Called by SP-AI-5A-Check').first().json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"alert\":[{{ $('Called by SP-AI-5A-Check').item.json['Original Rule'].toJsonString() }}],\n    \"related_logs\": [{\"name\":\"process_name\",\"alerts\":{{ $json.RL_ProcessName }}}],\n    \"device\":\"Splunk\"\n}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1440,
+        -1024
+      ],
+      "id": "e10903c3-b00e-411a-a02d-2890d5ce5f02",
+      "name": "AI analysis(ProcessName)"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ai/alert_log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer  {{ $('Called by SP-AI-5A-Check').first().json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"alert\":[{{ $('Called by SP-AI-5A-Check').item.json['Original Rule'].toJsonString() }}],\n    \"related_logs\": [{\"name\":\"file_path\",\"alerts\":{{ $json.RL_FilePath }}}],\n    \"device\":\"Splunk\"\n}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1408,
+        -624
+      ],
+      "id": "bc49a377-ff08-41bd-ae4a-b7cefcb0e4a6",
+      "name": "AI analysis(FilePath)"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ai/alert_log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer  {{ $('Called by SP-AI-5A-Check').first().json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"alert\":[{{ $('Called by SP-AI-5A-Check').item.json['Original Rule'].toJsonString() }}],\n    \"related_logs\": [{\"name\":\"user_name\",\"alerts\":{{ $json.RL_UserName }}}],\n    \"device\":\"Splunk\"\n}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1424,
+        -224
+      ],
+      "id": "d1a6d977-2450-4455-8cdf-e020bee9e148",
+      "name": "AI analysis(UserName)"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ai/alert_log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer  {{ $('Called by SP-AI-5A-Check').first().json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"alert\": [{{ $('Called by SP-AI-5A-Check').item.json['Original Rule'].toJsonString() }}],\n    \"related_logs\": [{\"name\":\"destination_ip\",\"alerts\":{{ $json.RL_DestinationIP }}}],\n    \"device\":\"Splunk\"\n}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1440,
+        192
+      ],
+      "id": "84f86211-8ae0-41ab-aa15-68232bd0e3ae",
+      "name": "AI analysis(DestinationIP)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2f66e26c-d4eb-4a29-95c9-48f5f548fb33",
+              "name": "Related_Analysis_SensorIP",
+              "value": "={{ $json.data[0].detailsMarkdown }}",
+              "type": "string"
+            },
+            {
+              "id": "2ef501f6-c2e8-411c-a3be-4ef95de832e1",
+              "name": "reference",
+              "value": "={{ $json.data[0].reference }}",
+              "type": "array"
+            },
+            {
+              "id": "d6f05976-43f2-4af3-843c-d6caf3e31f0c",
+              "name": "timeline",
+              "value": "={{ $json.data[0].timeline }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1200,
+        -1280
+      ],
+      "id": "3aead1b4-1219-430d-9142-1c1969b1e4c0",
+      "name": "Related_Analysis_SensorIP"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2f66e26c-d4eb-4a29-95c9-48f5f548fb33",
+              "name": "Related_Analysis_SourceIP",
+              "value": "={{ $json.data[0].detailsMarkdown }}",
+              "type": "string"
+            },
+            {
+              "id": "bff05fef-d950-4745-a696-04421b6ad3d3",
+              "name": "reference",
+              "value": "={{ $json.data[0].reference }}",
+              "type": "array"
+            },
+            {
+              "id": "9defce2c-85f0-4a24-84a7-98c2ea5b9d93",
+              "name": "timeline",
+              "value": "={{ $json.data[0].timeline }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1200,
+        -1536
+      ],
+      "id": "180a4622-c81d-498b-a594-010042413a72",
+      "name": "Related_Analysis_SourceIP"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2f66e26c-d4eb-4a29-95c9-48f5f548fb33",
+              "name": "Related_Analysis_ProcessName",
+              "value": "={{ $json.data[0].detailsMarkdown }}",
+              "type": "string"
+            },
+            {
+              "id": "8c7ad157-b9fe-4b16-b3fd-2775e9241399",
+              "name": "reference",
+              "value": "={{ $json.data[0].reference }}",
+              "type": "array"
+            },
+            {
+              "id": "390f478c-ae71-4c76-9628-8525eedaa9df",
+              "name": "timeline",
+              "value": "={{ $json.data[0].timeline }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1216,
+        -1024
+      ],
+      "id": "e6ae7f2d-83ad-41e0-8d58-7693eadf69d6",
+      "name": "Related_Analysis_ProcessName"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2f66e26c-d4eb-4a29-95c9-48f5f548fb33",
+              "name": "Related_Analysis_FilePath",
+              "value": "={{ $json.data[0].detailsMarkdown }}",
+              "type": "string"
+            },
+            {
+              "id": "adb22420-2a26-45e5-abbf-26e6f9cd5348",
+              "name": "reference",
+              "value": "={{ $json.data[0].reference }}",
+              "type": "array"
+            },
+            {
+              "id": "8b1b91c9-994b-4e27-b02d-27a5e2abfe11",
+              "name": "timeline",
+              "value": "={{ $json.data[0].timeline }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1184,
+        -624
+      ],
+      "id": "815dcec8-011d-416b-9d32-3e2949bc17ff",
+      "name": "Related_Analysis_FilePath"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2f66e26c-d4eb-4a29-95c9-48f5f548fb33",
+              "name": "Related_Analysis_UserName",
+              "value": "={{ $json.data[0].detailsMarkdown }}",
+              "type": "string"
+            },
+            {
+              "id": "35f1c520-07c3-48ca-bfba-bab7e0cb536d",
+              "name": "reference",
+              "value": "={{ $json.data[0].reference }}",
+              "type": "array"
+            },
+            {
+              "id": "cb0de61a-e554-44b3-9023-faa982c30f5f",
+              "name": "timeline",
+              "value": "={{ $json.data[0].timeline }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1200,
+        -224
+      ],
+      "id": "6ab49221-5f65-4548-8058-30e31fd741d8",
+      "name": "Related_Analysis_UserName"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2f66e26c-d4eb-4a29-95c9-48f5f548fb33",
+              "name": "Related_Analysis_DestinationIP",
+              "value": "={{ $json.data[0].detailsMarkdown }}",
+              "type": "string"
+            },
+            {
+              "id": "6dcb220c-d9a5-4910-ba73-dec8ed839fc6",
+              "name": "data[0].reference",
+              "value": "={{ $json.data[0].reference }}",
+              "type": "array"
+            },
+            {
+              "id": "5127a706-adaa-45cf-b91d-a6a1470ba9dc",
+              "name": "timeline",
+              "value": "={{ $json.data[0].timeline }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1216,
+        192
+      ],
+      "id": "776f506e-292e-4168-87ae-f629fc705489",
+      "name": "Related_Analysis_DestinationIP"
+    },
+    {
+      "parameters": {
+        "jsCode": "\ninput = $input.all();\nconst output = input.map(item => ({\n  name: \"Related_Analysis_SourceIP\",\n  analysis: $input.first().json.Related_Analysis_SourceIP,\n  reference: $input.first().json.reference,\n  timeline: $input.first().json.timeline\n}));\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -992,
+        -1536
+      ],
+      "id": "076315f7-0ba6-479b-aea9-4dfdf82e929f",
+      "name": "AI_Fields_SourceIP"
+    },
+    {
+      "parameters": {
+        "jsCode": "\ninput = $input.all();\nconst output = input.map(item => ({\n  name: \"Related_Analysis_SensorIP\",\n  analysis: $input.first().json.Related_Analysis_SensorIP,\n  reference: $input.first().json.reference,\n  timeline: $input.first().json.timeline\n}));\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -992,
+        -1280
+      ],
+      "id": "fedd76e7-fafa-4323-b0e3-f3d84aef744d",
+      "name": "AI_Fields_SensorIP"
+    },
+    {
+      "parameters": {
+        "jsCode": "\ninput = $input.all();\nconst output = input.map(item => ({\n  name: \"Related_Analysis_ProcessName\",\n  analysis: $input.first().json.Related_Analysis_ProcessName,\n  reference: $input.first().json.reference, \n  timeline: $input.first().json.timeline\n}));\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1008,
+        -1024
+      ],
+      "id": "3b3bf68b-51ed-4fef-98d4-fd82b45cdc2d",
+      "name": "AI_Fields_ProcessName"
+    },
+    {
+      "parameters": {
+        "jsCode": "\ninput = $input.all();\nconst output = input.map(item => ({\n  name: \"Related_Analysis_FilePath\",\n  analysis: $input.first().json.Related_Analysis_FilePath,\n  reference: $input.first().json.reference,\n  timeline: $input.first().json.timeline\n}));\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -976,
+        -624
+      ],
+      "id": "9737143d-950e-4cd2-8b52-287cde372e99",
+      "name": "AI_Fields_FilePath"
+    },
+    {
+      "parameters": {
+        "jsCode": "\ninput = $input.all();\nconst output = input.map(item => ({\n  name: \"Related_Analysis_UserName\",\n  analysis: $input.first().json.Related_Analysis_UserName,\n  reference: $input.first().json.reference,\n  timeline: $input.first().json.timeline\n}));\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -992,
+        -224
+      ],
+      "id": "59a0cde5-7ae7-4aa2-8edf-4be9aa686c0e",
+      "name": "AI_Fields_UserName"
+    },
+    {
+      "parameters": {
+        "jsCode": "\ninput = $input.all();\nconst output = input.map(item => ({\n  name: \"Related_Analysis_UserName\",\n  analysis: $input.first().json.Related_Analysis_UserName,\n  reference: $input.first().json.reference,\n  timeline: $input.first().json.timeline\n}));\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1008,
+        192
+      ],
+      "id": "789560da-113b-411c-9d7c-7d5fb4e46383",
+      "name": "AI_Fields_DestinationIP"
+    },
+    {
+      "parameters": {
+        "content": "## Extract and Normalize Alert Key Fields\nThis section of the workflow parses key fields from incoming alert data—such as source IP, destination IP, sensor IP, process name, file path, username, and rule name—by navigating the nested structure of the original alert. It then compiles these into flat, clean variables for use in later stages. ",
+        "height": 360,
+        "width": 580,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -4064,
+        -752
+      ],
+      "typeVersion": 1,
+      "id": "f8ec0328-72fd-4e89-8801-f8fa2c472833",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Splitting for Search\nThe extracted fields are evaluated to check for non-empty values. Based on conditions, the workflow splits into separate paths to search for each field (e.g., Source IP, Sensor IP, Process Name, etc.) in Elasticsearch.",
+        "height": 580,
+        "width": 260,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3472,
+        -896
+      ],
+      "typeVersion": 1,
+      "id": "2401b9a5-4b9b-4051-8204-9ae1455e4c62",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Normalizing File Path\nFile paths are processed to escape special characters (e.g., backslashes), ensuring compatibility with JSON queries for Elasticsearch searches.",
+        "height": 360
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3248,
+        -720
+      ],
+      "typeVersion": 1,
+      "id": "3ce3503f-4f61-4629-a87b-6d96a0597e53",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Related Logs AI Enrichment Subflow\nThis section extracts various related log fields (Source IP, Destination IP, Process Name and ...) from upstream data and assigns them to dedicated variables using `Set` nodes. Each variable is then sent individually to an external AI analysis API along with the original alert data. The purpose is to enrich the investigation timeline by analyzing the correlation and context of each related log field using AI, supporting deeper threat analysis in the SIEM environment.",
+        "height": 2748,
+        "width": 1900,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2688,
+        -1984
+      ],
+      "typeVersion": 1,
+      "id": "8c5c060c-97a6-4f35-b9be-cecc8af1e741",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Final Merging\nAll formatted AI analysis results are merged into a single output, combining insights from Source IP, Sensor IP, Process Name, File Path, User Name, Destination IP, and Rule Events.",
+        "height": 640,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -784,
+        -880
+      ],
+      "typeVersion": 1,
+      "id": "e4380c7a-7be7-4933-8bde-e8ec8c399c60",
+      "name": "Sticky Note14"
+    },
+    {
+      "parameters": {
+        "content": "## Extracting Required Fields\nProcesses input from previous AI analysis nodes to extract key fields (Related_Analysis_SensorIP, Related_Analysis_ProcessName, etc.). Filters out empty or null analysis fields and compiles a result list containing type, analysis, reference, and timeline for each valid entry.",
+        "height": 420,
+        "width": 300,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -528,
+        -800
+      ],
+      "typeVersion": 1,
+      "id": "f28a493f-6984-40f9-8b7d-39cc55a8f194",
+      "name": "Sticky Note15"
+    },
+    {
+      "parameters": {
+        "content": "## \nFinal AI Analysis Submission\nSends the cleaned original alert and the compiled related analysis results to the AI analysis API using a Bearer token for authentication. The request body includes the cleaned alert data and the merged analysis results.",
+        "height": 340,
+        "width": 420,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -208,
+        -720
+      ],
+      "typeVersion": 1,
+      "id": "7f0ee1e0-49e6-4a87-bd12-8aa6c482b346",
+      "name": "Sticky Note16"
+    },
+    {
+      "parameters": {
+        "content": "## Extract and Categorize Evidence Information\nThis segment of the workflow processes the additional evidence data by cleaning and extracting key-value pairs. It uses regular expressions to identify and parse the information into a structured format, including validation checks for specific fields like IP addresses. The parsed data is then passed to a switch node, which categorizes and routes the information based on conditions like the presence of an IP, host, or process data.",
+        "height": 400,
+        "width": 540,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        304,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "8a2e0836-d6b3-46ed-bd0c-c872985918a3",
+      "name": "Sticky Note18"
+    },
+    {
+      "parameters": {
+        "content": "## Categorize IP Addresses into Public and Private\nThis part of the workflow takes a list of IP addresses, separates them into public and private categories using a custom JavaScript function, and then routes the output based on the presence of each type.",
+        "height": 300,
+        "width": 760,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        864,
+        -384
+      ],
+      "typeVersion": 1,
+      "id": "b95f7495-6aa1-48d2-bc63-8f78fec09b9b",
+      "name": "Sticky Note19"
+    },
+    {
+      "parameters": {
+        "content": "## Prepare and Merge Host & IP Context for AI Summary\nThis section extracts and organizes key data including hostnames, private IPs, public IPs, access tokens, the original detection rule, and the AI-generated summary. It separates the context into two sets — one for host and another for private IPs — and then merges them to create a unified structure for downstream processing or enrichment.",
+        "height": 400,
+        "width": 720,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1648,
+        -208
+      ],
+      "typeVersion": 1,
+      "id": "8bfd313e-3140-4057-8f94-079e7348cd06",
+      "name": "Sticky Note20"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger AI-Based Threat Intelligence Summary for Public IPs\nThis section sets essential data — including public IPs, access token, original detection rule, and AI-generated summary — before invoking a sub-workflow. ",
+        "height": 280,
+        "width": 700,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1648,
+        -496
+      ],
+      "typeVersion": 1,
+      "id": "4c6e6189-0e1a-40a1-b7aa-c71fa9550dba",
+      "name": "Sticky Note22"
+    },
+    {
+      "parameters": {
+        "content": "## Process Enrichment and Conditional Routing\nThis part of the flow focuses on enriching the process name extracted from extra evidence. It sends the process name to an enrichment API with proper authorization and checks if a valid result is returned. If the enrichment fails (result is \"Not Found\"), it routes the flow to fetch AI summaries and additional details for advanced analysis and reporting.",
+        "height": 320,
+        "width": 1440,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        864,
+        224
+      ],
+      "typeVersion": 1,
+      "id": "e2c3ec16-055c-4f31-a34f-4ce621b886df",
+      "name": "Sticky Note25"
+    },
+    {
+      "parameters": {
+        "content": "## Merge and Validate Enrichment Results\nThis section merges up to four enrichment results (such as EI IP, EI Process, and TI IP) and runs a JavaScript function to check which results are present. The script filters and combines only the existing fields into a unified JSON object, preparing the data for further analysis or decision-making steps.",
+        "height": 380,
+        "width": 540
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2400,
+        -240
+      ],
+      "typeVersion": 1,
+      "id": "ffaecb7b-c57a-4c29-a1a3-00d3fb1d40bd",
+      "name": "Sticky Note33"
+    },
+    {
+      "parameters": {
+        "content": "## Prepare and Execute Final Note Insertion\nThis section collects all the essential data points—such as AI analysis results, timeline creation details, alert timestamps, and threat intelligence findings—and consolidates them into structured variables. Once assembled, these variables are passed to a sub-workflow which is responsible for inserting the final timeline note into the system.",
+        "height": 380,
+        "width": 580,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2864,
+        -736
+      ],
+      "typeVersion": 1,
+      "id": "55cb8926-f675-4652-b632-cd598f7f6bdc",
+      "name": "Sticky Note36"
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Splunk AI — SP-AI-5A-Check",
+        "height": 220,
+        "width": 300,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -4320,
+        -992
+      ],
+      "typeVersion": 1,
+      "id": "56107832-cde1-471d-9a61-60fa0b7eafeb",
+      "name": "Sticky Note45"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b87f0d17-3afa-486b-8c0e-2942b62d87f0",
+              "name": "Query",
+              "value": "=| search index=* \"{{ $('Extract Field in Alert').item.json.HostName }}\"| where _time > relative_time(now(), \"-2h\")| eval matched_fields = \"\"| foreach * [eval matched_fields = if(match('<<FIELD>>', \"{{ $('Extract Field in Alert').item.json.HostName }}\"), if(matched_fields=\"\", \"<<FIELD>>\", matched_fields . \",<<FIELD>>\"), matched_fields)]| where matched_fields != \"\"| sort -_time| streamstats count by index| where count <= 3",
+              "type": "string"
+            },
+            {
+              "id": "a04ccb67-a8a5-4f3e-b073-5f1bb3376b86",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2304,
+        -1280
+      ],
+      "id": "a80f94bd-71c2-4020-b79f-a64d22c75f7f",
+      "name": "HostName Query"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b87f0d17-3afa-486b-8c0e-2942b62d87f0",
+              "name": "Query",
+              "value": "=| search index=* \"{{ $('Extract Field in Alert').item.json.SourceIP }}\" | where _time > relative_time(now(), \"-2h\")| eval matched_fields = \"\"| foreach * [eval matched_fields = if(match('<<FIELD>>', \"{{ $('Extract Field in Alert').item.json.SourceIP }}\"), if(matched_fields=\"\", \"<<FIELD>>\", matched_fields . \",<<FIELD>>\"), matched_fields)]| where matched_fields != \"\"| sort -_time| streamstats count by index| where count <= 3",
+              "type": "string"
+            },
+            {
+              "id": "a04ccb67-a8a5-4f3e-b073-5f1bb3376b86",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2304,
+        -1536
+      ],
+      "id": "078c4ae7-153e-4e1d-bdbc-e9c9119effe9",
+      "name": "SourceIP Query"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b87f0d17-3afa-486b-8c0e-2942b62d87f0",
+              "name": "Query",
+              "value": "=| search index=* \"{{ $('Extract Field in Alert').item.json.ProcessName }}\"| where _time > relative_time(now(), \"-2h\")| eval matched_fields = \"\"| foreach * [eval matched_fields = if(match('<<FIELD>>', \"{{ $('Extract Field in Alert').item.json.ProcessName }}\"), if(matched_fields=\"\", \"<<FIELD>>\", matched_fields . \",<<FIELD>>\"), matched_fields)]| where matched_fields != \"\"| sort -_time| streamstats count by index| where count <= 3",
+              "type": "string"
+            },
+            {
+              "id": "a04ccb67-a8a5-4f3e-b073-5f1bb3376b86",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2320,
+        -912
+      ],
+      "id": "3b2d8d7c-8a1e-4bc4-8ae5-2aafb66c2588",
+      "name": "ProcessName Query"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b87f0d17-3afa-486b-8c0e-2942b62d87f0",
+              "name": "Query",
+              "value": "=| search index=* \"{{ $('Extract Field in Alert').item.json.DestinationIP }}\" | where _time > relative_time(now(), \"-2h\")| eval matched_fields = \"\"| foreach * [eval matched_fields = if(match('<<FIELD>>', \"{{ $('Extract Field in Alert').item.json.DestinationIP }}\"), if(matched_fields=\"\", \"<<FIELD>>\", matched_fields . \",<<FIELD>>\"), matched_fields)]| where matched_fields != \"\"| sort -_time| streamstats count by index| where count <= 3",
+              "type": "string"
+            },
+            {
+              "id": "a04ccb67-a8a5-4f3e-b073-5f1bb3376b86",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2320,
+        192
+      ],
+      "id": "2a5c8e0c-d97f-4489-be82-ebbdbec72e32",
+      "name": "DestinationIP Query"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b87f0d17-3afa-486b-8c0e-2942b62d87f0",
+              "name": "Query",
+              "value": "=| search index=* \"{{ $('Extract Field in Alert').item.json.UserName }}\" | where _time > relative_time(now(), \"-2h\")| eval matched_fields = \"\"| foreach * [eval matched_fields = if(match('<<FIELD>>', \"{{ $('Extract Field in Alert').item.json.UserName }}\"), if(matched_fields=\"\", \"<<FIELD>>\", matched_fields . \",<<FIELD>>\"), matched_fields)]| where matched_fields != \"\"| sort -_time| streamstats count by index| where count <= 3",
+              "type": "string"
+            },
+            {
+              "id": "a04ccb67-a8a5-4f3e-b073-5f1bb3376b86",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2320,
+        -112
+      ],
+      "id": "68a118dc-615b-4bbb-89bd-60461f154106",
+      "name": "UserName Query"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b87f0d17-3afa-486b-8c0e-2942b62d87f0",
+              "name": "Query",
+              "value": "={{ $json.entry[0].content.qualifiedSearch }}",
+              "type": "string"
+            },
+            {
+              "id": "a04ccb67-a8a5-4f3e-b073-5f1bb3376b86",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2096,
+        448
+      ],
+      "id": "dd1500b8-3a96-490b-b537-e4691ee841e6",
+      "name": "DestinationIP Query2"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2SMIBmK2MeGc47g5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2SMIBmK2MeGc47g5",
+          "cachedResultName": "SP — SP_AI_Query"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -992,
+        448
+      ],
+      "id": "11e056ac-0beb-4db6-979c-4e37aa80ed2b",
+      "name": "Execute Workflow1"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SP_Base_URL}}:8089/services/saved/searches/{{ $('Extract Field in Alert').first().json.RuleName.urlEncode() }}?output_mode=json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "splunkApi",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2320,
+        448
+      ],
+      "id": "ff3f3f5e-458a-4f18-81f1-1fab37eb69a3",
+      "name": "Get Rule Search Condition",
+      "credentials": {
+        "splunkApi": {
+          "id": "GrGXYAkohwkWH3cg",
+          "name": "Splunk account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2SMIBmK2MeGc47g5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2SMIBmK2MeGc47g5",
+          "cachedResultName": "SP — SP_AI_Query"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -2080,
+        -1536
+      ],
+      "id": "bb54efcc-ced2-46a9-a4e5-b829c4b96c17",
+      "name": "Query For Source IP"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2SMIBmK2MeGc47g5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2SMIBmK2MeGc47g5",
+          "cachedResultName": "SP — SP_AI_Query"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -2080,
+        -1280
+      ],
+      "id": "02ccfd11-09df-4dde-b75a-f8be9f4b3728",
+      "name": "Query For HostName"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2SMIBmK2MeGc47g5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2SMIBmK2MeGc47g5",
+          "cachedResultName": "SP — SP_AI_Query"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -2080,
+        -1024
+      ],
+      "id": "abcc9841-a3f7-46d2-878a-01aab09eead6",
+      "name": "Query For ProcessName"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b87f0d17-3afa-486b-8c0e-2942b62d87f0",
+              "name": "Query",
+              "value": "=| search index=* \"{{ $('Extract Field in Alert').item.json.ProcessName }}\"| where _time > relative_time(now(), \"-2h\")| eval matched_fields = \"\"| foreach * [eval matched_fields = if(match('<<FIELD>>', \"{{ $('Extract Field in Alert').item.json.ProcessName }}\"), if(matched_fields=\"\", \"<<FIELD>>\", matched_fields . \",<<FIELD>>\"), matched_fields)]| where matched_fields != \"\"| sort -_time| streamstats count by index| where count <= 3",
+              "type": "string"
+            },
+            {
+              "id": "a04ccb67-a8a5-4f3e-b073-5f1bb3376b86",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2336,
+        -512
+      ],
+      "id": "9e8489e0-244e-41ea-a7a6-a412e5b25c8e",
+      "name": "FilePath Query"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2SMIBmK2MeGc47g5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2SMIBmK2MeGc47g5",
+          "cachedResultName": "SP — SP_AI_Query"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -2080,
+        -624
+      ],
+      "id": "7d783ea9-2fbb-489b-b6be-96a5ee3d0e2b",
+      "name": "Query For FilePath"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2SMIBmK2MeGc47g5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2SMIBmK2MeGc47g5",
+          "cachedResultName": "SP — SP_AI_Query"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -2080,
+        -224
+      ],
+      "id": "dac69fb5-2324-48e2-8177-199b85deafab",
+      "name": "Query For UserName"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2SMIBmK2MeGc47g5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2SMIBmK2MeGc47g5",
+          "cachedResultName": "SP — SP_AI_Query"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -2096,
+        192
+      ],
+      "id": "ad6982e3-3742-4d28-94ae-e302c2a80292",
+      "name": "Query For DestinationIP"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3c01db35-b1b7-4b2f-80ec-c3e0270e76bc",
+              "leftValue": "={{ $json.RL_HostName }}",
+              "rightValue": "[]",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1648,
+        -1280
+      ],
+      "id": "881be8a5-a953-4404-bd07-c9069d742ed4",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3c01db35-b1b7-4b2f-80ec-c3e0270e76bc",
+              "leftValue": "={{ $json.RL_HostName }}",
+              "rightValue": "[]",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1648,
+        -1536
+      ],
+      "id": "44dc6e8c-45b1-46f6-b9c3-606f7559d8d3",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3c01db35-b1b7-4b2f-80ec-c3e0270e76bc",
+              "leftValue": "={{ $json.RL_ProcessName }}",
+              "rightValue": "[]",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1664,
+        -1024
+      ],
+      "id": "662ab4e6-221e-40c4-b5da-11cdc2b159e9",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3c01db35-b1b7-4b2f-80ec-c3e0270e76bc",
+              "leftValue": "={{ $json.RL_FilePath }}",
+              "rightValue": "[]",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1632,
+        -624
+      ],
+      "id": "205f4738-6682-42f3-a3ee-ccc8bf8e3f02",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3c01db35-b1b7-4b2f-80ec-c3e0270e76bc",
+              "leftValue": "={{ $json.RL_UserName }}",
+              "rightValue": "[]",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1648,
+        -224
+      ],
+      "id": "658ad325-bb05-4efe-b97f-25b167f3b45c",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3c01db35-b1b7-4b2f-80ec-c3e0270e76bc",
+              "leftValue": "={{ $json.RL_DestinationIP }}",
+              "rightValue": "[]",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1664,
+        192
+      ],
+      "id": "421c8c3b-d8cc-4753-8175-178f1e6029b2",
+      "name": "If7"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "88b2875e-9e1f-4d80-acc6-c0528b289001",
+              "name": "RL_HostName",
+              "value": "={{ $json.results.toJsonString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1872,
+        -1280
+      ],
+      "id": "e95896bc-b893-4e08-a404-f9f3fcdcc505",
+      "name": "RL_HostName"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ai/alert_log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer  {{ $('Called by SP-AI-5A-Check').first().json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"alert\":[{{ $('Called by SP-AI-5A-Check').item.json['Original Rule'].toJsonString() }}],\n    \"related_logs\": [{\"name\":\"hostname\",\"alerts\":{{ $json.RL_HostName }}}],\n    \"device\":\"Splunk\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1424,
+        -1280
+      ],
+      "id": "86ec838f-f5e6-4922-97da-4ddbe49132c5",
+      "name": "AI analysis(Hostname)"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -3968,
+        -576
+      ],
+      "id": "d44bf59e-2d86-4492-87bc-d9b0d8076adb",
+      "name": "Called by SP-AI-5A-Check"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Jrm5H4QsK8KZgi0W",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/Jrm5H4QsK8KZgi0W",
+          "cachedResultName": "SP — SP-AI-EI & AI Summery"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2080,
+        368
+      ],
+      "id": "36a15c21-7a0a-4bf3-a10a-ee0d83ed4cd8",
+      "name": "Called SP-AI-EI & AI Summery(Process)",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "BnI4Ot5HmXhBkK8a",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/BnI4Ot5HmXhBkK8a",
+          "cachedResultName": "SP — SP-AI-TI & AI Summary"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2048,
+        -400
+      ],
+      "id": "784d929a-e756-4a23-88f3-824cd902a60d",
+      "name": "Called-SP-AI-TI & AI Summary"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: SP-AI-RL & AI Analysis\n### Workflow-Version: 1.0.1\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Create for first time\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -4320,
+        -1312
+      ],
+      "typeVersion": 1,
+      "id": "310fef8e-341e-484e-8dd0-84d0912ff650",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "iAdtPYDYJ3ndUvvM",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/iAdtPYDYJ3ndUvvM",
+          "cachedResultName": "SP — SP-AI-Insert Timeline"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        3248,
+        -576
+      ],
+      "id": "23dc0545-da76-4bd3-b96f-8ea0107a3062",
+      "name": "Call 'SP-AI-Insert Timeline'"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d46a4967-fb14-4b14-bade-fe0db3ab4ce6",
+              "leftValue": "={{ $('Extract Field in Alert').item.json.HostName }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2528,
+        -1008
+      ],
+      "id": "309d4d08-b814-4667-9cb7-d11f09e9a6da",
+      "name": "If8"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b87f0d17-3afa-486b-8c0e-2942b62d87f0",
+              "name": "Query",
+              "value": "=| search index=* host=\"{{ $json.HostName }}\" \"{{ $('Extract Field in Alert').item.json.ProcessName }}\"| where _time > relative_time(now(), \"-2h\")| eval matched_fields = \"\"| foreach * [eval matched_fields = if(match('<<FIELD>>', \"{{ $('Extract Field in Alert').item.json.ProcessName }}\"), if(matched_fields=\"\", \"<<FIELD>>\", matched_fields . \",<<FIELD>>\"), matched_fields)]| where matched_fields != \"\"| sort -_time| streamstats count by index| where count <= 3",
+              "type": "string"
+            },
+            {
+              "id": "a04ccb67-a8a5-4f3e-b073-5f1bb3376b86",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2320,
+        -1104
+      ],
+      "id": "d969982b-9cbb-4d38-92b8-5ef99e06c827",
+      "name": "ProcessName Query with Hostname"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d46a4967-fb14-4b14-bade-fe0db3ab4ce6",
+              "leftValue": "={{ $('Extract Field in Alert').item.json.HostName }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2560,
+        -608
+      ],
+      "id": "9ea7269c-38af-4a22-9857-f61919a9a8e9",
+      "name": "If9"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b87f0d17-3afa-486b-8c0e-2942b62d87f0",
+              "name": "Query",
+              "value": "=| search index=* host=\"{{ $json.HostName }}\" \"{{ $('Extract Field in Alert').item.json.ProcessName }}\"| where _time > relative_time(now(), \"-2h\")| eval matched_fields = \"\"| foreach * [eval matched_fields = if(match('<<FIELD>>', \"{{ $('Extract Field in Alert').item.json.ProcessName }}\"), if(matched_fields=\"\", \"<<FIELD>>\", matched_fields . \",<<FIELD>>\"), matched_fields)]| where matched_fields != \"\"| sort -_time| streamstats count by index| where count <= 3",
+              "type": "string"
+            },
+            {
+              "id": "a04ccb67-a8a5-4f3e-b073-5f1bb3376b86",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2336,
+        -720
+      ],
+      "id": "34c448a1-e2bc-4c05-9661-af1fb7534b1f",
+      "name": "FilePath Query with Hostname"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d46a4967-fb14-4b14-bade-fe0db3ab4ce6",
+              "leftValue": "={{ $('Extract Field in Alert').item.json.HostName }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2544,
+        -208
+      ],
+      "id": "58e34c6f-ab3e-4611-85e7-d2612b0a3ea1",
+      "name": "If10"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3c01db35-b1b7-4b2f-80ec-c3e0270e76bc",
+              "leftValue": "={{ $json.RL_XSC }}",
+              "rightValue": "[]",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1648,
+        -1808
+      ],
+      "id": "ced88f48-868a-422c-bb9d-ca154bccb865",
+      "name": "If11"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b87f0d17-3afa-486b-8c0e-2942b62d87f0",
+              "name": "Query",
+              "value": "=| search index=* host=\"{{ $('Extract Field in Alert').first().json.SourceIP }}\" dest IN {{ $json.found_values.toJsonString().replaceAll('[','(').replaceAll(']',')').replaceAll(',',', ') }}| where _time > relative_time(now(), \"-2h\")| sort - _time| head 3",
+              "type": "string"
+            },
+            {
+              "id": "a04ccb67-a8a5-4f3e-b073-5f1bb3376b86",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2240,
+        -1808
+      ],
+      "id": "ffb80fff-ebe5-4c64-a756-e9d5adbd99e9",
+      "name": "XSC Query"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2SMIBmK2MeGc47g5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2SMIBmK2MeGc47g5",
+          "cachedResultName": "SP — SP_AI_Query"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -2048,
+        -1808
+      ],
+      "id": "a5f6875c-58bb-4937-8468-f62de4807c7e",
+      "name": "Query For XSC"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1e4db11-8944-403b-a757-a8e1ff7de4cb",
+              "name": "RL_XSC",
+              "value": "={{ $json.results.toJsonString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1840,
+        -1808
+      ],
+      "id": "4b8d0eb5-f9dc-4829-a351-522484902cf5",
+      "name": "RL_XSC"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ai/alert_log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer  {{ $('Called by SP-AI-5A-Check').first().json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"alert\": [{{ $('Called by SP-AI-5A-Check').item.json['Original Rule'].toJsonString() }}],\n    \"related_logs\": [{\"name\":\"XSC\",\"alerts\":{{ $json.RL_SourceIP }}}],\n    \"device\":\"Splunk\"\n}\n\n ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1424,
+        -1808
+      ],
+      "id": "6b68b32a-e02f-4a73-90a9-cc47428c92e7",
+      "name": "AI analysis(XSC)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2f66e26c-d4eb-4a29-95c9-48f5f548fb33",
+              "name": "Related_Analysis_XSC",
+              "value": "={{ $json.data[0].detailsMarkdown }}",
+              "type": "string"
+            },
+            {
+              "id": "bff05fef-d950-4745-a696-04421b6ad3d3",
+              "name": "reference",
+              "value": "={{ $json.data[0].reference }}",
+              "type": "array"
+            },
+            {
+              "id": "9defce2c-85f0-4a24-84a7-98c2ea5b9d93",
+              "name": "timeline",
+              "value": "={{ $json.data[0].timeline }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1184,
+        -1808
+      ],
+      "id": "84c80d85-d2d0-4661-a50c-60f017a461fb",
+      "name": "Related_Analysis_XSC"
+    },
+    {
+      "parameters": {
+        "jsCode": "\ninput = $input.all();\nconst output = input.map(item => ({\n  name: \"Related_Analysis_XSC\",\n  analysis: $input.first().json.Related_Analysis_XSC,\n  reference: $input.first().json.reference,\n  timeline: $input.first().json.timeline\n}));\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1008,
+        -1808
+      ],
+      "id": "aa594731-a121-40b5-8a72-1f83a40e5751",
+      "name": "AI_Fields_XSC"
+    },
+    {
+      "parameters": {
+        "jsCode": "// --- INPUT ------------------------------------------------------------------\n\nconst inputItem = $('Called by SP-AI-5A-Check').first();\nif (!inputItem) return [];\n\nconst rowLog = inputItem.json['Row Log'];\nconst originalRule = inputItem.json['Original Rule'];\nif (!rowLog || !originalRule) return [];\n\nconst doc = {\n  row_log: rowLog,\n  original_rule: originalRule\n};\n\n// --- CIM NETWORK FIELDS ------------------------------------------------------\n\nconst cimNetworkFields = new Set([\n  'dest','dest_ip','dest_zone','dvc_host','dvc_ip',\n  'dns'\n]);\n\n// --- EXCLUDED FIELDS ---------------------------------------------------------\n\nconst excluded = new Set([\n  'http_x_forwarded_for',\n  'src',\n  'src_ip',\n  'host'\n].map(v => v.toLowerCase()));\n\n// --- HELPERS -----------------------------------------------------------------\n\nfunction isValidIPv4(ip) {\n  if (typeof ip !== \"string\") return false;\n  const trimmed = ip.trim();\n  const parts = trimmed.split('.').map(Number);\n  if (parts.length !== 4) return false;\n  if (trimmed !== parts.join('.')) return false;\n  return parts.every(p => p >= 0 && p <= 255);\n}\n\nfunction isHostname(str) {\n  if (typeof str !== \"string\") return false;\n  return /^[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/.test(str);\n}\n\n// --- RESULT ------------------------------------------------------------------\n\nconst foundFields = [];\nconst seenValues = new Set();\n\n// --- SCANNER -----------------------------------------------------------------\n\nfunction findNetworkValues(obj, path = '') {\n  const lowerFieldName = path.split('.').pop().toLowerCase();\n\n  if (excluded.has(lowerFieldName)) return;\n\n  const isNetworkField = cimNetworkFields.has(lowerFieldName);\n\n  if (typeof obj === 'object' && obj !== null) {\n    if (Array.isArray(obj)) {\n      obj.forEach((item, i) => {\n        findNetworkValues(item, `${path}[${i}]`);\n      });\n    } else {\n      for (const key in obj) {\n        findNetworkValues(obj[key], path ? `${path}.${key}` : key);\n      }\n    }\n  } else if (typeof obj === 'string') {\n    if (!isNetworkField) return;\n\n    const val = obj.trim();\n    if (val.toLowerCase() === \"null\") return;\n\n    if (isValidIPv4(val) || isHostname(val)) {\n      if (!seenValues.has(val)) {\n        seenValues.add(val);\n\n        foundFields.push({\n          field: path,\n          ip: val\n        });\n      }\n    }\n  }\n}\n\n// --- EXECUTE -----------------------------------------------------------------\n\nfindNetworkValues(doc);\n\n// --- RETURN -----------------------------------------------------------------\n\nreturn [{\n  json: {\n    found_fields: foundFields,\n    found_values: Array.from(seenValues)\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2448,
+        -1808
+      ],
+      "id": "994ff014-ed09-4f09-9731-4617405e8dd4",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b87f0d17-3afa-486b-8c0e-2942b62d87f0",
+              "name": "Query",
+              "value": "=| search index=* host=\"{{ $json.HostName }}\" \"{{ $('Extract Field in Alert').item.json.UserName }}\" | where _time > relative_time(now(), \"-2h\")| eval matched_fields = \"\"| foreach * [eval matched_fields = if(match('<<FIELD>>', \"{{ $('Extract Field in Alert').item.json.UserName }}\"), if(matched_fields=\"\", \"<<FIELD>>\", matched_fields . \",<<FIELD>>\"), matched_fields)]| where matched_fields != \"\"| sort -_time| streamstats count by index| where count <= 3",
+              "type": "string"
+            },
+            {
+              "id": "a04ccb67-a8a5-4f3e-b073-5f1bb3376b86",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2336,
+        -304
+      ],
+      "id": "e4ab9f34-d645-401f-aacd-a36b6165875f",
+      "name": "UserName Query with host"
+    }
+  ],
+  "connections": {
+    "Extract Field in Alert": {
+      "main": [
+        [
+          {
+            "node": "Split to Search on Each Field",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split to Search on Each Field": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SourceIP Query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HostName Query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Normalize file path",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If10",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DestinationIP Query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Rule Search Condition",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize file path": {
+      "main": [
+        [
+          {
+            "node": "If9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI analysis(RL Info)": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RL_SourceIP": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RL_ProcessName": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RL_FilePath": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RL_UserName": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RL_DestinationIP": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Required fields": {
+      "main": [
+        [
+          {
+            "node": "AI analysis(RL Info)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Extract Required fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Required Items": {
+      "main": [
+        [
+          {
+            "node": "Call 'SP-AI-Insert Timeline'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Collect Required Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Seprate Extra Evidences",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seprate Extra Evidences": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "IP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Host",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "process",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IP": {
+      "main": [
+        [
+          {
+            "node": "Extract Public & Private IPs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process": {
+      "main": [
+        [
+          {
+            "node": "Enrich Process",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Host": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Extract Public & Private IPs": {
+      "main": [
+        [
+          {
+            "node": "Divided Public & Private IPs ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Divided Public & Private IPs ": {
+      "main": [
+        [
+          {
+            "node": "Public IP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Private IP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Private IP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Public IP": {
+      "main": [
+        [
+          {
+            "node": "Called-SP-AI-TI & AI Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Private IP": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Process": {
+      "main": [
+        [
+          {
+            "node": "Called SP-AI-EI & AI Summery(Process)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Check for existence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for existence": {
+      "main": [
+        [
+          {
+            "node": "Collect Required Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich Process": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 2
+          }
+        ],
+        [
+          {
+            "node": "Process",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI analysis(SourceIP)": {
+      "main": [
+        [
+          {
+            "node": "Related_Analysis_SourceIP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI analysis(ProcessName)": {
+      "main": [
+        [
+          {
+            "node": "Related_Analysis_ProcessName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI analysis(FilePath)": {
+      "main": [
+        [
+          {
+            "node": "Related_Analysis_FilePath",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI analysis(UserName)": {
+      "main": [
+        [
+          {
+            "node": "Related_Analysis_UserName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI analysis(DestinationIP)": {
+      "main": [
+        [
+          {
+            "node": "Related_Analysis_DestinationIP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Related_Analysis_SensorIP": {
+      "main": [
+        [
+          {
+            "node": "AI_Fields_SensorIP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Related_Analysis_SourceIP": {
+      "main": [
+        [
+          {
+            "node": "AI_Fields_SourceIP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Related_Analysis_ProcessName": {
+      "main": [
+        [
+          {
+            "node": "AI_Fields_ProcessName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Related_Analysis_FilePath": {
+      "main": [
+        [
+          {
+            "node": "AI_Fields_FilePath",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Related_Analysis_UserName": {
+      "main": [
+        [
+          {
+            "node": "AI_Fields_UserName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Related_Analysis_DestinationIP": {
+      "main": [
+        [
+          {
+            "node": "AI_Fields_DestinationIP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI_Fields_SourceIP": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "AI_Fields_SensorIP": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "AI_Fields_ProcessName": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "AI_Fields_FilePath": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "AI_Fields_UserName": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "AI_Fields_DestinationIP": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "DestinationIP Query2": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "Get Rule Search Condition": {
+      "main": [
+        [
+          {
+            "node": "DestinationIP Query2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HostName Query": {
+      "main": [
+        [
+          {
+            "node": "Query For HostName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SourceIP Query": {
+      "main": [
+        [
+          {
+            "node": "Query For Source IP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ProcessName Query": {
+      "main": [
+        [
+          {
+            "node": "Query For ProcessName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FilePath Query": {
+      "main": [
+        [
+          {
+            "node": "Query For FilePath",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UserName Query": {
+      "main": [
+        [
+          {
+            "node": "Query For UserName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DestinationIP Query": {
+      "main": [
+        [
+          {
+            "node": "Query For DestinationIP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query For Source IP": {
+      "main": [
+        [
+          {
+            "node": "RL_SourceIP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query For HostName": {
+      "main": [
+        [
+          {
+            "node": "RL_HostName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query For ProcessName": {
+      "main": [
+        [
+          {
+            "node": "RL_ProcessName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query For FilePath": {
+      "main": [
+        [
+          {
+            "node": "RL_FilePath",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query For UserName": {
+      "main": [
+        [
+          {
+            "node": "RL_UserName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query For DestinationIP": {
+      "main": [
+        [
+          {
+            "node": "RL_DestinationIP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI analysis(Hostname)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "AI analysis(ProcessName)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "AI analysis(SourceIP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "AI analysis(FilePath)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "AI analysis(UserName)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "AI analysis(DestinationIP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RL_HostName": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI analysis(Hostname)": {
+      "main": [
+        [
+          {
+            "node": "Related_Analysis_SensorIP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Called by SP-AI-5A-Check": {
+      "main": [
+        [
+          {
+            "node": "Extract Field in Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Called SP-AI-EI & AI Summery(Process)": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Called-SP-AI-TI & AI Summary": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If8": {
+      "main": [
+        [
+          {
+            "node": "ProcessName Query with Hostname",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ProcessName Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ProcessName Query with Hostname": {
+      "main": [
+        [
+          {
+            "node": "Query For ProcessName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If9": {
+      "main": [
+        [
+          {
+            "node": "FilePath Query with Hostname",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "FilePath Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FilePath Query with Hostname": {
+      "main": [
+        [
+          {
+            "node": "Query For FilePath",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If10": {
+      "main": [
+        [
+          {
+            "node": "UserName Query with host",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "UserName Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If11": {
+      "main": [
+        [
+          {
+            "node": "AI analysis(XSC)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "XSC Query": {
+      "main": [
+        [
+          {
+            "node": "Query For XSC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query For XSC": {
+      "main": [
+        [
+          {
+            "node": "RL_XSC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RL_XSC": {
+      "main": [
+        [
+          {
+            "node": "If11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI analysis(XSC)": {
+      "main": [
+        [
+          {
+            "node": "Related_Analysis_XSC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Related_Analysis_XSC": {
+      "main": [
+        [
+          {
+            "node": "AI_Fields_XSC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "XSC Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UserName Query with host": {
+      "main": [
+        [
+          {
+            "node": "Query For UserName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI_Fields_XSC": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "d6cf0385-878a-4c3c-bfb2-97cdc9df6dbc",
+  "owner": {
+    "type": "team",
+    "teamId": "VkJ1fWswpm3ZmsSH",
+    "teamName": "SP"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

@@ -1,0 +1,15 @@
+{
+  "id": "UttJfZcggpikviuq",
+  "name": "Local Elastic",
+  "type": "httpBasicAuth",
+  "data": {
+    "user": "",
+    "password": ""
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "U3dBtr1FA3nBypwO",
+    "teamName": "RTX5090-ES"
+  },
+  "isGlobal": false
+}

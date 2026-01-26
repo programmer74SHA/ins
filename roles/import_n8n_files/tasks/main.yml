@@ -1,0 +1,65 @@
+---
+# =============================================================================
+# IMPORT N8N FILES ROLE - Main Tasks
+# =============================================================================
+# This role imports n8n workflow files, credential stubs, projects, and
+# configuration files into the SOAR platform deployment
+# =============================================================================
+
+- name: Ensure n8n template directory exists
+  ansible.builtin.file:
+    path: "{{ n8n_files_deploy_dir }}/template"
+    state: directory
+    mode: '0755'
+
+- name: Copy workflows directory
+  ansible.builtin.copy:
+    src: workflows/
+    dest: "{{ n8n_files_deploy_dir }}/template/workflows/"
+    mode: '0644'
+    directory_mode: '0755'
+  notify: Restart n8n containers
+
+- name: Copy credential stubs directory
+  ansible.builtin.copy:
+    src: credential_stubs/
+    dest: "{{ n8n_files_deploy_dir }}/template/credential_stubs/"
+    mode: '0644'
+    directory_mode: '0755'
+  notify: Restart n8n containers
+
+- name: Copy projects directory
+  ansible.builtin.copy:
+    src: projects/
+    dest: "{{ n8n_files_deploy_dir }}/template/projects/"
+    mode: '0644'
+    directory_mode: '0755'
+  notify: Restart n8n containers
+
+- name: Copy folders.json
+  ansible.builtin.copy:
+    src: folders.json
+    dest: "{{ n8n_files_deploy_dir }}/template/folders.json"
+    mode: '0644'
+  notify: Restart n8n containers
+
+- name: Copy tags.json
+  ansible.builtin.copy:
+    src: tags.json
+    dest: "{{ n8n_files_deploy_dir }}/template/tags.json"
+    mode: '0644'
+  notify: Restart n8n containers
+
+- name: Display import status
+  ansible.builtin.debug:
+    msg:
+      - "============================================"
+      - "n8n Files Import Complete!"
+      - "============================================"
+      - "Files deployed to: {{ n8n_files_deploy_dir }}/template"
+      - "  - workflows/"
+      - "  - credential_stubs/"
+      - "  - projects/"
+      - "  - folders.json"
+      - "  - tags.json"
+      - "============================================"

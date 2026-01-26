@@ -1,0 +1,781 @@
+{
+  "id": "Xa6XvHQ9GRxA4nq1",
+  "name": "ES-AI-Observable",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -160,
+        336
+      ],
+      "id": "c7e6e920-6aea-4425-bb77-0cb6e5e6da6f",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "resource": "Issues",
+        "operation": "Search Issues",
+        "jql": "=project =  \"{{ $json.Project_Key }}\" AND issuetype = \"{{$vars.JIRA_Security_Event_IssueType}}\" AND issuekey = \"{{ $('When Executed by Another Workflow').item.json['Alert Key'] }}\"",
+        "maxResults": 10,
+        "requestOptions": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "CUSTOM.Jira Service Management",
+      "typeVersion": 1,
+      "position": [
+        240,
+        336
+      ],
+      "id": "f3fd0926-1ce8-4461-bd31-d059e0c7dc20",
+      "name": "Search For Alert Issue",
+      "credentials": {
+        "jsmApi": {
+          "id": "l597CchS20GYrsZ3",
+          "name": "Jira Service Management Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('When Executed by Another Workflow').first().json['Final AI Result'][0];\n\nconst result = [];\n\n// Helper function to add items with appropriate type\nfunction addItemIfExists(items, itemType) {\n    if (Array.isArray(items)) {\n        items.forEach(item => {\n            result.push({\n                value: item,\n                type: itemType\n            });\n        });\n    }\n}\n\n// Function to check if a string is an IPv4 address\nfunction isIPv4(ip) {\n    return /^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$/.test(ip);\n}\n\n// Process attackerIps\nif (Array.isArray(input.attackerIps)) {\n    input.attackerIps.forEach(ip => {\n        const type = isIPv4(ip.trim()) ? 'IP' : 'Host Name';\n        result.push({ value: ip, type });\n    });\n}\n\n// Process targetIps\nif (Array.isArray(input.targetIps)) {\n    input.targetIps.forEach(ip => {\n        const type = isIPv4(ip.trim()) ? 'IP' : 'Host Name';\n        result.push({ value: ip, type });\n    });\n}\n\n// Add users\naddItemIfExists(input.users, 'User Name');\naddItemIfExists(input.targetNames, 'Domain');\n\n// Add urls\naddItemIfExists(input.urls, 'URL');\n\n// Add processes\naddItemIfExists(input.processes, 'Process');\n\nreturn [{ json: { result } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        320
+      ],
+      "id": "322e3441-8105-490e-8a0e-b2df6eaf5abf",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "result",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        912,
+        352
+      ],
+      "id": "bd6f2721-917d-4dff-857c-65ca246009b4",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1104,
+        352
+      ],
+      "id": "b5fe15cc-e369-48b7-a1dc-294daf123999",
+      "name": "Loop Over Items",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        400
+      ],
+      "id": "e727d4f0-2876-4dfe-b5de-450f6d3e975d",
+      "name": "Date & Time"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input value from n8n\nconst inputDate = $input.first().json.currentDate;\n\n// Convert the input string to a JavaScript Date object\nconst dateObj = new Date(inputDate);\n\n// Get the year, month, day, hours, minutes, seconds, and milliseconds\nconst year = dateObj.getFullYear();\nconst month = String(dateObj.getMonth() + 1).padStart(2, '0');\nconst day = String(dateObj.getDate()).padStart(2, '0');\nconst hour = String(dateObj.getHours()).padStart(2, '0');\nconst minute = String(dateObj.getMinutes()).padStart(2, '0');\nconst second = String(dateObj.getSeconds()).padStart(2, '0');\nconst millisecond = String(dateObj.getMilliseconds()).padStart(3, '0');\n\n// Set the fixed timezone offset manually (in this case, +05:30)\nconst fixedOffset = \"+0530\";\n\n// Construct the formatted date string for Jira DateTime Picker with the fixed offset\nconst jiraFormattedDate = `${year}-${month}-${day}T${hour}:${minute}:${second}.${millisecond}${fixedOffset}`;\n\n// Output the result\nreturn {\n  json: {\n    jiraFormattedDate\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        400
+      ],
+      "id": "cd87ca83-d65a-491d-bdf2-f75519d102b0",
+      "name": "Jira Format Converted"
+    },
+    {
+      "parameters": {
+        "resource": "Issues",
+        "operation": "Search Issues",
+        "jql": "=project =  \"{{ $('Check for Multi Jira Project').item.json.Project_Key }}\" AND issuetype = Observable AND summary ~ \"{{ $json.value.replaceAll('\\\\','\\\\\\\\') }}\"",
+        "maxResults": 10,
+        "requestOptions": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "CUSTOM.Jira Service Management",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        432
+      ],
+      "id": "1cf85d6c-f7a4-488a-9203-ee071e81713c",
+      "name": "Search For existence Observable Issue",
+      "credentials": {
+        "jsmApi": {
+          "id": "l597CchS20GYrsZ3",
+          "name": "Jira Service Management Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "08947f57-795a-438b-86be-5038548f58ca",
+              "leftValue": "={{ $json.total }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        432
+      ],
+      "id": "ef0353b9-111e-4c09-bc93-be4e6e4d34e3",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "Issues",
+        "operation": "Create Issue Link",
+        "type": "{\n  \"name\": \"Observable to Security Event\"\n}",
+        "inwardIssue": "={\n  \"key\": \"{{ $json.key }}\"\n}",
+        "outwardIssue": "={\n  \"key\": \"{{ $('When Executed by Another Workflow').first().json['Alert Key'] }}\"\n} ",
+        "requestOptions": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "CUSTOM.Jira Service Management",
+      "typeVersion": 1,
+      "position": [
+        2832,
+        400
+      ],
+      "id": "42d69073-29b1-416f-9d74-1d4ea07ff635",
+      "name": "Link Observable to Alert",
+      "credentials": {
+        "jsmApi": {
+          "id": "l597CchS20GYrsZ3",
+          "name": "Jira Service Management Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Issues",
+        "operation": "Create Issue Link",
+        "type": "{\n  \"name\": \"Observable to Case\"\n}",
+        "inwardIssue": "={\n  \"key\": \"{{ $('Create Observable ').item.json.key }}\"\n}",
+        "outwardIssue": "={\n  \"key\": \"{{ $('When Executed by Another Workflow').first().json['case key'] }}\"\n} ",
+        "requestOptions": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "CUSTOM.Jira Service Management",
+      "typeVersion": 1,
+      "position": [
+        3392,
+        384
+      ],
+      "id": "5a8f4b7b-7e4f-4ab6-9008-025653687497",
+      "name": "Link Observable to Case",
+      "credentials": {
+        "jsmApi": {
+          "id": "l597CchS20GYrsZ3",
+          "name": "Jira Service Management Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract Observable_key values\nconst keys = items.map(item => item.json.Observable_key);\n\n// Remove duplicates using Set\nconst uniqueKeys = [...new Set(keys)];\n\n// Return the unique keys in a single item\nreturn [\n  {\n    json: {\n      Observable_keys: uniqueKeys\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        112
+      ],
+      "id": "35ad00cf-4e6a-4c73-b1d5-e6ff6cb1067d",
+      "name": "Return Observable keys 1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1977ac8b-a1ad-42c1-85ad-31d6d66a5e9f",
+              "name": "Observable_key",
+              "value": "={{ $('If').item.json.issues[0].key }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1920,
+        512
+      ],
+      "id": "a28f3ca2-d342-4ae0-a5cf-34f347f9fceb",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1977ac8b-a1ad-42c1-85ad-31d6d66a5e9f",
+              "name": "Observable_key",
+              "value": "={{ $('Create Observable ').first().json.key }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3552,
+        592
+      ],
+      "id": "6d49dd6e-2d67-4acf-b6fc-f051b7a7c109",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "resource": "Observable",
+        "operation": "Create Observable",
+        "fields": "={\n  \"project\": {\n    \"key\": \"{{ $('Check for Multi Jira Project').item.json.Project_Key }}\"\n  },\n  \"issuetype\": {\n    \"name\": \"Observable\"\n  },\n  \"summary\": {{ $('Loop Over Items').item.json.value.toJsonString() }},\n  \"{{$vars.JIRA_Observable_Type_Field}}\": {\n    \"value\": \"{{ $('Loop Over Items').item.json.type.replaceAll('IP','IPv4') }}\"\n  },\n  \"{{$vars.JIRA_Observable_Value_Field}}\": {{ $('Loop Over Items').item.json.value.toJsonString() }},\n  \"labels\": [\n    \"{{$vars.JIRA_Labels_AI_Analyzer_Field}}-APKSIEM\",\"Zone-{{ $('Check for Multi Jira Project').item.json.Lable }}\"\n  ],\n  \"description\": \"This Observable indicates the status of the Observable {{ $('Loop Over Items').item.json.value.replaceAll('\\\\','\\\\\\\\') }}.\",\n  \"{{$vars.JIRA_Last_Action_Time_Field}}\": \"{{ $json.jiraFormattedDate }}\"\n} ",
+        "requestOptions": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "CUSTOM.Jira Service Management",
+      "typeVersion": 1,
+      "position": [
+        2592,
+        400
+      ],
+      "id": "4498b92b-7b18-48e7-9619-5c3d36c7a813",
+      "name": "Create Observable ",
+      "credentials": {
+        "jsmApi": {
+          "id": "l597CchS20GYrsZ3",
+          "name": "Jira Service Management Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Jira Alert Issue Search and Observable Extraction \nThis nodes, searches for a Jira issue of type \"Alert\" within the project based on a provided alert key. It then extracts specific custom fields related to observables (such as IPv4 addresses, URLs, processes, and usernames) from the found issue using a code node. Finally, it checks whether any observables exist to determine subsequent processing steps.",
+        "height": 360,
+        "width": 640,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        192,
+        144
+      ],
+      "typeVersion": 1,
+      "id": "79d97e1e-cdfd-4863-a061-f48d711ece9c",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Workflow Trigger and Conditional Routing Based on Last Node\nThis workflow starts when triggered by another workflow and uses a **Switch node** to route execution based on the value of the last node field in the input JSON.",
+        "height": 360,
+        "width": 380,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -224,
+        144
+      ],
+      "typeVersion": 1,
+      "id": "2a380ece-261e-4d67-a5c6-060f59a9e87d",
+      "name": "Sticky Note12"
+    },
+    {
+      "parameters": {
+        "content": "## Automated Creation and Linking of Observables with Alerts and Cases in Jira\nThis workflow automates the creation of Observable issues in the Jira project with date-time formatting compatible with Jira's DateTime Picker. After creating an Observable, it links the Observable to a related alert issue. It then conditionally checks for the presence of a related case key; if the case exists, it links the Observable to the case as well. Finally, the Observable key is stored for further processing. This ensures seamless traceability and association between observables, alerts, and cases in Jira.",
+        "height": 520,
+        "width": 1600,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2112,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "50cd35f1-e605-4ae3-98a8-4b88a0e5bfa9",
+      "name": "Sticky Note16"
+    },
+    {
+      "parameters": {
+        "content": "## Conditional Linking of Existing Observable Issues to Alerts in Jira\nThis workflow searches for existing \"Observable\" issues in the Jira project by matching the summary with a given value. If a matching issue is found, it creates a link between the Observable issue and a specified alert issue, then stores the Observable issue key for subsequent steps. This ensures alerts are properly associated only with pre-existing observables.",
+        "height": 420,
+        "width": 780,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1312,
+        288
+      ],
+      "typeVersion": 1,
+      "id": "e218a849-5e49-48a6-bfd0-31827a15c26f",
+      "name": "Sticky Note17"
+    },
+    {
+      "parameters": {
+        "content": "## Split Out & Loop Over Items\nSplits the result array of observables into individual items for further processing and iterates over each observable item in batches for individual processing.",
+        "height": 300,
+        "width": 440,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        848,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "20425124-3c86-4955-b92b-94efc8ba8a75",
+      "name": "Sticky Note18"
+    },
+    {
+      "parameters": {
+        "content": "## Extract Unique Observable Keys\nExtracts and returns unique Observable_key values for general observables.",
+        "height": 280,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1312,
+        -16
+      ],
+      "typeVersion": 1,
+      "id": "f192b86d-99bb-4107-b495-0fc6932e90a2",
+      "name": "Sticky Note25"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9102b684-6e98-4df4-ad5b-8821dce961dd",
+              "leftValue": "={{ $('When Executed by Another Workflow').item.json['case key'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3040,
+        400
+      ],
+      "id": "5e525941-8daf-4bb8-8a5e-6c377c649894",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "resource": "Issues",
+        "operation": "Create Issue Link",
+        "type": "{\n  \"name\": \"Observable to Security Event\"\n}",
+        "inwardIssue": "={\n  \"key\": \"{{ $json.issues[0].key }}\"\n}",
+        "outwardIssue": "={\n  \"key\": \"{{ $('When Executed by Another Workflow').first().json['Alert Key'] }}\"\n} ",
+        "comment": "={\n  \"body\": \"Linked related issue!\"\n}",
+        "requestOptions": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "CUSTOM.Jira Service Management",
+      "typeVersion": 1,
+      "position": [
+        1744,
+        512
+      ],
+      "id": "c394f1c4-a8e4-46b2-8133-8fdfce2167e3",
+      "name": "Link Observable to Alert2",
+      "credentials": {
+        "jsmApi": {
+          "id": "l597CchS20GYrsZ3",
+          "name": "Jira Service Management Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7afe1a40-4d98-400d-89b7-22ceb814e59d",
+              "leftValue": "={{ $json.result }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        320
+      ],
+      "id": "5fc433f8-2925-4662-a5fc-bd1bd313e2f8",
+      "name": "Check for existing Observable"
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Elastic AI — ES-AI-Insert Timeline",
+        "height": 220,
+        "width": 280,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -384,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "8b7c0c11-c0c0-44e3-a73a-8cf242e21fc9",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: ES-AI-Observable\n### Workflow-Version: 1.0.4\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Create for first time\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -384,
+        -416
+      ],
+      "typeVersion": 1,
+      "id": "2421f35a-7242-4d76-b0c6-f66f5d29531a",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === READ VARIABLES ===\nconst esMultiJira = String($vars.ES_MultiJiraProject).toLowerCase() === \"true\";\nconst esMultiZone = String($vars.ES_MultiZone).toLowerCase() === \"true\";\nconst jiraProjectKey = $vars.JIRA_Project_Key_Field;\n\n// === TRY TO READ NAMESPACE SAFELY ===\nlet namespace;\n\ntry {\n  // Use .first().json (confirmed from your working version)\n  const sourceNode = $('When Executed by Another Workflow').first().json;\n\n  namespace =\n    sourceNode?.['Original Rule']?.[0]?.json?.latest_doc?.hits?.hits?.[0]?._source?.data_stream?.namespace ||\n    null;\n} catch (err) {\n  namespace = null;\n}\n\n// Default fallback\nif (!namespace) namespace = 'Unknown_Namespace';\n\n// === APPLY LOGIC ===\nlet Project_Key;\nlet Lable;\n\nif (esMultiJira === true) {\n  // Condition 1: MultiJiraProject = true\n  Project_Key = namespace;\n  Lable = namespace;\n} else if (esMultiZone === true) {\n  // Condition 2: MultiJiraProject = false, MultiZone = true\n  Project_Key = jiraProjectKey;\n  Lable = namespace;\n} else {\n  // Condition 3: both false\n  Project_Key = jiraProjectKey;\n  Lable = jiraProjectKey;\n}\n\n// === REPLACE \"default\" VALUES WITH JIRA PROJECT KEY ===\nif (String(Project_Key).toLowerCase() === \"default\") {\n  Project_Key = jiraProjectKey;\n}\n\nif (String(Lable).toLowerCase() === \"default\") {\n  Lable = jiraProjectKey;\n}\n\n// === DEBUG LOGS (visible in n8n execution logs) ===\nconsole.log('ES_MultiJiraProject:', esMultiJira);\nconsole.log('ES_MultiZone:', esMultiZone);\nconsole.log('Namespace:', namespace);\nconsole.log('Project_Key:', Project_Key);\nconsole.log('Lable:', Lable);\n\n// === RETURN OUTPUT ===\nreturn [\n  {\n    json: {\n      Project_Key,\n      Lable,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        336
+      ],
+      "id": "3cba2465-d4db-4e78-8cc6-ae5532e60ebd",
+      "name": "Check for Multi Jira Project"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Check for Multi Jira Project",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search For Alert Issue": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Check for existing Observable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Return Observable keys 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search For existence Observable Issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time": {
+      "main": [
+        [
+          {
+            "node": "Jira Format Converted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jira Format Converted": {
+      "main": [
+        [
+          {
+            "node": "Create Observable ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search For existence Observable Issue": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Link Observable to Alert2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Link Observable to Alert": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Link Observable to Case": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Observable ": {
+      "main": [
+        [
+          {
+            "node": "Link Observable to Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Link Observable to Case",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Link Observable to Alert2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for existing Observable": {
+      "main": [
+        [
+          {
+            "node": "Return Observable keys 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Multi Jira Project": {
+      "main": [
+        [
+          {
+            "node": "Search For Alert Issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "fb6cf6dd-5347-4b46-a939-b17e3f092e80",
+  "owner": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

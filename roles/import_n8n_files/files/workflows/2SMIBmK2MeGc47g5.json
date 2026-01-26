@@ -1,0 +1,625 @@
+{
+  "id": "2SMIBmK2MeGc47g5",
+  "name": "SP_AI_Query",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        -16
+      ],
+      "id": "b78cad04-fbc2-4d58-bdb0-6a2bc4770d43",
+      "name": "Called by all Splunk Query Needed"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": true
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        0,
+        -16
+      ],
+      "id": "ff473303-f354-4b4c-842f-abe9d2871fe7",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "090aa836-5d8e-4f23-a82f-1002319774e9",
+              "leftValue": "={{ $json.isDone }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1472,
+        0
+      ],
+      "id": "0a5629f8-cbaf-4517-87f9-abb89f7298dc",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "searchJobId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.splunk",
+      "typeVersion": 2,
+      "position": [
+        192,
+        0
+      ],
+      "id": "eaf33438-222e-4d09-8ace-63e65d95df08",
+      "name": "Check For Job Finished",
+      "credentials": {
+        "splunkApi": {
+          "id": "GrGXYAkohwkWH3cg",
+          "name": "Splunk account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        224
+      ],
+      "id": "34ea1305-be17-4a27-918b-fa15b68114a5",
+      "name": "wait For Finished Job",
+      "webhookId": "06ce3efe-25a5-4095-a8dd-a6e5c308bcae"
+    },
+    {
+      "parameters": {
+        "operation": "getResult",
+        "searchJobId": {
+          "__rl": true,
+          "value": "={{ $('If1').item.json.id }}",
+          "mode": "id"
+        },
+        "limit": "=10",
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splunk",
+      "typeVersion": 2,
+      "position": [
+        1824,
+        -16
+      ],
+      "id": "4e1f0d49-aeaa-4713-8f85-884a5e30d5cb",
+      "name": "Get Splunk Job Result",
+      "credentials": {
+        "splunkApi": {
+          "id": "GrGXYAkohwkWH3cg",
+          "name": "Splunk account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eeb9703c-369c-454a-a42f-3804c533d4e3",
+              "name": "results",
+              "value": "={{ $json.results }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2048,
+        -16
+      ],
+      "id": "fbe82f50-a513-4445-81c1-e1e832152582",
+      "name": "Retuen Only Results"
+    },
+    {
+      "parameters": {
+        "search": "={{ $json.Query }}",
+        "additionalFields": {
+          "adhoc_search_level": "verbose"
+        }
+      },
+      "type": "n8n-nodes-base.splunk",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        -16
+      ],
+      "id": "15b453c5-ca9f-48a7-ad22-b8cbe99472c4",
+      "name": "Create Job",
+      "credentials": {
+        "splunkApi": {
+          "id": "GrGXYAkohwkWH3cg",
+          "name": "Splunk account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "88645826-d0c7-4929-bde3-7da3c1ec492f",
+              "leftValue": "={{ $json.eventCount }}",
+              "rightValue": "={{ $('Called by all Splunk Query Needed').item.json.Size }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "60974768-bbba-4277-9077-20bd58325a86",
+              "leftValue": "={{ $json.isDone }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        352,
+        0
+      ],
+      "id": "ccd9023f-513f-4901-aea6-fe92a4df90b0",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.SP_Base_URL}}:8089/services/search/jobs/{{ $json.id }}/control",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "splunkApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "finalize"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        688,
+        -16
+      ],
+      "id": "c4aa1a43-f25d-4e00-9b26-3c3eb9990b42",
+      "name": "Get Rule Search Condition",
+      "credentials": {
+        "splunkApi": {
+          "id": "GrGXYAkohwkWH3cg",
+          "name": "Splunk account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": true
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        960,
+        -16
+      ],
+      "id": "ce2db6bf-0f55-4b4d-808d-193c8baaf675",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "searchJobId": {
+          "__rl": true,
+          "value": "={{ $('Create Job').item.json.id }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.splunk",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "d2b88cb4-9fb1-4593-b27a-2b3d24731e1b",
+      "name": "Check For Job Finished1",
+      "credentials": {
+        "splunkApi": {
+          "id": "GrGXYAkohwkWH3cg",
+          "name": "Splunk account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1584,
+        208
+      ],
+      "id": "c1bda05f-a55e-4fc4-9b44-84422821577e",
+      "name": "wait For Finished Job1",
+      "webhookId": "06ce3efe-25a5-4095-a8dd-a6e5c308bcae"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "83442cda-bb76-4309-aa59-f4654230e82d",
+              "leftValue": "={{ $json.runDuration }}",
+              "rightValue": 120,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        512,
+        128
+      ],
+      "id": "b26b4a68-fd1d-448c-80b4-b38e0d19d2fd",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Splunk AI — SP-AI-RL & AI Analysis\n- Splunk AI — SP_AI_Alert_Related_Alerts",
+        "height": 220,
+        "width": 300,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -576,
+        -384
+      ],
+      "typeVersion": 1,
+      "id": "62fa2338-13e8-42b7-987e-e498070d70c8",
+      "name": "Sticky Note45"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger & Execute Splunk Search\nThis section acts as the entry point for executing custom Splunk search jobs.  ",
+        "height": 280,
+        "width": 440,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -496,
+        -144
+      ],
+      "typeVersion": 1,
+      "id": "bd4c1573-d8f0-483b-90cf-39f761c25e01",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Monitor and Finalize Splunk Job Execution\nThis loop continuously checks the status of each Splunk search job, `SplitInBatches` iterates over jobs, `Check For Job Finished` verifies completion or event count, `If1` branches accordingly—if complete, it finalizes the job via HTTP; if the job runs over 120 seconds (`If2`), it loops back with `Wait` to recheck—ensuring clean job finalization and efficient resource use.",
+        "height": 580,
+        "width": 920,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "4720d10e-0948-40e7-ab58-94744563b02d",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Loop & Job Completion Check\nThis section loops through Splunk jobs, checks if each job is completed (`isDone === true`), and if not, waits before retrying. It ensures jobs are finalized only after successful execution, preventing premature data access.",
+        "height": 580,
+        "width": 840,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        912,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "80e65ff3-9964-420a-9a7a-1bd4f825d4ba",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Fetching & Filtering Job Results\nAfter job completion, this part retrieves the top 10 Splunk search results and isolates only the `results` array for clean downstream processing.",
+        "height": 320,
+        "width": 480,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1760,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "3137be7c-4351-4d21-8cc5-212ca9f4756f",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: SP_AI_Query\n### Workflow-Version: 1.0.1\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Create for first time\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -576,
+        -704
+      ],
+      "typeVersion": 1,
+      "id": "1e45cb48-bea2-4742-b713-a7e768a4c5c0",
+      "name": "Sticky Note4"
+    }
+  ],
+  "connections": {
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Check For Job Finished",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get Splunk Job Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "wait For Finished Job1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check For Job Finished": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait For Finished Job": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Splunk Job Result": {
+      "main": [
+        [
+          {
+            "node": "Retuen Only Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Called by all Splunk Query Needed": {
+      "main": [
+        [
+          {
+            "node": "Create Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Job": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Get Rule Search Condition",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Rule Search Condition": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Check For Job Finished1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check For Job Finished1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait For Finished Job1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Get Rule Search Condition",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "wait For Finished Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "22d782b1-fc92-4c0d-909f-29e28ce9e2b9",
+  "owner": {
+    "type": "team",
+    "teamId": "VkJ1fWswpm3ZmsSH",
+    "teamName": "SP"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

@@ -1,0 +1,15 @@
+{
+  "id": "c1HFejKdbePerVBB",
+  "name": "Jira Service Management Api account",
+  "type": "jsmApi",
+  "data": {
+    "token": "",
+    "jsmdomain": ""
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "VkJ1fWswpm3ZmsSH",
+    "teamName": "SP"
+  },
+  "isGlobal": false
+}

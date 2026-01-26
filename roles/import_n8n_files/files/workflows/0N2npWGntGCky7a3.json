@@ -1,0 +1,1305 @@
+{
+  "id": "0N2npWGntGCky7a3",
+  "name": "ES-AI-Alert-Related Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "={{$vars.ES_Base_URL_Elastic}}/.internal.alerts-security.alerts-default*/_search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n            \"size\":0,\n             \"query\": {\n    \"bool\": {\n      \"filter\": [\n        {\n          \"match\": {\n           \"kibana.alert.rule.name\": \"{{ $json.RuleName }}\"\n          }\n        },\n        {\n          \"range\": {\n            \"@timestamp\": {\n              \"gte\": \"now-48h\",\n              \"lte\": \"now\"\n            }\n          }\n        },\n        {\n          \"term\": {\n            \"data_stream.namespace\": \"{{ $('called by ES-AI-5A-Check').first().json['Original Rule'][0].json.latest_doc.hits.hits[0]._source.data_stream.namespace }}\"\n          }\n        }\n      ],\n      \"must_not\": [\n        {\n          \"term\": {\n            \"_id\": \"{{ $('called by ES-AI-5A-Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._id }}\"\n          }\n        }\n      ]\n    }\n  },\n              \"aggs\": {\n                \"reason_priority\": {\n                  \"composite\": {\n                    \"size\": {{$vars.ES_Related_Alerts_Aggregation_Size}},\n                    \"sources\": [\n                      {\n                        \"reason\": {\n                          \"terms\": {\n                            \"field\": \"kibana.alert.reason\"\n                          }\n                        }\n                      }\n                    ]\n                  },\n                  \"aggs\": {\n                    \"latest_doc\": {\n                      \"top_hits\": {\n                        \"size\": 1,\n                        \"sort\": [\n                          {\n                            \"@timestamp\": {\n                              \"order\": \"desc\"\n                            }\n                          }\n                        ]\n                      }\n                    }\n                  }\n                }\n              }\n            }\n",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -480,
+        1280
+      ],
+      "id": "f0977f24-bffa-4848-999c-460a6782a2b4",
+      "name": "same ruleName, different alert reason, ignore current alert id",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.ES_Base_URL_Elastic}}/.internal.alerts-security.alerts-default*/_search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n            \"size\":0,\n             \"query\": {\n    \"bool\": {\n      \"filter\": [\n        {\n          \"match\": {\n           \"host.hostname\": \"{{ $json.HostName }}\"\n          }\n        },\n        {\n          \"range\": {\n            \"@timestamp\": {\n              \"gte\": \"now-48h\",\n              \"lte\": \"now\"\n            }\n          }\n        },\n        {\n          \"term\": {\n            \"data_stream.namespace\": \"{{ $('called by ES-AI-5A-Check').first().json['Original Rule'][0].json.latest_doc.hits.hits[0]._source.data_stream.namespace }}\"\n          }\n        }\n      ],\n      \"must_not\": [\n        {\n          \"term\": {\n            \"_id\": \"{{ $('called by ES-AI-5A-Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._id }}\"\n          }\n        }\n      ]\n    }\n  },\n              \"aggs\": {\n                \"reason_priority\": {\n                  \"composite\": {\n                    \"size\": {{$vars.ES_Related_Alerts_Aggregation_Size}},\n                    \"sources\": [\n                      {\n                        \"reason\": {\n                          \"terms\": {\n                            \"field\": \"kibana.alert.reason\"\n                          }\n                        }\n                      }\n                    ]\n                  },\n                  \"aggs\": {\n                    \"latest_doc\": {\n                      \"top_hits\": {\n                        \"size\": 1,\n                        \"sort\": [\n                          {\n                            \"@timestamp\": {\n                              \"order\": \"desc\"\n                            }\n                          }\n                        ]\n                      }\n                    }\n                  }\n                }\n              }\n            }\n",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -480,
+        320
+      ],
+      "id": "a016d9ef-a6c4-4c7c-96c4-1fe622a2616d",
+      "name": "same Hostname and not rulename and uniqe reason",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.ES_Base_URL_Elastic}}/.internal.alerts-security.alerts-default*/_search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n            \"size\":0,\n             \"query\": {\n    \"bool\": {\n      \"filter\": [\n        {\n          \"match\": {\n           \"process.name\": \"{{ $json.ProcessName }}\"\n          }\n        },\n        {\n          \"range\": {\n            \"@timestamp\": {\n              \"gte\": \"now-48h\",\n              \"lte\": \"now\"\n            }\n          }\n        },\n        {\n          \"term\": {\n            \"data_stream.namespace\": \"{{ $('called by ES-AI-5A-Check').first().json['Original Rule'][0].json.latest_doc.hits.hits[0]._source.data_stream.namespace }}\"\n          }\n        }\n      ],\n      \"must_not\": [\n        {\n          \"term\": {\n            \"_id\": \"{{ $('called by ES-AI-5A-Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._id }}\"\n          }\n        }\n      ]\n    }\n  },\n              \"aggs\": {\n                \"reason_priority\": {\n                  \"composite\": {\n                    \"size\": {{$vars.ES_Related_Alerts_Aggregation_Size}},\n                    \"sources\": [\n                      {\n                        \"reason\": {\n                          \"terms\": {\n                            \"field\": \"kibana.alert.reason\"\n                          }\n                        }\n                      }\n                    ]\n                  },\n                  \"aggs\": {\n                    \"latest_doc\": {\n                      \"top_hits\": {\n                        \"size\": 1,\n                        \"sort\": [\n                          {\n                            \"@timestamp\": {\n                              \"order\": \"desc\"\n                            }\n                          }\n                        ]\n                      }\n                    }\n                  }\n                }\n              }\n            }\n",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -480,
+        528
+      ],
+      "id": "924b9eb4-74ab-4c1b-ba18-adada7f907b8",
+      "name": "same Process Name and not rulename and uniqe reason1",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.ES_Base_URL_Elastic}}/.internal.alerts-security.alerts-default*/_search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n            \"size\":0,\n             \"query\": {\n    \"bool\": {\n      \"filter\": [\n        {\n          \"match\": {\n           \"user.name\": \"{{ $json.UserName }}\"\n          }\n        },\n        {\n          \"range\": {\n            \"@timestamp\": {\n              \"gte\": \"now-48h\",\n              \"lte\": \"now\"\n            }\n          }\n        },\n        {\n          \"term\": {\n            \"data_stream.namespace\": \"{{ $('called by ES-AI-5A-Check').first().json['Original Rule'][0].json.latest_doc.hits.hits[0]._source.data_stream.namespace }}\"\n          }\n        }\n      ],\n      \"must_not\": [\n        {\n          \"term\": {\n            \"_id\": \"{{ $('called by ES-AI-5A-Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._id }}\"\n          }\n        }\n      ]\n    }\n  },\n              \"aggs\": {\n                \"reason_priority\": {\n                  \"composite\": {\n                    \"size\": {{$vars.ES_Related_Alerts_Aggregation_Size}},\n                    \"sources\": [\n                      {\n                        \"reason\": {\n                          \"terms\": {\n                            \"field\": \"kibana.alert.reason\"\n                          }\n                        }\n                      }\n                    ]\n                  },\n                  \"aggs\": {\n                    \"latest_doc\": {\n                      \"top_hits\": {\n                        \"size\": 1,\n                        \"sort\": [\n                          {\n                            \"@timestamp\": {\n                              \"order\": \"desc\"\n                            }\n                          }\n                        ]\n                      }\n                    }\n                  }\n                }\n              }\n            }\n",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -480,
+        912
+      ],
+      "id": "b0c7bddc-0110-4714-a228-1d39075b506c",
+      "name": "same User Name and not rulename and uniqe reason",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.ES_Base_URL_Elastic}}/.internal.alerts-security.alerts-default*/_search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n            \"size\":0,\n             \"query\": {\n    \"bool\": {\n      \"filter\": [\n        {\n          \"match\": {\n           \"source.ip\": \"{{ $json.SourceIP }}\"\n          }\n        },\n        {\n          \"range\": {\n            \"@timestamp\": {\n              \"gte\": \"now-48h\",\n              \"lte\": \"now\"\n            }\n          }\n        },\n        {\n          \"term\": {\n            \"data_stream.namespace\": \"{{ $('called by ES-AI-5A-Check').first().json['Original Rule'][0].json.latest_doc.hits.hits[0]._source.data_stream.namespace }}\"\n          }\n        }\n      ],\n      \"must_not\": [\n        {\n          \"term\": {\n            \"_id\": \"{{ $('called by ES-AI-5A-Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._id }}\"\n          }\n        }\n      ]\n    }\n  },\n              \"aggs\": {\n                \"reason_priority\": {\n                  \"composite\": {\n                    \"size\": {{$vars.ES_Related_Alerts_Aggregation_Size}},\n                    \"sources\": [\n                      {\n                        \"reason\": {\n                          \"terms\": {\n                            \"field\": \"kibana.alert.reason\"\n                          }\n                        }\n                      }\n                    ]\n                  },\n                  \"aggs\": {\n                    \"latest_doc\": {\n                      \"top_hits\": {\n                        \"size\": 1,\n                        \"sort\": [\n                          {\n                            \"@timestamp\": {\n                              \"order\": \"desc\"\n                            }\n                          }\n                        ]\n                      }\n                    }\n                  }\n                }\n              }\n            }\n",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -480,
+        -80
+      ],
+      "id": "3f50dd07-7f34-4f81-9ad5-00eef9592224",
+      "name": "same Source IP and not rulename and uniqe reason1",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.ES_Base_URL_Elastic}}/.internal.alerts-security.alerts-default*/_search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n            \"size\":0,\n             \"query\": {\n    \"bool\": {\n      \"filter\": [\n        {\n          \"match\": {\n           \"destination.ip\": \"{{ $json.DestinationIP }}\"\n          }\n        },\n        {\n          \"range\": {\n            \"@timestamp\": {\n              \"gte\": \"now-48h\",\n              \"lte\": \"now\"\n            }\n          }\n        },\n        {\n          \"term\": {\n            \"data_stream.namespace\": \"{{ $('called by ES-AI-5A-Check').first().json['Original Rule'][0].json.latest_doc.hits.hits[0]._source.data_stream.namespace }}\"\n          }\n        }\n      ],\n      \"must_not\": [\n        {\n          \"term\": {\n            \"_id\": \"{{ $('called by ES-AI-5A-Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._id }}\"\n          }\n        }\n      ]\n    }\n  },\n              \"aggs\": {\n                \"reason_priority\": {\n                  \"composite\": {\n                    \"size\": {{$vars.ES_Related_Alerts_Aggregation_Size}},\n                    \"sources\": [\n                      {\n                        \"reason\": {\n                          \"terms\": {\n                            \"field\": \"kibana.alert.reason\"\n                          }\n                        }\n                      }\n                    ]\n                  },\n                  \"aggs\": {\n                    \"latest_doc\": {\n                      \"top_hits\": {\n                        \"size\": 1,\n                        \"sort\": [\n                          {\n                            \"@timestamp\": {\n                              \"order\": \"desc\"\n                            }\n                          }\n                        ]\n                      }\n                    }\n                  }\n                }\n              }\n            }\n",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -480,
+        1088
+      ],
+      "id": "11235b1f-fcae-41ae-a673-a3d901230abd",
+      "name": "same DestinationI P and not rulename and uniqe reason",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.ES_Base_URL_Elastic}}/.internal.alerts-security.alerts-default*/_search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n            \"size\":0,\n             \"query\": {\n    \"bool\": {\n      \"filter\": [\n        {\n          \"match\": {\n           \"file.path\": \"{{ $json.EscapedFilePath }}\"\n          }\n        },\n        {\n          \"range\": {\n            \"@timestamp\": {\n              \"gte\": \"now-48h\",\n              \"lte\": \"now\"\n            }\n          }\n        },\n        {\n          \"term\": {\n            \"data_stream.namespace\": \"{{ $('called by ES-AI-5A-Check').first().json['Original Rule'][0].json.latest_doc.hits.hits[0]._source.data_stream.namespace }}\"\n          }\n        }\n      ],\n      \"must_not\": [\n        {\n          \"term\": {\n            \"_id\": \"{{ $('called by ES-AI-5A-Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._id }}\"\n          }\n        }\n      ]\n    }\n  },\n              \"aggs\": {\n                \"reason_priority\": {\n                  \"composite\": {\n                    \"size\": {{$vars.ES_Related_Alerts_Aggregation_Size}},\n                    \"sources\": [\n                      {\n                        \"reason\": {\n                          \"terms\": {\n                            \"field\": \"kibana.alert.reason\"\n                          }\n                        }\n                      }\n                    ]\n                  },\n                  \"aggs\": {\n                    \"latest_doc\": {\n                      \"top_hits\": {\n                        \"size\": 1,\n                        \"sort\": [\n                          {\n                            \"@timestamp\": {\n                              \"order\": \"desc\"\n                            }\n                          }\n                        ]\n                      }\n                    }\n                  }\n                }\n              }\n            }\n",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -480,
+        720
+      ],
+      "id": "5d50c9b4-0f64-43cb-935f-8c50350d9a80",
+      "name": "same File Path and not rulename and uniqe reason1",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.ES_Base_URL_Elastic}}/.internal.alerts-security.alerts-default*/_search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n            \"size\":0,\n             \"query\": {\n    \"bool\": {\n      \"filter\": [\n        {\n          \"match\": {\n           \"sensor.ip\": \"{{ $json.SensorIP }}\"\n          }\n        },\n        {\n          \"range\": {\n            \"@timestamp\": {\n              \"gte\": \"now-48h\",\n              \"lte\": \"now\"\n            }\n          }\n        },\n        {\n          \"term\": {\n            \"data_stream.namespace\": \"{{ $('called by ES-AI-5A-Check').first().json['Original Rule'][0].json.latest_doc.hits.hits[0]._source.data_stream.namespace }}\"\n          }\n        }\n      ],\n      \"must_not\": [\n        {\n          \"term\": {\n            \"_id\": \"{{ $('called by ES-AI-5A-Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._id }}\"\n          }\n        }\n      ]\n    }\n  },\n              \"aggs\": {\n                \"reason_priority\": {\n                  \"composite\": {\n                    \"size\": {{$vars.ES_Related_Alerts_Aggregation_Size}},\n                    \"sources\": [\n                      {\n                        \"reason\": {\n                          \"terms\": {\n                            \"field\": \"kibana.alert.reason\"\n                          }\n                        }\n                      }\n                    ]\n                  },\n                  \"aggs\": {\n                    \"latest_doc\": {\n                      \"top_hits\": {\n                        \"size\": 1,\n                        \"sort\": [\n                          {\n                            \"@timestamp\": {\n                              \"order\": \"desc\"\n                            }\n                          }\n                        ]\n                      }\n                    }\n                  }\n                }\n              }\n            }\n",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -480,
+        128
+      ],
+      "id": "5bc0b8b4-46f9-407c-b778-043e0857c5d1",
+      "name": "same SensorIP and not rulename and uniqe reason1",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "525f8dff-3540-46a0-a44a-2823685dfb3c",
+              "name": "OriginalRule",
+              "value": "={{ $('called by ES-AI-5A-Check').item.json['Original Rule'] }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -304,
+        1648
+      ],
+      "id": "72b88255-59ce-4084-8c68-dcfa78564f85",
+      "name": "Original rule"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f9b30886-d0d3-4844-bddd-0dbebc400b7a",
+              "name": "processname",
+              "value": "={{ $json.aggregations.reason_priority.buckets }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        528
+      ],
+      "id": "b2352473-5887-4797-b566-f06d973e1391",
+      "name": "same Process Name"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f9b30886-d0d3-4844-bddd-0dbebc400b7a",
+              "name": "sourceip",
+              "value": "={{ $json.aggregations.reason_priority.buckets }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        -80
+      ],
+      "id": "aa832cae-18a6-48ae-a92e-d1ca7738d45a",
+      "name": "same SourceIP"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f9b30886-d0d3-4844-bddd-0dbebc400b7a",
+              "name": "sesnroip",
+              "value": "={{ $json.aggregations.reason_priority.buckets }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        128
+      ],
+      "id": "82ce4ece-8f23-43e4-a990-c5d99aff51da",
+      "name": "same SensorIP"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f9b30886-d0d3-4844-bddd-0dbebc400b7a",
+              "name": "hostname",
+              "value": "={{ $json.aggregations.reason_priority.buckets }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        320
+      ],
+      "id": "e382b050-d734-4094-8858-aae870fd08c4",
+      "name": "same HostName"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f9b30886-d0d3-4844-bddd-0dbebc400b7a",
+              "name": "filepath",
+              "value": "={{ $json.aggregations.reason_priority.buckets }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        720
+      ],
+      "id": "9656568a-97f2-4196-b320-51f2dfd92615",
+      "name": "same FilePath"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f9b30886-d0d3-4844-bddd-0dbebc400b7a",
+              "name": "username",
+              "value": "={{ $json.aggregations.reason_priority.buckets }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        912
+      ],
+      "id": "66b92d1c-c7e2-455e-847a-6777d0a6ec61",
+      "name": "same UserName"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f9b30886-d0d3-4844-bddd-0dbebc400b7a",
+              "name": "destinationip",
+              "value": "={{ $json.aggregations.reason_priority.buckets }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        1088
+      ],
+      "id": "0bbda7a3-c949-4542-a21b-7218cd5252da",
+      "name": "same DestinationIP"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8375695c-c498-44ec-a3a1-d5ad5a4eefd7",
+              "name": "rulename",
+              "value": "={{ $json.aggregations.reason_priority.buckets }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        1280
+      ],
+      "id": "8f9dca4e-3440-4630-ad4a-852ef56e5965",
+      "name": "same RuleName"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/related_alerts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer  {{ $('called by ES-AI-5A-Check').first().json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"related_alerts\":{{ $('Extract Required fields').item.json.related_alerts.toJsonString() }},\"size\":{{ $json.size }}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        944,
+        688
+      ],
+      "id": "83ff738d-672b-404e-a144-30e9fb56ce13",
+      "name": "Get Prioritized Related Alerts",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1824,
+        704
+      ],
+      "id": "3d5616bf-8330-4471-8bb4-a17ce04b590c",
+      "name": "called by ES-AI-5A-Check"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve the data array from the previous node\nconst data = $input.all();\n\n// Initialize empty arrays to store IPs\nlet sourceip = [];\nlet sensorip = [];\nlet destinationip = [];\nlet username = [];\nlet processname = [];\nlet filepath = [];\nlet hostname = [];\nlet rulename = [];\n\n// Loop through each item in the data array\nfor (const item of data) {\n  // Check if the item has a 'source.ip' field\n  const sourceIp =$input.first().json['Original Rule'][0].json?.latest_doc?.hits?.hits[0]?._source?.source?.ip;\n  if (sourceIp) {\n    sourceip.push(sourceIp);\n  }\n\n  // Check if the item has a 'sensor.ip' field\n  const RuleName = $input.first().json['Original Rule'][0].json?.latest_doc?.hits?.hits[0]?._source?.['kibana.alert.rule.name'];\n  if (RuleName) {\n    rulename.push(RuleName);\n  }\n  \nconst sensorIp = $input.first().json['Original Rule'][0].json?.latest_doc?.hits?.hits[0]?._source?.['sensor.ip'];\n  if (sensorIp) {\n    sensorip.push(sensorIp);\n  }\n  // Check if the item has a 'host.hostname' field\n  const hostName = $input.first().json['Original Rule'][0].json?.latest_doc?.hits?.hits[0]?._source?.host?.hostname;\n  if (hostName) {\n    hostname.push(hostName);\n  }\n\n  // Check if the item has a 'destination.ip' field\n  const DestinationIP = $input.first().json['Original Rule'][0].json?.latest_doc?.hits?.hits[0]?._source?.destination?.ip;\n  if (DestinationIP) {\n    destinationip.push(DestinationIP);\n  }\n\n  // Check if the item has a 'process.name' field\n  const processName = $input.first().json['Original Rule'][0].json?.latest_doc?.hits?.hits[0]?._source?.process?.name;\n  if (processName) {\n    processname.push(processName);\n  }\n\n  // Check if the item has a 'source.port' field\n  const filePath = $input.first().json['Original Rule'][0].json?.latest_doc?.hits?.hits[0]?._source?.file?.path;\n  if (filePath) {\n    filepath.push(filePath);\n  }\n\n  // Check if the item has a 'user.name' field\n  const userName = $input.first().json['Original Rule'][0].json?.latest_doc?.hits?.hits[0]?._source?.user?.name;\n  if (userName) {\n    username.push(userName);\n  }\n}\n\n// Join all IPs into a single string, separated by a delimiter (e.g., comma)\nconst SourceIP = sourceip.join(\", \");\nconst SensorIP = sensorip.join(\", \");\nconst HostName = hostname.join(\", \");\nconst DestinationIP = destinationip.join(\", \");\nconst UserName = username.join(\", \");\nconst ProcessName = processname.join(\", \");\nconst FilePath = filepath.join(\", \");\nconst RuleName = rulename.join(\", \");\n\n\n// Return all the collected data in a single JSON object\nreturn [{ json: { SourceIP, SensorIP, HostName, ProcessName, FilePath, UserName, DestinationIP, RuleName } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1568,
+        704
+      ],
+      "id": "3075fc30-e31b-475a-a337-6de46f256583",
+      "name": "Extract Field in Alert"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.SourceIP }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "SourceIP"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "03681f65-b17f-4b4c-9089-6421b98393e0",
+                    "leftValue": "={{ $json.SensorIP }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "SensorIP"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c60d4292-1fc3-4695-a5e3-489fb22f49b6",
+                    "leftValue": "={{ $json.HostName }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "HostName"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "da033ba8-fef6-424c-acf7-e7fa4b392013",
+                    "leftValue": "={{ $json.ProcessName }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ProcessName"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e74b7a62-11f6-4377-a648-6666daaed5a5",
+                    "leftValue": "={{ $json.FilePath }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "FilePath"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7ca03f7b-5621-42cf-b848-166c74331beb",
+                    "leftValue": "={{ $json.UserName }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "UserName"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "97494940-32ce-4b1d-a569-a95c52ddef6d",
+                    "leftValue": "={{ $json.DestinationIP }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DestinationIP"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a96781da-93dd-420a-bd6c-ad20d2443f43",
+                    "leftValue": "={{ $json.RuleName }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RuleName"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1168,
+        608
+      ],
+      "id": "a80d5b84-629c-49da-a854-6e19a873738b",
+      "name": "Split to Search on Each Field"
+    },
+    {
+      "parameters": {
+        "numberInputs": 9
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        400,
+        560
+      ],
+      "id": "1f0983be-beba-427a-ac70-38694c0c47e5",
+      "name": "Merge All Related Alerts",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Initialize an array to hold the related alerts\nconst relatedAlerts = [];\n\n// Get input data\nconst items = $input.all(); // Get all input items\n\n// Function to safely extract values from input data and escape newlines\nfunction getValue(fieldName) {\n  const item = items.find(i => i.json && i.json[fieldName] !== undefined);\n  return item ? String(item.json[fieldName]).replace(/\\n/g, '\\\\n') : null; // Escape \\n\n}\n\n// Extract values using the function\nconst ruleName = getValue('rulename');\nconst hostName = getValue('hostname');\nconst processName = getValue('processname');\nconst userName = getValue('username');\nconst sourceIP = getValue('sourceip');\nconst sensorIP = getValue('sensorip'); // Fixed typo\nconst destinationIP = getValue('destinationip');\nconst filePath = getValue('filepath');\n\n// Helper function to add alert if value exists\nfunction addAlert(value, name) {\n  if (value) {\n    relatedAlerts.push({\n      alerts: value,\n      name: name\n    });\n  }\n}\n\n// Add alerts to array\naddAlert(ruleName, \"same rulename\");\naddAlert(hostName, \"same hostname\");\naddAlert(processName, \"same processname\");\naddAlert(userName, \"same username\");\naddAlert(sourceIP, \"same sourceip\");\naddAlert(sensorIP, \"same sensorip\");\naddAlert(filePath, \"same filepath\");\naddAlert(destinationIP, \"same destinationip\");\n\n// Construct the final JSON object\nconst result = {\n  related_alerts: relatedAlerts,\n  size: relatedAlerts.length // Make size dynamic\n};\n\n// Return the result in n8n format\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        688
+      ],
+      "id": "e42b380d-6c51-430b-9b16-f2cdcfd23705",
+      "name": "Extract Required fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "777d14cd-b760-4336-8714-0273a6eb4889",
+              "name": " Get Prioritized Related Alerts",
+              "value": "={{ $json.data }}",
+              "type": "array"
+            },
+            {
+              "id": "a06eaac4-9dd8-4c83-a458-c88f0d1cf8c7",
+              "name": "OriginalRule",
+              "value": "={{ $('Original rule').first().json.OriginalRule }}",
+              "type": "array"
+            },
+            {
+              "id": "ad1cd3b5-9a8e-46bc-953f-6667e86f0490",
+              "name": "Create TimeLine",
+              "value": "={{ $('called by ES-AI-5A-Check').first().json['Create TimeLine'] }}",
+              "type": "string"
+            },
+            {
+              "id": "5ca240fc-a200-4801-a9c4-0d1454937c1e",
+              "name": "Access Token",
+              "value": "={{ $('called by ES-AI-5A-Check').first().json['Access Token'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1168,
+        688
+      ],
+      "id": "bc84dc9d-d536-47c3-9765-630d00e5c475",
+      "name": "Collect Required Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "const filepath = $input.first().json.FilePath;\n\nfunction escapeFilePathForJSON(filePath) {\n    return filePath.replace(/\\\\/g, \"\\\\\\\\\");\n}\n\n// Escape the file path\nconst escapedFilePath = escapeFilePathForJSON(filepath);\n\n// Return an array of objects (n8n expected format)\nreturn [{ json: { EscapedFilePath: escapedFilePath } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -816,
+        720
+      ],
+      "id": "72b361f5-28cc-425c-9e8c-eda39d1550ba",
+      "name": "Normalize file path"
+    },
+    {
+      "parameters": {
+        "content": "## Extract Key Alert Fields from Triggered Rule\nThis section of the workflow is triggered by another workflow and is responsible for extracting relevant fields from the original security alert. It parses the alert’s JSON structure to retrieve important attributes such as source and destination IPs, sensor IP, hostname, username, file path and ... The extracted data is consolidated into a single structured JSON object for further analysis or enrichment in the following workflow steps.",
+        "height": 460,
+        "width": 560,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1904,
+        448
+      ],
+      "typeVersion": 1,
+      "id": "6f64c8a5-e2fa-4a22-8795-ca12fd411075",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Field-Specific Set Nodes\nStores aggregation results from each search\n",
+        "height": 300,
+        "width": 440
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -464,
+        1504
+      ],
+      "typeVersion": 1,
+      "id": "0704b4d4-42cb-4caa-aa6a-c70384931196",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Split to Search on Each Field \n\n- Routes data to appropriate search nodes based on available fields\n- 8 possible output branches (one for each field type)",
+        "height": 760,
+        "width": 420,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1328,
+        352
+      ],
+      "typeVersion": 1,
+      "id": "325c1172-6ce7-4422-8d9b-f1afdcc879f9",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## AI-Powered Related Alerts Contextualization Flow\nThis nodes enhances alert investigation by extracting key contextual fields from the original alert and formatting them into a structured list of related indicators. These indicators are sent to an internal API that prioritizes and returns related alerts based on contextual similarity. The response, along with critical metadata such as the original rule, timeline instructions, and access token, is consolidated and passed into a downstream AI-driven analysis workflow. \n\n",
+        "height": 440,
+        "width": 960,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        608,
+        480
+      ],
+      "typeVersion": 1,
+      "id": "f00395d5-c83e-40b6-a517-72782389cfed",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Merge All Related Alerts\nCombined array of all related alerts",
+        "height": 720,
+        "width": 400,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        192,
+        352
+      ],
+      "typeVersion": 1,
+      "id": "65565bab-06d2-46d0-ac13-0d9fd70f8d5c",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## Normalize file path\nEscapes backslashes for Elasticsearch query\n",
+        "height": 340,
+        "width": 220,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -880,
+        544
+      ],
+      "typeVersion": 1,
+      "id": "f79a3428-4bfb-498b-b927-44ecc601baa6",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## Field-Specific Search Nodes\n1. **same Source IP** - Searches by `source.ip`\n2. **same SensorIP** - Searches by `sensor.ip`  \n3. **same HostName** - Searches by `host.hostname`\n4. **same Process Name** - Searches by `process.name`\n5. **same File Path** - Uses normalized path from \"Normalize file path\" node\n6. **same User Name** - Searches by `user.name`\n7. **same DestinationIP** - Searches by `destination.ip`\n8. **same RuleName** - Searches by `kibana.alert.rule.name`\n",
+        "height": 1820,
+        "width": 780,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -640,
+        -336
+      ],
+      "typeVersion": 1,
+      "id": "a61f4d12-2bd6-461e-ae8b-9ef37f6e8230",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Elastic AI — ES-AI-5A-Create Time line & Checkck",
+        "height": 220,
+        "width": 280,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2064,
+        192
+      ],
+      "typeVersion": 1,
+      "id": "2e50ed35-731d-4ac8-acbf-5e8f6979c820",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: ES-AI-Alert-Related Alerts\n### Workflow-Version: 1.0.2\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Modifying variables\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2064,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "ebb58c59-4bbf-4849-a58c-15964bfe9034",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "6tqmsmQkOnTIetJW",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/6tqmsmQkOnTIetJW",
+          "cachedResultName": "ES — ES-AI-Alert-Related Alerts- AI analysis"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1360,
+        688
+      ],
+      "id": "7fef530c-367a-4182-96f7-c1413bb37649",
+      "name": "Call 'ES-AI-Alert-Related Alerts- AI analysis'",
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "same ruleName, different alert reason, ignore current alert id": {
+      "main": [
+        [
+          {
+            "node": "same RuleName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "same Hostname and not rulename and uniqe reason": {
+      "main": [
+        [
+          {
+            "node": "same HostName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "same Process Name and not rulename and uniqe reason1": {
+      "main": [
+        [
+          {
+            "node": "same Process Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "same User Name and not rulename and uniqe reason": {
+      "main": [
+        [
+          {
+            "node": "same UserName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "same Source IP and not rulename and uniqe reason1": {
+      "main": [
+        [
+          {
+            "node": "same SourceIP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "same DestinationI P and not rulename and uniqe reason": {
+      "main": [
+        [
+          {
+            "node": "same DestinationIP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "same File Path and not rulename and uniqe reason1": {
+      "main": [
+        [
+          {
+            "node": "same FilePath",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "same SensorIP and not rulename and uniqe reason1": {
+      "main": [
+        [
+          {
+            "node": "same SensorIP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Original rule": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 8
+          }
+        ]
+      ]
+    },
+    "same Process Name": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "same SourceIP": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "same SensorIP": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "same HostName": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "same FilePath": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "same UserName": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "same DestinationIP": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "same RuleName": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "Get Prioritized Related Alerts": {
+      "main": [
+        [
+          {
+            "node": "Collect Required Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "called by ES-AI-5A-Check": {
+      "main": [
+        [
+          {
+            "node": "Extract Field in Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Field in Alert": {
+      "main": [
+        [
+          {
+            "node": "Split to Search on Each Field",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Original rule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split to Search on Each Field": {
+      "main": [
+        [
+          {
+            "node": "same Source IP and not rulename and uniqe reason1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "same SensorIP and not rulename and uniqe reason1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "same Hostname and not rulename and uniqe reason",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "same Process Name and not rulename and uniqe reason1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Normalize file path",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "same User Name and not rulename and uniqe reason",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "same DestinationI P and not rulename and uniqe reason",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "same ruleName, different alert reason, ignore current alert id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Related Alerts": {
+      "main": [
+        [
+          {
+            "node": "Extract Required fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Required fields": {
+      "main": [
+        [
+          {
+            "node": "Get Prioritized Related Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Required Items": {
+      "main": [
+        [
+          {
+            "node": "Call 'ES-AI-Alert-Related Alerts- AI analysis'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize file path": {
+      "main": [
+        [
+          {
+            "node": "same File Path and not rulename and uniqe reason1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'ES-AI-Alert-Related Alerts- AI analysis'": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "39098146-308c-46a2-8c53-2c605e1110eb",
+  "owner": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

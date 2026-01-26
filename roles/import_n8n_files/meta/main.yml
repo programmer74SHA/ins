@@ -1,0 +1,22 @@
+---
+# =============================================================================
+# IMPORT N8N FILES - Role Metadata
+# =============================================================================
+
+galaxy_info:
+  author: APK Group
+  description: Import n8n workflow files, credential stubs, and projects into SOAR platform
+  license: proprietary
+  min_ansible_version: "2.9"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+
+dependencies:
+  - role: deploy_soar_platform

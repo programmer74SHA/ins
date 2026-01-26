@@ -1,0 +1,248 @@
+{
+  "id": "ZxfCxkyJxbjxQkHL",
+  "name": "SP-AI-Ticketing & AI Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ticket_alert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Called by SP-AI-5A-Check').item.json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"alert\":{\n        \"_id\": \"{{ $json['Original Rule'].source_guid }}\",\n        \"@timestamp\": \"{{ $json['Original Rule']._time }}\",\n        \"kibana.alert.rule.description\": \"{{ $json['Original Rule'].orig_rule_description.replaceAll('\\n','\\\\n') }}\",\n        \"sensor.ip\":\"{{ $json['Original Rule'].dest }}\",\n        \"sensor.name\": \"{{ $json['Original Rule'].dest }}\",\n        \"source.ip\": \"{{ $json['Original Rule'].src }}\",\n        \"kibana.alert.severity\": \"{{ $json['Original Rule'].severity }}\",\n        \"alert_count\": \"{{ $json['Original Rule']._serial }}\",\n        \"kibana.alert.rule.name\":\"{{ $json['Original Rule'].source }}\"\n    },\n  \"project_info\": {\n        \"project\": \"{{ $vars.JIRA_Project_Key_Field }}\",\n        \"siem_type\": \"Splunk\",\n        \"zone\": \"{{ $vars.JIRA_Project_Key_Field }}\"\n     }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        -144
+      ],
+      "id": "0cf36c60-cd03-45e6-8add-70575fea68f3",
+      "name": "request for check Similar Tickets "
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ai/alert_ticket",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer  {{ $('Called by SP-AI-5A-Check').first().json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"alert\": [{{ $('Called by SP-AI-5A-Check').item.json['Original Rule'].toJsonString() }}],\n    \"ticket_info\": {{ $json.data.toJsonString() }},\n    \"device\":\"Splunk\"\n\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        32,
+        -144
+      ],
+      "id": "15762635-b8fc-45b9-897d-3692eec5a748",
+      "name": "AI analysis(Ticket Info)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0e8e9309-fa16-409a-b02d-a623dc5d2c12",
+              "name": "4th AI Result",
+              "value": "={{ $json.data }}",
+              "type": "array"
+            },
+            {
+              "id": "4c979e51-8e69-43b3-99ff-409b563474fb",
+              "name": "Alert Timestamp",
+              "value": "={{ $('Called by SP-AI-5A-Check').item.json['Original Rule']._time }}",
+              "type": "string"
+            },
+            {
+              "id": "de0fd8f1-d587-40d8-aef4-93b5a84de66c",
+              "name": "TimeLine ID",
+              "value": "={{ $('Called by SP-AI-5A-Check').item.json['TimeLine ID'] }}",
+              "type": "string"
+            },
+            {
+              "id": "e9424dbc-ece0-4511-a7b0-0ce0f4d1f017",
+              "name": "data[0].reference",
+              "value": "={{ $json.data[0].reference }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        -144
+      ],
+      "id": "bb80c7ef-a671-4ad0-83f1-d4247dc7c447",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "## AI-Based Alert Similarity Check and Enrichment\nThis workflow is triggered by \"SP-AI-5A-Check\" workflow and receives alert data along with an access token. It sends the alert information to an API to check for similar existing tickets, then passes both the alert and related ticket data to an AI service for further analysis. The results, including AI insights and metadata, are stored in variables for use in later steps.\n",
+        "height": 356,
+        "width": 1300,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -608,
+        -288
+      ],
+      "typeVersion": 1,
+      "id": "8b6d1778-4881-45f6-b02e-0aa5edff577b",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Splunk AI — SP-AI-5A-Check",
+        "height": 220,
+        "width": 300,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -768,
+        -528
+      ],
+      "typeVersion": 1,
+      "id": "dcd1811a-5d7a-413f-94f8-59fcfcc8732b",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -512,
+        -144
+      ],
+      "id": "389d60e2-f6fb-4350-9300-b3d498d0b86c",
+      "name": "Called by SP-AI-5A-Check"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: SP-AI-Ticketing & AI Analysis\n### Workflow-Version: 1.0.1\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Create for first time\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -768,
+        -848
+      ],
+      "typeVersion": 1,
+      "id": "cec9b045-8749-4070-a458-53e598ae4936",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "iAdtPYDYJ3ndUvvM",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/iAdtPYDYJ3ndUvvM",
+          "cachedResultName": "SP — SP-AI-Insert Timeline"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        -144
+      ],
+      "id": "06027b69-db14-4bf4-a5cc-ebf2d1bd8a6c",
+      "name": "Call 'SP-AI-Insert Timeline'"
+    }
+  ],
+  "connections": {
+    "request for check Similar Tickets ": {
+      "main": [
+        [
+          {
+            "node": "AI analysis(Ticket Info)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI analysis(Ticket Info)": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Call 'SP-AI-Insert Timeline'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Called by SP-AI-5A-Check": {
+      "main": [
+        [
+          {
+            "node": "request for check Similar Tickets ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "8ab5ccf3-222d-4c65-9c6a-e0eaaf19270b",
+  "owner": {
+    "type": "team",
+    "teamId": "VkJ1fWswpm3ZmsSH",
+    "teamName": "SP"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

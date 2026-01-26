@@ -1,0 +1,15 @@
+{
+  "id": "TAqEVeh9FfFVOZh5",
+  "name": "Splunk account",
+  "type": "splunkApi",
+  "data": {
+    "authToken": "",
+    "baseUrl": ""
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "DnyRJEaUvoGmmq7e",
+    "teamName": "SP-Functions"
+  },
+  "isGlobal": false
+}

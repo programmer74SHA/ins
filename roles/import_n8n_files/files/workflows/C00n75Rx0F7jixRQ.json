@@ -1,0 +1,270 @@
+{
+  "id": "C00n75Rx0F7jixRQ",
+  "name": "ES-AI-Find Uncompleted Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "={{$vars.ES_Local}}:9200/timeline/_search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": {\n    \"bool\": {\n      \"must\": [\n        {\n          \"term\": {\n            \"Device.keyword\": \"Elastic\"\n          }\n        },\n        {\n          \"range\": {\n            \"@timestamp\": {\n              \"gte\": \"now-{{2*$vars.ES_Schedule_Trigger_Hours_Time}}m\",\n              \"lt\": \"now-{{$vars.ES_Schedule_Trigger_Hours_Time}}m\"\n            }\n          }\n        },\n        {\n          \"exists\": {\n            \"field\": \"AlertID\"\n          }\n        }\n      ],\n      \"must_not\": [\n        {\n          \"exists\": {\n            \"field\": \"Final\"\n          }\n        }\n      ]\n    }\n  },\n  \"size\": 200\n}\n",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -176,
+        -64
+      ],
+      "id": "e3e09208-1588-432a-a674-03a9b85db547",
+      "name": "Get",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Zm2ZQ42acv9nDnwz",
+          "name": "Elastic Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "hits.hits",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        48,
+        -64
+      ],
+      "id": "d47e2300-e80c-4055-9153-f3498cd61039",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        272,
+        -64
+      ],
+      "id": "5086333d-b8ab-4a2b-9515-19a1aed307b8",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": "={{$vars.ES_Schedule_Trigger_Hours_Time}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        -64
+      ],
+      "id": "7d04ae2e-859f-40bf-9c83-d0441a663f5b",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "content": "## Scheduled Elasticsearch Query for Pending Alerts\nThis workflow runs on a scheduled interval to query the timeline index in Elasticsearch. It retrieves records within a specific time window, filtered to include only those where the device is marked as *Elastic*, an AlertID exists, and the Final field has not yet been assigned. The collected results are then broken down into individual entries for further processing or analysis.",
+        "height": 320,
+        "width": 640,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -464,
+        -224
+      ],
+      "typeVersion": 1,
+      "id": "7dadc371-b348-4ec2-966c-ca4f96077a87",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Logging Uncompleted Alerts into SIEM\nThis part of the workflow iterates through each alert entry and sends the relevant details to the SIEM by creating a new document in Elasticsearch. For every alert, fields such as AlertID, the original alert timestamp, the current processing timestamp, and monitoring status are stored.",
+        "height": 360,
+        "width": 480,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        208,
+        -224
+      ],
+      "typeVersion": 1,
+      "id": "02cb9b27-c9ea-47d6-b7dc-e6edde816088",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: ES-AI-Find Uncompleted Alerts\n### Workflow-Version: 1.0.1\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Create for first time\n### Status: Active",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -464,
+        -544
+      ],
+      "typeVersion": 1,
+      "id": "14d32fb7-728c-4f09-a900-0fa9a3fa05fe",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Local}}:9200/logs-apksoar.unchecked-default/_doc",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"AlertID\": \"{{ $('Split Out').item.json._source.AlertID }}\",\n  \"Alert.timestamp\": \"{{ $('Split Out').item.json._source.ai_ingested_time }}\",\n  \"@timestamp\": \"{{$now}}\",\n  \"SIEM.Type\":\"APKSIEM\",\n  \"monitoring.message\":\"Uncompleted\",\n  \"OrgNickname\":\"{{$vars.ES_Org_Nickname}}\"\n}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        -64
+      ],
+      "id": "c4f42dc1-8ce4-40ae-854d-304983ace9a0",
+      "name": "Add Uncompleted Alert to an Local Elastic",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Zm2ZQ42acv9nDnwz",
+          "name": "Elastic Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Base_URL_Elastic}}/logs-apksoar.unchecked-default/_doc",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"AlertID\": \"{{ $('Split Out').item.json._source.AlertID }}\",\n  \"Alert.timestamp\": \"{{ $('Split Out').item.json._source.ai_ingested_time }}\",\n  \"@timestamp\": \"{{$now}}\",\n  \"SIEM.Type\":\"APKSIEM\",\n  \"monitoring.message\":\"Uncompleted\",\n  \"OrgNickname\":\"{{$vars.ES_Org_Nickname}}\"\n}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        704,
+        -64
+      ],
+      "id": "1f93be16-d9c4-4e60-a742-53e8a2e0c109",
+      "name": "Add Uncompleted Alert to an SIEM1",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Get": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Add Uncompleted Alert to an Local Elastic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Uncompleted Alert to an Local Elastic": {
+      "main": [
+        [
+          {
+            "node": "Add Uncompleted Alert to an SIEM1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Uncompleted Alert to an SIEM1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "8d968f75-9978-4951-a34e-0634a1cb3f9f",
+  "owner": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

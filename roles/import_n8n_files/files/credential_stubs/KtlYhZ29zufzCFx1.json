@@ -1,0 +1,15 @@
+{
+  "id": "KtlYhZ29zufzCFx1",
+  "name": "Jira Service Management Api account",
+  "type": "jsmApi",
+  "data": {
+    "token": "",
+    "jsmdomain": ""
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "U3dBtr1FA3nBypwO",
+    "teamName": "RTX5090-ES"
+  },
+  "isGlobal": false
+}
