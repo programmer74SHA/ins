@@ -1,0 +1,10 @@
+---
+# =============================================================================
+# IMPORT N8N FILES - Handlers
+# =============================================================================
+
+- name: Restart n8n containers
+  ansible.builtin.shell:
+    cmd: docker compose restart apksoar apksoar-worker
+    chdir: "{{ n8n_files_deploy_dir }}"
+  listen: "Restart n8n containers"

@@ -1,0 +1,1201 @@
+{
+  "id": "6tqmsmQkOnTIetJW",
+  "name": "ES-AI-Alert-Related Alerts- AI analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ai/prime_alert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer  {{ $('Called by ES-AI-Alert-Related Alerts').item.json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"alert\": {{ $('Clean Original Rule ').first().json.CleanOriginalRule.toJsonString() }},\n    \"related_alerts\": {{ $('Create the required format for AI').item.json.related_alerts.toJsonString() }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        304
+      ],
+      "id": "fb02d213-169c-4075-b727-184bfa362601",
+      "name": "AI analysis(primary alert)"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -32,
+        304
+      ],
+      "id": "f9ed2107-a964-4fd3-b6fc-0d57fca01f91",
+      "name": "Called by ES-AI-Alert-Related Alerts"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve the data array from the previous node\nconst data = $input.all();\n\n// Initialize an empty array to store all reasons\nlet related_alerts = [];\n\n// Loop through each item in the data array\nfor (const item of data) {\n  for (let i = 0; i <$input.first().json[' Get Prioritized Related Alerts'].length ; i++) {\n      const related_alert = {\n        _id : $input.first().json[' Get Prioritized Related Alerts'][i].latest_doc.hits.hits[0]._id,\n        timestamp:item.json[' Get Prioritized Related Alerts'][i].latest_doc.hits.hits[0]._source['@timestamp'],\n        kibana_alert_risk_score:  $input.first().json[' Get Prioritized Related Alerts'][i].latest_doc.hits.hits[0]._source['kibana.alert.rule.parameters'].risk_score,\n        kibana_alert_rule_description :$input.first().json[' Get Prioritized Related Alerts'][i].latest_doc.hits.hits[0]._source['kibana.alert.rule.parameters'].description,\n        kibana_alert_rule_name : $input.first().json[' Get Prioritized Related Alerts'][i].latest_doc.hits.hits[0]._source['kibana.alert.rule.name'],\n        kibana_alert_severity: $input.first().json[' Get Prioritized Related Alerts'][i].latest_doc.hits.hits[0]._source['kibana.alert.rule.parameters'].severity,\n        kibana_alert_reason : $input.first().json[' Get Prioritized Related Alerts'][i].key.reason,\n        alert_count : $input.first().json[' Get Prioritized Related Alerts'][i].doc_count,\n        sensor_ip: $input.first().json[' Get Prioritized Related Alerts'][i].latest_doc.hits.hits[0]._source['sensor.ip'],\n      };\n \n      related_alerts.push(related_alert)\n  \n    \n}\n}\n// Join all reasons into a single string, separated by a delimiter (e.g., comma)\n//const concatenatedtimestamp = timestamp.join(\", \");\n\n// Return the concatenated string\n//return [{ json: { concatenatedtimestamp } }];\nreturn {related_alerts: related_alerts}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        304
+      ],
+      "id": "38b5f9a6-fdf6-4164-a479-86fd909971c5",
+      "name": "Create the required format for AI"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "07ecbbb7-f605-4ed3-90fa-d67d42ca2d57",
+              "name": "First AI Result",
+              "value": "={{ $('AI analysis(primary alert)').first().json.data }}",
+              "type": "array"
+            },
+            {
+              "id": "1fe577e6-a5e1-4d36-94b1-588950c00a0b",
+              "name": "Alert Timestamp",
+              "value": "={{ $('Called by ES-AI-Alert-Related Alerts').first().json.OriginalRule[0].json.latest_doc.hits.hits[0]._source['@timestamp'] }}",
+              "type": "string"
+            },
+            {
+              "id": "66f45d26-1a18-46df-8b76-fcb5a4d353bb",
+              "name": "Create TimeLine",
+              "value": "={{ $('Called by ES-AI-Alert-Related Alerts').first().json['Create TimeLine'] }}",
+              "type": "string"
+            },
+            {
+              "id": "41d3d3a2-1f4b-49a5-a63a-90c3fb63e8dc",
+              "name": "EI IP result",
+              "value": "={{ $('Check for existence').first().json.eiIpResult }}",
+              "type": "string"
+            },
+            {
+              "id": "d69b1993-2067-4aad-ac74-f79bdc92115d",
+              "name": "TI IP result",
+              "value": "={{ $('Check for existence').first().json.tiIpResult }}",
+              "type": "string"
+            },
+            {
+              "id": "a31c481a-88ff-442f-ad54-45c988cc899e",
+              "name": "EI Process result",
+              "value": "={{ $('Check for existence').first().json.eiProcessResult }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3584,
+        288
+      ],
+      "id": "3bcfedf6-3ad7-46ec-8553-a267e949ba93",
+      "name": "Collect Required Items"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "rFDystiVMo93hN9J",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/rFDystiVMo93hN9J",
+          "cachedResultName": "ES — ES-AI-Insert Timeline"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        3872,
+        288
+      ],
+      "id": "b05a304e-59dd-4ad4-b873-6ac6594ced59",
+      "name": "Call ES-AI-Alert-Related Alerts- Insert Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract the alert reason from the input path\nconst alertReason = $input.first().json.related_alerts[0].kibana_alert_reason;\n\n// Clean the string (replace \\ with \\\\ and \\n with \\\\n)\nconst cleanedAlertReason = alertReason\n  .replace(/\\\\/g, '\\\\\\\\')\n  .replace(/\\n/g, '\\\\n');\n\n// Return the cleaned alert reason\nreturn {\n  cleanedAlertReason: cleanedAlertReason\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        304
+      ],
+      "id": "238c5cf0-dea5-4aa2-8f09-22f96347244b",
+      "name": "Correct json"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d3cc17f2-b4b0-4a01-80e6-6be20329688f",
+              "leftValue": "={{ $json.data[0].extraEvidence }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d9798321-64ca-469c-903a-57a298b82942",
+              "leftValue": "={{ $json.data[0].extraEvidence }}",
+              "rightValue": "None",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "7ac6ad1d-9699-4e3c-a04a-e7fcad1c2d40",
+              "leftValue": "={{ $json.data[0].extraEvidence }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        304
+      ],
+      "id": "b9156f62-c64b-4259-9a9d-459285e78dce",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input value from the previous node\nconst input = $input.first().json.data[0].extraEvidence;\n\n// Remove the \"Extra Evidences:\" part from the input\nconst cleanedInput = input.replace(/Extra Evidences?:\\s*/, '');\n\n// Regular expression to match key-value pairs\nconst regex = /(\\w+):\\s([^,]+)/g;\nlet matches;\nlet result = {};\n\n// Function to validate IPv4 format\nfunction isValidIP(ip) {\n  const parts = ip.trim().split('.');\n  if (parts.length !== 4) return false;\n  return parts.every(part => {\n    const n = Number(part);\n    return /^\\d+$/.test(part) && n >= 0 && n <= 255;\n  });\n}\n\nwhile ((matches = regex.exec(cleanedInput)) !== null) {\n  const key = matches[1].toLowerCase();\n  let value = matches[2].trim();\n\n  // Remove parentheses and their content\n  value = value.replace(/\\s*\\(.*?\\)\\s*/, '').trim();\n\n  // If the value is empty after cleaning, skip it\n  if (!value) continue;\n\n  // If key is 'ip', validate the value\n  if (key === 'ip' && !isValidIP(value)) {\n    continue; // Skip this entry if IP is invalid\n  }\n\n  if (!result[key]) {\n    result[key] = [];\n  }\n\n  result[key].push(value);\n}\n\n// Remove any keys that have only empty or null arrays (just in case)\nfor (const key in result) {\n  if (!result[key].length || result[key].every(v => !v.trim())) {\n    delete result[key];\n  }\n}\n\nreturn [{ json: result }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        1008
+      ],
+      "id": "8ff18f95-9186-46bc-b2cb-218487415a5d",
+      "name": "Seprate Extra Evidences"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.ip }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "44927994-377a-4cbe-ac3f-ba9998912b4d"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "IP"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b4188cd0-fde0-450c-88b8-fb6f786bbbbb",
+                    "leftValue": "={{ $json.host }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Host"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0808e582-f3df-46f1-8bf2-b7acea8854ec",
+                    "leftValue": "={{ $json.process }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Process"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1312,
+        1008
+      ],
+      "id": "2a6427f8-2229-4f2b-8850-10816dc17e3e",
+      "name": "Switch",
+      "alwaysOutputData": false,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "100e2a45-c348-4031-9ce3-5e469673f290",
+              "name": "ip",
+              "value": "={{ $json.ip }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        688
+      ],
+      "id": "156beeb9-3ed9-4bd7-b902-b0bfa2dfd508",
+      "name": "IP"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d84cacdf-829a-441d-955e-13c3653a62b3",
+              "name": "process",
+              "value": "={{ $json.process }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1792,
+        1392
+      ],
+      "id": "86f1d9ef-c888-485a-b1dc-b89397ee052c",
+      "name": "process"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "157e49a7-40d8-4b0a-beb4-322b9d025a47",
+              "name": "host",
+              "value": "={{ $json.host }}",
+              "type": "array"
+            },
+            {
+              "id": "af3e9c2a-33a5-4cd4-b690-8e6673f0a77b",
+              "name": "Access Token",
+              "value": "={{ $('Called by ES-AI-Alert-Related Alerts').first().json['Access Token'] }}",
+              "type": "string"
+            },
+            {
+              "id": "55ed47fb-1b58-48ac-8400-38d0c2521a20",
+              "name": "Summery",
+              "value": "={{ $('AI analysis(primary alert)').first().json.data[0].detailsMarkdown }}",
+              "type": "string"
+            },
+            {
+              "id": "960fdfda-848d-4406-98f3-7da8b3afd894",
+              "name": "Original Rule",
+              "value": "={{ $('Called by ES-AI-Alert-Related Alerts').first().json.OriginalRule }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2064,
+        1008
+      ],
+      "id": "0ad98e37-acb4-4845-8464-1c5b20eac5c5",
+      "name": "Host"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M0x1cGAodQU2slha",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/M0x1cGAodQU2slha",
+          "cachedResultName": "ES — ES-AI-TI & AI Summary"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2752,
+        528
+      ],
+      "id": "b3e5eb7c-3fa3-4e25-8365-155f80ad53be",
+      "name": "Called ES-AI-TI & AI Summary"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the array of IPs from the input\nconst ips = $input.first().json.ip;\n\n// Function to determine if an IP is public\nfunction isPublicIp(ip) {\n  const privateIpRanges = [\n    /^10\\./,\n    /^172\\.(1[6-9]|2[0-9]|3[0-1])\\./,\n    /^192\\.168\\./,\n    /^127\\./,\n    /^169\\.254\\./,\n  ];\n  return !privateIpRanges.some(range => range.test(ip));\n}\n\n// Separate IPs into public and private\nconst PublicIPs = [];\nconst PrivateIPs = [];\n\nfor (const ip of ips) {\n  if (isPublicIp(ip)) {\n    PublicIPs.push(ip);\n  } else {\n    PrivateIPs.push(ip);\n  }\n}\n\n// Return the result\nreturn [\n  {\n    json: {\n      PublicIPs,\n      PrivateIPs,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        688
+      ],
+      "id": "93a5c296-e6e7-4a2e-bfcc-57c142fb075c",
+      "name": "Extract Public & Private IPs"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.PublicIPs }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "0feb9f7c-1148-4cce-a31d-0682f65f9f16"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Public IP"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5984806b-0fd5-4694-80b5-6d5f288f3284",
+                    "leftValue": "={{ $json.PrivateIPs }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Private IP"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1952,
+        688
+      ],
+      "id": "962542b4-b62e-4906-bdee-a0790cbe9fae",
+      "name": "Divided Public & Private IPs "
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9e1112f5-3aed-437e-80c6-40fc75463a65",
+              "name": "PublicIPs",
+              "value": "={{ $json.PublicIPs }}",
+              "type": "array"
+            },
+            {
+              "id": "502c8c28-0198-497f-8050-dc701a716a8c",
+              "name": "Access Token",
+              "value": "={{ $('Called by ES-AI-Alert-Related Alerts').first().json['Access Token'] }}",
+              "type": "string"
+            },
+            {
+              "id": "02ad0555-9d53-4608-9626-b9a880ff08b8",
+              "name": "Original Rule",
+              "value": "={{ $('Called by ES-AI-Alert-Related Alerts').first().json.OriginalRule }}",
+              "type": "array"
+            },
+            {
+              "id": "5cad53ed-7fc2-44cf-9901-8c4156aac423",
+              "name": "Summery",
+              "value": "={{ $('AI analysis(primary alert)').first().json.data[0].detailsMarkdown }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        528
+      ],
+      "id": "1959d798-f8eb-4718-9b00-98a17a4c1ad8",
+      "name": "Public IP"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bfe09a77-e7ab-46d0-92b8-80b29562975e",
+              "name": "PrivateIPs",
+              "value": "={{ $json.PrivateIPs }}",
+              "type": "array"
+            },
+            {
+              "id": "10511c69-3f9a-4d75-bf2c-4f2a4f46be40",
+              "name": "Access Token",
+              "value": "={{ $('Called by ES-AI-Alert-Related Alerts').first().json['Access Token'] }}\n",
+              "type": "string"
+            },
+            {
+              "id": "c5e7178b-52fd-468c-8ac6-6dea81b5750e",
+              "name": "PublicIPs",
+              "value": "={{ $json.PublicIPs }}",
+              "type": "array"
+            },
+            {
+              "id": "a7a93edc-838a-4e25-b7e0-0897dbb94a1d",
+              "name": "Access Token",
+              "value": "={{ $('Called by ES-AI-Alert-Related Alerts').first().json['Access Token'] }}",
+              "type": "string"
+            },
+            {
+              "id": "19d999a0-b8bd-4ca5-a52c-c34adadd6df6",
+              "name": "Summery",
+              "value": "={{ $('AI analysis(primary alert)').first().json.data[0].detailsMarkdown }}",
+              "type": "string"
+            },
+            {
+              "id": "1521b54b-9d72-4fe5-814a-96d552370f13",
+              "name": "Original Rule",
+              "value": "={{ $('Called by ES-AI-Alert-Related Alerts').first().json.OriginalRule }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        704
+      ],
+      "id": "78d6f8b9-73a6-470e-a68a-343c3a32a972",
+      "name": "Private IP"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2368,
+        912
+      ],
+      "id": "adbed1ec-bba0-4362-9f4f-5be3dcec4e22",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        3088,
+        912
+      ],
+      "id": "9d099896-80dd-43e4-9f03-ada2b94b1726",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all inputs\nconst input = $input.all();\n\n// Initialize an empty result object\nlet result = {};\n\n// Loop through all the input objects\ninput.forEach(item => {\n  // Check if \"EI IP result\" exists and add it to the result object\n  if (item.json['EI Extra Evidence Result'] !== undefined && item.json['EI Extra Evidence Result'] !== null) {\n    result.EIExtraEvidenceResult = item.json['EI Extra Evidence Result'];\n  }\n\n\n  // Check if \"TI IP Result \" exists and add it to the result object\n  if (item.json['TI IP Result '] !== undefined && item.json['TI IP Result '] !== null) {\n    result.tiIpResult = item.json['TI IP Result '];\n  }\n});\n\n// Return the merged result as an object inside 'json'\nreturn [\n  {\n    json: result // Return the final result object\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3328,
+        912
+      ],
+      "id": "c301b731-5a55-47eb-a174-13b24f28b675",
+      "name": "Check for existence"
+    },
+    {
+      "parameters": {
+        "content": "## AI-Powered Primary Alert Processing and Formatting\nThis part of the workflow handles the processing of security alerts for AI analysis. It begins by receiving alerts triggered by an upstream workflow, then extracts and formats related alert data into a structured JSON array. The alerts’ reasons are cleaned for JSON compatibility. The original alert data is flattened and sanitized to ensure safe transmission. Finally, the formatted data is sent via HTTP request with authorization headers to an AI analysis API endpoint for further investigation. Conditional logic checks if additional evidence is present before proceeding.\n\n\n",
+        "height": 440,
+        "width": 1160,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        112
+      ],
+      "typeVersion": 1,
+      "id": "b47a2ba9-6936-444b-b47f-360cac9a0c49",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Conditional Routing Based on Presence of IP, Host, or Process Data\nThis workflow segment uses a Switch node to evaluate incoming data and route it into three distinct paths depending on which key fields are populated. It checks whether the arrays for `ip`, `host`, or `process` fields are not empty and outputs accordingly to the matching branch: \"IP\", \"Host\", or \"Process\". ",
+        "height": 380,
+        "width": 620,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        864,
+        784
+      ],
+      "typeVersion": 1,
+      "id": "224a492a-d6d2-4bac-b3d5-093da9ec435b",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Process Enrichment and AI Summary Integration\nThis segment of the workflow extracts the process name related to an alert and sends it to an external enrichment API to gather additional context. It checks whether enrichment was successful (i.e., result is not \"Not Found\"). If successful, it prepares a structured set of variables—including enriched process details, access token, original detection rule, and AI-generated summary—and then triggers a sub-workflow named **\"Elastic AI — ES-AI-EI & AI Summery\"** to perform further analysis and summarization. ",
+        "height": 416,
+        "width": 584,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1504,
+        1168
+      ],
+      "typeVersion": 1,
+      "id": "05d1142e-f029-425b-953a-4a3867220b25",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## IP + Extract IPs:\nExtracts all IP addresses from the note and enriches them with metadata such as geolocation, type (internal/external), and role (source/destination). Produces a structured ip_info object to support threat context and correlation.",
+        "height": 320,
+        "width": 380,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1504,
+        512
+      ],
+      "typeVersion": 1,
+      "id": "3bea6adc-bb36-4b0f-a6e9-067c3b3fe31c",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## Host Node\nExtracts various fields (host, Access Token, Summary, Original Rule) and assigns them accordingly.",
+        "height": 260,
+        "width": 320,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1952,
+        880
+      ],
+      "typeVersion": 1,
+      "id": "2ee22763-d3ed-43a2-8f78-8b956f30c8e3",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "content": "## Divided Public & Private IPs Node\nA switch node that checks if the separated IP arrays (Public and Private) are not empty, and categorizes them accordingly.",
+        "height": 360,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1904,
+        512
+      ],
+      "typeVersion": 1,
+      "id": "0400c548-c873-48ff-844a-8eaed36ad2ab",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "content": "## IP Analysis Node\nThis node is responsible for analyzing both public and private IP addresses. It leverages a unified structure with consistent fields such as Access Token and Summary..",
+        "height": 500,
+        "width": 260,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2160,
+        368
+      ],
+      "typeVersion": 1,
+      "id": "0498bcd0-e6d6-47bd-8aa8-3dee814c173d",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "content": "## Called ES-AI-TI & AI Summary\nTriggers a sub-workflow that enriches alerts using Threat Intelligence (TI) data and generates a summarized analysis using AI",
+        "height": 340,
+        "width": 300,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2640,
+        368
+      ],
+      "typeVersion": 1,
+      "id": "f30e4ab1-dffa-42c4-9dc7-f45c01c168e4",
+      "name": "Sticky Note16"
+    },
+    {
+      "parameters": {
+        "content": "## AI Summary Execution for IP-Based Context\nThis part of the workflow merges relevant alert and IP data before invoking the **\"Elastic AI — ES-AI-EI & AI Summery\"**  workflow, specifically for IP-level analysis. It ensures the combined data is passed into the AI summarization engine to generate enriched insights based on IP-related threat indicators.",
+        "height": 380,
+        "width": 540,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2464,
+        720
+      ],
+      "typeVersion": 1,
+      "id": "d3428eff-7450-432a-84ba-363adfef07d8",
+      "name": "Sticky Note17"
+    },
+    {
+      "parameters": {
+        "content": "## Normalize and Merge Threat Intelligence Results\nThis workflow section merges up to three parallel inputs containing threat intelligence results (related to IPs and processes) and filters out any undefined or null values. Using a custom code node, it checks the presence of `EI IP result`, `EI Process result`, and `TI IP Result`, and constructs a clean, unified JSON object for downstream use.",
+        "height": 420,
+        "width": 500
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3008,
+        688
+      ],
+      "typeVersion": 1,
+      "id": "3af6c549-4463-4f8c-ae5a-0556864481b3",
+      "name": "Sticky Note18"
+    },
+    {
+      "parameters": {
+        "content": "## Enrich & Forward AI Alert Details to Timeline Workflow\nThis part, gathers key data from a previously generated AI analysis (including IP and process threat intelligence, alert timestamp, and timeline creation objects) and prepares it for structured processing. It then calls a workflow (`ES-AI-Alert-Related Alerts- Insert Note`) to insert a contextual note into the timeline based on enriched alert details.",
+        "height": 340,
+        "width": 720,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3440,
+        144
+      ],
+      "typeVersion": 1,
+      "id": "3af3a4e1-2925-419e-8d4e-71a38d4d7dd7",
+      "name": "Sticky Note20"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Function Node\n\n// Get the array of hits\nconst hitsArray = $('Called by ES-AI-Alert-Related Alerts').first().json.OriginalRule[0].json.latest_doc.hits.hits;\n\n// Flatten function\nfunction flattenObject(ob) {\n    const toReturn = {};\n\n    for (let i in ob) {\n        if (!ob.hasOwnProperty(i)) continue;\n\n        if (typeof ob[i] === 'object' && ob[i] !== null && !Array.isArray(ob[i])) {\n            const flatObject = flattenObject(ob[i]);\n            for (let x in flatObject) {\n                if (!flatObject.hasOwnProperty(x)) continue;\n                // Replace dots in the key with underscores\n                const newKey = i.replace(/\\./g, '_') + '_' + x.replace(/\\./g, '_');\n                toReturn[newKey] = flatObject[x];\n            }\n        } else {\n            // Replace dots in the key with underscores\n            const newKey = i.replace(/\\./g, '_');\n            toReturn[newKey] = ob[i];\n        }\n    }\n    return toReturn;\n}\n\n// Escape function to make JSON safe\nfunction escapeString(value) {\n    if (typeof value === 'string') {\n        return value\n            .replace(/\\\\/g, '\\\\\\\\') // Escape backslashes first\n            .replace(/\\n/g, '\\\\n')   // Escape newlines\n            .replace(/\\r/g, '\\\\r')   // Escape carriage returns\n            .replace(/\\t/g, '\\\\t')   // Escape tabs\n            .replace(/\\\"/g, '\\\\\"');  // Escape double quotes\n    }\n    return value;\n}\n\n// Flatten and escape each hit\nconst flattenedHits = hitsArray.map(hit => {\n    const flattened = flattenObject(hit);\n\n    // Escape all string fields inside flattened object\n    const escaped = {};\n    for (const key in flattened) {\n        escaped[key] = escapeString(flattened[key]);\n    }\n\n    return escaped;\n});\n\n// Return everything\nreturn [\n  {\n    json: {\n      CleanOriginalRule: flattenedHits\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        304
+      ],
+      "id": "2b126c74-bf7e-4dc2-8f2e-e24f7c1e390d",
+      "name": "Clean Original Rule "
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Elastic AI — ES-AI-Alert-Related Alerts",
+        "height": 220,
+        "width": 280,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -256,
+        -144
+      ],
+      "typeVersion": 1,
+      "id": "9a13ce1d-526c-433c-889d-d299d661e7de",
+      "name": "Sticky Note22"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: ES-AI-Alert-Related Alerts- AI analysis\n### Workflow-Version: 1.1.1\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Change Structure and Bug Fixes\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -256,
+        -464
+      ],
+      "typeVersion": 1,
+      "id": "30cef34f-1225-4a92-9461-f9b04c703fea",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input items\nconst allItems = $input.all();\n\n// This will hold the merged data\nlet merged = {};\n\n// Loop through each input item\nfor (const item of allItems) {\n    // Merge the JSON of each item\n    merged = { ...merged, ...item.json };\n}\n\n// Return as a single item\nreturn [{ json: merged }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2560,
+        912
+      ],
+      "id": "925b8ab3-6184-47bf-8e08-946ea21c637c",
+      "name": "Merge all data"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "eiVosPdVzzBe1lRq",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/eiVosPdVzzBe1lRq",
+          "cachedResultName": "ES — ES-AI-EI & AI Summery"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2784,
+        912
+      ],
+      "id": "0e2ffe58-9fbc-4cd7-9fe5-a23bff937ea9",
+      "name": "Called ES-AI-EI & AI Summery",
+      "executeOnce": false
+    }
+  ],
+  "connections": {
+    "AI analysis(primary alert)": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Called by ES-AI-Alert-Related Alerts": {
+      "main": [
+        [
+          {
+            "node": "Create the required format for AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create the required format for AI": {
+      "main": [
+        [
+          {
+            "node": "Correct json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Required Items": {
+      "main": [
+        [
+          {
+            "node": "Call ES-AI-Alert-Related Alerts- Insert Note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Correct json": {
+      "main": [
+        [
+          {
+            "node": "Clean Original Rule ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Collect Required Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Seprate Extra Evidences",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seprate Extra Evidences": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "IP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Host",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "process",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IP": {
+      "main": [
+        [
+          {
+            "node": "Extract Public & Private IPs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Host": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Called ES-AI-TI & AI Summary": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Public & Private IPs": {
+      "main": [
+        [
+          {
+            "node": "Divided Public & Private IPs ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Divided Public & Private IPs ": {
+      "main": [
+        [
+          {
+            "node": "Public IP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Private IP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Private IP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Public IP": {
+      "main": [
+        [
+          {
+            "node": "Called ES-AI-TI & AI Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Private IP": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Merge all data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Check for existence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for existence": {
+      "main": [
+        [
+          {
+            "node": "Collect Required Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Original Rule ": {
+      "main": [
+        [
+          {
+            "node": "AI analysis(primary alert)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge all data": {
+      "main": [
+        [
+          {
+            "node": "Called ES-AI-EI & AI Summery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Called ES-AI-EI & AI Summery": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "6a55344c-7403-4b54-8c51-9cdb4c1a3a62",
+  "owner": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

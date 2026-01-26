@@ -1,0 +1,7 @@
+---
+# =============================================================================
+# IMPORT N8N FILES - Default Variables
+# =============================================================================
+
+# Deployment directory (should match soar_deploy_dir from deploy_soar_platform role)
+n8n_files_deploy_dir: "/opt/soar"

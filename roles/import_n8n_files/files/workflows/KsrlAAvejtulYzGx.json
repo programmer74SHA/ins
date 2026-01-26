@@ -1,0 +1,646 @@
+{
+  "id": "KsrlAAvejtulYzGx",
+  "name": "ES-AI-Alert-Schaeduler 2h with unchecked info & Multizone",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": "={{$vars.ES_Schedule_Trigger_Hours_Time}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -464,
+        320
+      ],
+      "id": "59e00582-6128-4f5f-8e68-ff23fb9de072",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        592,
+        480
+      ],
+      "id": "37af4a1c-2a31-4e29-8345-2acc70b5ac14",
+      "name": "Loop Over Items",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.latest_doc.hits.hits[0]._source['kibana.alert.rule.category'] }}",
+                    "rightValue": "Event Correlation Rule",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "695e70c1-1dac-4554-9f88-fb7d63ad894e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Event Correlation Rule"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "dcd32c0c-c880-4d51-9d19-5b51a27545e4",
+                    "leftValue": "={{ $json.latest_doc.hits.hits[0]._source['kibana.alert.rule.category'] }}",
+                    "rightValue": "Custom Query Rule",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Custom Query Rule"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4255b340-fb69-428e-aebf-4b485afd3320",
+                    "leftValue": "={{ $json.latest_doc.hits.hits[0]._source['kibana.alert.rule.category'] }}",
+                    "rightValue": "Indicator Match Rule",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Indicator Match Rule"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e54e84c6-3208-45b1-9262-c00ea8b34a2e",
+                    "leftValue": "={{ $json.latest_doc.hits.hits[0]._source['kibana.alert.rule.category'] }}",
+                    "rightValue": "Threshold Rule",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Threshold Rule"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2b7e3de7-62c5-47f5-8df7-042796dcedda",
+                    "leftValue": "={{ $json.latest_doc.hits.hits[0]._source['kibana.alert.rule.category'] }}",
+                    "rightValue": "Machine Learning Rule",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Machine Learning Rule"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f1d2fbe4-20a0-4b3f-a52e-376856570939",
+                    "leftValue": "={{ $json.latest_doc.hits.hits[0]._source['kibana.alert.rule.category'] }}",
+                    "rightValue": "New Terms Rule",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "New Terms Rule"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fee38764-c227-44bb-84e1-bd6451f60729",
+                    "leftValue": "={{ $json.latest_doc.hits.hits[0]._source['kibana.alert.rule.category'] }}",
+                    "rightValue": "ES|QL Rule",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ES|QL"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        864,
+        432
+      ],
+      "id": "2a404f84-fd4f-4d3c-87f7-8ef72ea344db",
+      "name": "Rule Category Extraction"
+    },
+    {
+      "parameters": {
+        "content": "## Scheduled Retrieval and Aggregation of Security Alerts\nThis workflow segment periodically queries the security alerts index in Elasticsearch within a defined time window. It collects alerts generated during the interval and groups them by their reason field. To optimize processing, one request retrieves a limited set of aggregated alerts, while another fetches a broader set with higher capacity.\n",
+        "height": 340,
+        "width": 750,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        144
+      ],
+      "id": "f67fb151-92f6-472e-9d72-55d222dc1e38",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Zaz6xcc0cG96hbSX",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/Zaz6xcc0cG96hbSX",
+          "cachedResultName": "ES — ES-AI-5A-Create Time line & Check"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1280,
+        512
+      ],
+      "id": "62534593-c6c8-4b62-8e65-8c9a74068310",
+      "name": "call ES-AI-5A-Check",
+      "executeOnce": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.ES_Base_URL_Elastic}}/.internal.alerts-security.alerts-default*/_search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $('Gnerate Elastic Query').first().json.toJsonString() }}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        128,
+        320
+      ],
+      "id": "ac1db045-4cad-4c35-89fa-dfa82aec9632",
+      "name": "Get Alerts From index",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "aggregations.reason_priority.buckets",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        368,
+        480
+      ],
+      "id": "2bdc93c1-295b-431d-b913-22fe10a9efdc",
+      "name": "Split Alerts Out"
+    },
+    {
+      "parameters": {
+        "content": "## Field Preparation and Loop Over Aggregation Buckets\nThis section identifies which fields from the input need to be split or processed (focusing on aggregations.reason) and iterates over the selected fields to analyze or extract values individually.\n",
+        "height": 340,
+        "width": 460
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        304,
+        304
+      ],
+      "typeVersion": 1,
+      "id": "31b96e68-a386-4862-b9ff-4dab493af5d4",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Rule Category Extraction\nExtracts the kibana.alert.rule.category field from the latest document for rule identification.\n\n",
+        "height": 460,
+        "width": 340,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        784,
+        304
+      ],
+      "typeVersion": 1,
+      "id": "a9458ee5-1f0e-4237-8f18-17d7a5eaffa1",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## External Rule Check\nCalls the ES-AI-5A-Check workflow to perform additional validation or enrichment based on the extracted data.\n",
+        "height": 340,
+        "width": 300,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1152,
+        432
+      ],
+      "typeVersion": 1,
+      "id": "0a0bd55d-dd16-42c8-b5ac-40e801fcb30f",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.ES_Base_URL_Elastic}}/.internal.alerts-security.alerts-default*/_search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.toJsonString().replaceAll('\\\"reason_priority\\\":{\\\"composite\\\":{\\\"size\\\":','\\\"reason_priority\\\":{\\\"composite\\\":{\\\"size\\\":10')}}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        320
+      ],
+      "id": "a3cf483b-dff2-4860-87c8-e61d8f2eea1d",
+      "name": "Get All Alerts From index",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the two inputs\nconst allAlertsAgg = $('Get All Alerts From index').first().json.aggregations;\nconst excludeAlertsAgg = $input.first().json.aggregations;\n\n// Extract relevant fields from the buckets in \"all alerts\"\nfunction extractAlerts(agg) {\n    if (!agg || !agg.reason_priority || !agg.reason_priority.buckets) return [];\n    return agg.reason_priority.buckets.flatMap(bucket => {\n        const reason = bucket.key.reason;\n        return (bucket.latest_doc?.hits?.hits || []).map(hit => ({\n            id: hit._id,\n            reason,\n            name: hit._source?.[\"kibana.alert.rule.name\"] || null,\n            timestamp: hit._source?.[\"@timestamp\"] || null\n        }));\n    });\n}\n\nconst allAlerts = extractAlerts(allAlertsAgg);\nconst excludeAlerts = extractAlerts(excludeAlertsAgg);\n\n// Build a Set of IDs to exclude\nconst excludeIds = new Set(excludeAlerts.map(a => a.id));\n\n// Filter out excluded alerts\nconst filteredAlerts = allAlerts.filter(a => !excludeIds.has(a.id));\n\n// Limit to 8 items\nconst limitedAlerts = filteredAlerts.slice(0, 8);\n\n// Return them all as ONE item\nreturn [\n    {\n        json: {\n            alerts: limitedAlerts\n        }\n    }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        112
+      ],
+      "id": "13da40b0-6262-467a-a265-f2193f4521c4",
+      "name": " Return Unchecked Alerts"
+    },
+    {
+      "parameters": {
+        "content": "## Filtering and Forwarding Unchecked Alerts\nThis part of the workflow compares two sets of alerts — all collected alerts and those already excluded — then filters out any duplicates. From the remaining results, it selects up to eight alerts and groups them into a single output. These unchecked alerts are then passed forward for further handling in a dedicated workflow, ensuring only new and relevant events continue through the process.",
+        "height": 320,
+        "width": 560,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        304,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "7b3b2dd8-88fe-4520-9644-20cd1b77a0ad",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: ES-AI-Alert-Schaeduler 2h with unchecked info\n### Workflow-Version: 1.2.1\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Fixed Bugs\n### Status: Active",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -304,
+        -256
+      ],
+      "typeVersion": 1,
+      "id": "d9f4a2c7-49d9-4436-bd1d-6c58902e617d",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Function node — final version (no normalization, skip nulls, correct field names)\n\nfunction isValid(val) {\n  if (val === null || val === undefined) return false;\n  if (typeof val === \"string\") {\n    const trimmed = val.trim().toLowerCase();\n    return trimmed !== \"\" && trimmed !== \"null\" && trimmed !== \"undefined\";\n  }\n  if (Array.isArray(val)) {\n    return val.length > 0 && val.some(v => isValid(v));\n  }\n  return true;\n}\n\n// Input variables (taken as-is, unmodified)\nconst severity   = $vars[\"ES_kibana_alert_severity\"];\nconst tags       = $vars[\"ES_kibana_alert_rule_tags\"];\nconst module     = $vars[\"ES_kibana_alert_original_event_module\"];\nconst namespace  = $vars[\"ES_data_stream_namespace\"];\nconst ruleName   = $vars[\"ES_kibana_alert_rulename\"]; // corrected key name here if needed\n\n// Time window in minutes (default 60m)\nconst minutesWindow = parseInt($vars[\"ES_Schedule_Trigger_Hours_Time\"], 10);\nconst minutes = isNaN(minutesWindow) ? 60 : minutesWindow;\n\n// Aggregation size (default 10)\nconst aggLimit = parseInt($vars[\"ES_Alert_Limit_size\"], 10);\nconst aggSize = isNaN(aggLimit) ? 10 : aggLimit;\n\n// MultiZone switch (default false)\nconst multiZone = String($vars[\"ES_MultiZone\"] || \"false\").toLowerCase() === \"true\";\n\n// Base query structure\nlet mustClauses = [\n  {\n    range: {\n      \"@timestamp\": {\n        gte: `now-${minutes}m`,\n        lte: \"now\"\n      }\n    }\n  }\n];\n\nlet mustNotClauses = [];\n\n// Add valid filters only\nif (isValid(severity)) {\n  mustClauses.push({\n    terms: { \"kibana.alert.severity\": Array.isArray(severity) ? severity : [severity] }\n  });\n}\n\nif (isValid(tags)) {\n  mustClauses.push({\n    terms: { \"kibana.alert.rule.tags\": Array.isArray(tags) ? tags : [tags] }\n  });\n}\n\nif (isValid(module)) {\n  mustClauses.push({\n    terms: { \"kibana.alert.original_event.module\": Array.isArray(module) ? module : [module] }\n  });\n}\n\nif (isValid(namespace)) {\n  mustClauses.push({\n    terms: { \"data_stream.namespace.keyword\": Array.isArray(namespace) ? namespace : [namespace] }\n  });\n}\n\n// ✅ Corrected: exclude rule name properly\nif (isValid(ruleName)) {\n  mustNotClauses.push({\n    terms: { \"kibana.alert.rule.name\": Array.isArray(ruleName) ? ruleName : [ruleName] }\n  });\n}\n\n// Build bool query\nconst boolQuery = { must: mustClauses };\nif (mustNotClauses.length > 0) {\n  boolQuery.must_not = mustNotClauses;\n}\n\n// Aggregation sources\nlet aggSources = [\n  { reason: { terms: { field: \"kibana.alert.reason\" } } }\n];\n\nif (multiZone) {\n  aggSources.push({ namespace: { terms: { field: \"data_stream.namespace\" } } });\n}\n\n// Final query\nconst query = {\n  size: 0,\n  query: { bool: boolQuery },\n  aggs: {\n    reason_priority: {\n      composite: {\n        size: aggSize,\n        sources: aggSources\n      },\n      aggs: {\n        latest_doc: {\n          top_hits: {\n            size: 1,\n            sort: [{ \"@timestamp\": { order: \"desc\" } }]\n          }\n        }\n      }\n    }\n  }\n};\n\n// Return Elasticsearch query object\nreturn [{ json: query }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -288,
+        320
+      ],
+      "id": "67ecc452-f5db-4630-b93e-041d92fed951",
+      "name": "Gnerate Elastic Query"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "OhDXgMW3olZug5qA",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/OhDXgMW3olZug5qA",
+          "cachedResultName": "ES — ES-AI-Unchecked Alerts"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        112
+      ],
+      "id": "23420c3b-c76d-4caf-a508-4d10f9721f90",
+      "name": "Call 'ES-AI-Unchecked Alerts'",
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Gnerate Elastic Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Rule Category Extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rule Category Extraction": {
+      "main": [
+        [
+          {
+            "node": "call ES-AI-5A-Check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "call ES-AI-5A-Check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "call ES-AI-5A-Check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "call ES-AI-5A-Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "call ES-AI-5A-Check": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Alerts From index": {
+      "main": [
+        [
+          {
+            "node": " Return Unchecked Alerts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Alerts Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Alerts Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Alerts From index": {
+      "main": [
+        [
+          {
+            "node": "Get Alerts From index",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " Return Unchecked Alerts": {
+      "main": [
+        [
+          {
+            "node": "Call 'ES-AI-Unchecked Alerts'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gnerate Elastic Query": {
+      "main": [
+        [
+          {
+            "node": "Get All Alerts From index",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 1,
+  "versionId": "50026e8f-7309-4370-9ed1-40514a324e9d",
+  "owner": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

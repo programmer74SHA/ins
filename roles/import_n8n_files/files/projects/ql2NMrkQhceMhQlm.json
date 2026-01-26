@@ -1,0 +1,29 @@
+{
+  "id": "ql2NMrkQhceMhQlm",
+  "name": "ES-Functions",
+  "icon": {
+    "type": "icon",
+    "value": "layers"
+  },
+  "description": "",
+  "type": "team",
+  "owner": {
+    "type": "team",
+    "teamId": "ql2NMrkQhceMhQlm",
+    "teamName": "ES-Functions"
+  },
+  "variableStubs": [
+    {
+      "id": "E6FEKjjYQVzxDaVN",
+      "key": "ES_Base_URL_Elastic",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "5g3VWiw7uSJQ9SCp",
+      "key": "ES_Base_URL_Kibana",
+      "type": "string",
+      "value": ""
+    }
+  ]
+}

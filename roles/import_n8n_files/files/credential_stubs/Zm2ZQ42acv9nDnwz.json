@@ -1,0 +1,15 @@
+{
+  "id": "Zm2ZQ42acv9nDnwz",
+  "name": "Elastic Local",
+  "type": "httpBasicAuth",
+  "data": {
+    "user": "",
+    "password": ""
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "isGlobal": false
+}

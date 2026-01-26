@@ -1,0 +1,16 @@
+{
+  "id": "ESeo8HknyYYDHegT",
+  "name": "MISP account",
+  "type": "mispApi",
+  "data": {
+    "apiKey": "",
+    "baseUrl": "",
+    "allowUnauthorizedCerts": true
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "U3dBtr1FA3nBypwO",
+    "teamName": "RTX5090-ES"
+  },
+  "isGlobal": false
+}

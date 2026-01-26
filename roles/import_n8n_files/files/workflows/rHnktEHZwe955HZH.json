@@ -1,0 +1,1348 @@
+{
+  "id": "rHnktEHZwe955HZH",
+  "name": "ES_Al_Case_Creation_Schaeduler_24h",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": "={{$vars.ES_Schedule_Trigger_Hours_Time}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -3856,
+        688
+      ],
+      "id": "e5a6532a-3196-4fb2-a9af-0f83df341ca8",
+      "name": "Schedule Trigger for 2Hour"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ai/case",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer {{ $('Token Received').item.json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"alerts\":{{ $json.Cleannote.toJsonString() }}\n}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2080,
+        432
+      ],
+      "id": "b2dded47-1455-4a48-a3a1-e97823562e0d",
+      "name": "Ai Analysis(Case Suggestion)"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1856,
+        672
+      ],
+      "id": "46105936-d937-4d35-b6f9-fbb1bc37d3a5",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1648,
+        672
+      ],
+      "id": "1c7fa239-aa2c-45d5-a89f-0588ce996252",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.ES_Base_URL_Kibana }}/api/cases",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; Elastic-Api-Version=2023-10-31"
+            },
+            {
+              "name": "kbn-xsrf",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"tags\": [\n    \"2H-AI Analyser\"\n  ],\n  \"owner\": \"securitySolution\",\n  \"title\": \"{{ $('Ai Analysis(Case Analysis)').item.json.data.title }}\",\n  \"settings\": {\n    \"syncAlerts\": true\n  },\n  \"severity\": \"{{ $json.cleanedOutput.severity }}\",\n  \"connector\": {\n    \"id\": \"none\",\n    \"name\": \"My connector\",\n    \"type\": \".jira\",\n    \"fields\": {\n      \"parent\": null,\n      \"priority\": \"High\",\n      \"issueType\": \"10006\"\n    }\n  },\n  \"description\": \"{{ $json.cleanedOutput.details }}\"\n}\n",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -144,
+        -96
+      ],
+      "id": "2ba783c7-18de-4a8f-8df2-a4a3ad53295b",
+      "name": "Create Case",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Base_URL_Kibana}}/api/cases/{{ $('Create Case').item.json.id }}/comments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; Elastic-Api-Version=2023-10-31"
+            },
+            {
+              "name": "kbn-xsrf",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"type\": \"alert\",\n  \"alertId\": {{ $json.alertIds.toJsonString() }},\n  \"index\": {{ $json.index.toJsonString() }},\n  \"owner\": \"securitySolution\",\n  \"rule\": {\n    \"id\": \"none\",\n    \"name\": \"AI Analyser\"\n  }\n}\n",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        304,
+        -96
+      ],
+      "id": "2322c5fc-0348-480a-8cfb-ddd3d6153163",
+      "name": "Add AlertID to Case",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input object from the first item\nlet input = $input.first().json.data;\nlet reference = $input.first().json.data.reference;\nlet timeline = $input.first().json.data.timeline\n\n// Extract the markdown fields\nlet details = input.detailsMarkdown;\nlet severity = $input.first().json.data.severity.result;\n\n// Format timeline into string with explicit \\\\n\nconst formatTimelineAsText = (timeline) => {\n    if (!Array.isArray(timeline)) return '';\n\n    const sortedTimeline = timeline.slice().sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));\n\n    const blocks = sortedTimeline.map(item => {\n        return `${item.timestamp} -->  ${item.description}`;\n    });\n\n    return blocks.join('\\n\\n');\n};\nconst formattedTimeline = formatTimelineAsText(timeline);\n// Function to clean markdown and HTML from a string\nconst cleanText = (text) => {\n    if (typeof text !== 'string') return '';\n\n    // Remove markdown bold, italics, etc.\n    let cleaned = text.replace(/\\*\\*(.*?)\\*\\*/g, '$1'); // Bold\n    cleaned = cleaned.replace(/\\*(.*?)\\*/g, '$1');       // Italics\n    cleaned = cleaned.replace(/__(.*?)__/g, '$1');       // Underline\n    cleaned = cleaned.replace(/`(.*?)`/g, '$1');         // Inline code\n    cleaned = cleaned.replace(/\\[(.*?)\\]\\(.*?\\)/g, '$1'); // Markdown links\n\n    // Remove HTML tags\n    cleaned = cleaned.replace(/<[^>]+>/g, '');\n\n    // Escape backslashes for JSON\n    cleaned = cleaned.replace(/\\\\/g, '\\\\\\\\');\n\n    // Normalize newlines to space\n    cleaned = cleaned.replace(/\\n/g, ' ').trim();\n\n    return cleaned;\n};\n\n// Clean the details field\nlet cleanedDetails = cleanText(details);\nconst cleanedTimeline = cleanText(formattedTimeline);\n\n// Add newline and joined references if available\nif (Array.isArray(reference) && reference.length > 0) {\n    const referenceText = reference.join('\\\\n');\n    cleanedDetails += `\\\\n${referenceText}`;\n}\n\nlet cleanedOutput = {\n    details: cleanedDetails,\n    severity: typeof severity === 'string' ? severity.toLowerCase() : '',\n    timeline: cleanedTimeline\n};\n\n// Return the cleaned object\nreturn {\n    cleanedOutput\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        -96
+      ],
+      "id": "e5be8b38-715c-4ef3-bb6b-6f24f9be1d8c",
+      "name": "Json Clean Format"
+    },
+    {
+      "parameters": {
+        "jsCode": "const alertIds = $('Loop Over Items').first().json.alertIds;\nconst indexValue = '.internal.alerts-security.alerts-default*';\n\n// Create an array of repeated index values\nconst index = Array(alertIds.length).fill(indexValue);\n\n// Output only the index array\nreturn [\n  {\n    json: {\n      index,\n      alertIds\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        -96
+      ],
+      "id": "c36be7bf-074c-41c9-a3ff-df4395c576d4",
+      "name": "for generate Right number of indexes  "
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "tpvIVwtC9j6jgIOp",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/tpvIVwtC9j6jgIOp",
+          "cachedResultName": "ES — ES-Al-Case Creation-Jira"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        992,
+        -96
+      ],
+      "id": "4dde3b2b-c6e5-4dab-9255-a46b84eed3e5",
+      "name": "Call ES-Al-Case Creation-Jira"
+    },
+    {
+      "parameters": {
+        "content": "## Automated AI Case Suggestion (Every 2 Hours)\nThis flow runs every 2 hours to fetch recent alerts from Elasticsearch, extract their final analyses, clean the data, and—if valid—send the structured alerts to an AI endpoint for case suggestion. ",
+        "height": 380,
+        "width": 1740,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3456,
+        528
+      ],
+      "typeVersion": 1,
+      "id": "40aacedc-e794-4720-8e73-a0a1b9439820",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Prepare Alert Graph Structure\nThis part transforms alert notes and their references into a graph-friendly format, where each alert is a main node, and related alerts or issues (references) become child nodes linked via a parent field.",
+        "height": 840,
+        "width": 1580,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1040,
+        160
+      ],
+      "typeVersion": 1,
+      "id": "afc3e0c0-b11b-4a9c-84b2-e20d34fd8085",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## Extract & Structure Alert References\nThis section processes timeline notes to extract alert IDs, clean note content, and classify references (as alert, issue, or log). It then structures the data into a flat format, linking each reference to its parent alert for further analysis or visualization.",
+        "height": 380,
+        "width": 640,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1696,
+        528
+      ],
+      "typeVersion": 1,
+      "id": "336aae90-98e0-4abe-ad07-4475866d207e",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "content": "##Alert Graph Deduplication & Summary\nThis step removes duplicate alerts from the graph structure and groups related alerts and issues. It outputs a clean summary where each top-level alert includes its child references, making the graph suitable for visualization or downstream processing.",
+        "height": 360,
+        "width": 2020,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -880,
+        -240
+      ],
+      "typeVersion": 1,
+      "id": "154e7717-6a52-4ba2-a5e9-3079af3eb178",
+      "name": "Sticky Note12"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('loop for on NameSpace').first().json.sample_docs.hits.hits|| [];\n\nconst result = [];\n\nfor (const entry of input) {\n  const fullNote = entry._source?.Final || \"\";\n\n  // Extract Alert ID\n  const alertIdMatch = fullNote.match(/Alert ID:([a-f0-9-]+)/i);\n  const alert_id = alertIdMatch ? alertIdMatch[1] : \"\";\n\n  // Extract the \"note\" content between **Details** and **Refrences**\n  const noteMatch = fullNote.match(/\\*\\*Details\\*\\*:([\\s\\S]*?)\\*\\*Refrences\\*\\*/i);\n  let note = noteMatch ? noteMatch[1].trim() : \"\";\n\n  // Extract the reference(s) section and split by comma or new lines\n  const refMatch = fullNote.match(/\\*\\*Refrences\\*\\*\\s*\\[?\\d*\\]?:?\\s*(.+)/i);\n  const referenceRaw = refMatch ? refMatch[1].trim() : \"\";\n  const referenceList = referenceRaw\n    .split(/,|\\n/)\n    .map(ref => ref.trim())\n    .filter(Boolean);\n\n  // Classify each reference by type\n  const references = referenceList.map(ref => {\n    const cleanRef = ref.replace(/^\\[\\d+\\]:\\s*/, '');\n\n    if (/^[a-f0-9]{64}$/i.test(cleanRef)) {\n      return { type: \"alert\", value: cleanRef };\n    } else if (/^[A-Z]+-\\d+$/i.test(cleanRef)) {\n      return { type: \"issue\", value: cleanRef };\n    } else {\n      return { type: \"log\", value: cleanRef };\n    }\n  });\n\n  result.push({\n    alert_id,\n    note: fullNote, // You can also use `note` here if you only want the content between **Details** and **Refrences**\n    references\n  });\n}\n\nreturn [\n  {\n    json: {\n      alerts: result\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1424,
+        688
+      ],
+      "id": "ad639659-b197-4117-b27b-8724fd3261b5",
+      "name": "json_notes"
+    },
+    {
+      "parameters": {
+        "jsCode": "let alertIDs = $('Loop Over Items').first().json.alertIds;\nlet json_notes = $input.first().json.alerts;\n\nlet finalOutput = [];\n\nfor (let id of alertIDs) {\n  // Find the matched alert object\n  let match = json_notes.find(note => note.alert_id === id);\n  \n  if (match) {\n    // Add the main alert item with note\n    finalOutput.push({\n      type: \"alert\",\n      id: match.alert_id,\n      note: match.note || \"\",\n      parent: \"\"\n    });\n\n    // Add filtered references (only alert or ticket types)\n    if (Array.isArray(match.references)) {\n      for (let ref of match.references) {\n        if (ref.type === \"alert\" || ref.type === \"issue\") {\n          finalOutput.push({\n            type: ref.type,\n            id: ref.value,\n            note: \"\", \n            parent: id\n          });\n        }\n      }\n    }\n  }\n}\n\n// Return formatted for n8n\nreturn finalOutput.map(item => ({ json: item }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        688
+      ],
+      "id": "6c9079d6-e0b1-403f-abc1-0cfa3e6b5fc9",
+      "name": "search_code"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  type: $('search_code').first().json.type,\n  id: $('Loop Over Notes').first().json.id,\n  issue_id: $input.first().json.issues[0].key,\n  note: $input.first().json.issues[0].fields?.customfield_10901 || \"\",\n  parent: $('Loop Over Notes').first().json.parent\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        224
+      ],
+      "id": "5a2d69c7-e852-4d07-b75a-4c9efcde7d69",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.issues[0].fields.issuetype.name }}",
+                    "rightValue": "Case",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "17f660bd-4008-4f9c-bdea-5dcdd483e841"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "case_issue"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6e4ef8d5-841a-48f8-86d5-60ba568357d3",
+                    "leftValue": "={{ $json.issues[0].fields.issuetype.name }}",
+                    "rightValue": "Security Event",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "alert_issue"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b85ef436-0567-4480-bf4a-becacf164d56",
+                    "leftValue": "={{ $json.issues[0].fields.issuetype.name }}",
+                    "rightValue": "Tuning",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "tuning_issue"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -48,
+        400
+      ],
+      "id": "04e3ceac-b4d4-4310-9990-08afe91b41d6",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        400
+      ],
+      "id": "836889f5-0c0f-40ff-8967-057ad526443f",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const issue = $input.first().json.issues?.[0]?.fields;\n\nreturn {\n  type: $('search_code').first().json.type,\n  id: $('Loop Over Notes').first().json.id,\n  issue_id: $input.first().json.issues[0]?.key ?? '',\n  note: issue?.customfield_10904 ?? '',\n  parent: $('Loop Over Notes').first().json.parent\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        784
+      ],
+      "id": "3445a109-7e7a-4d27-b5f8-7a36fd4f6f4f",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        400,
+        544
+      ],
+      "id": "2c512fae-89e8-49fc-b6e7-d13879f51f18",
+      "name": "Merge",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v2/ai/wide_case",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer {{ $('Token Received').first().json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\":{{ $json.data.toJsonString() }}\n  \n}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -576,
+        -96
+      ],
+      "id": "1c41e14a-3512-4b62-8daa-81d7240f4385",
+      "name": "Ai Analysis(Case Analysis)"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  type: $('search_code').first().json.type,\n  id: \"\",\n  issue_id: \"\",\n  note: \"\",\n  parent: \"\"\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        608
+      ],
+      "id": "d070a527-6b57-4f3a-b49e-1575b04116dd",
+      "name": "Code5"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -976,
+        528
+      ],
+      "id": "a2c120bd-6b7e-424b-8923-ca6ff1a2300d",
+      "name": "Loop Over Notes",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "Issues",
+        "operation": "Search Issues",
+        "jql": "=project in ({{ $json.project_key }}) and {{ $vars.JIRA_Alert_ID_CF_Field }} ~ {{ $('Check empty note').item.json.id }}",
+        "maxResults": 10,
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.Jira Service Management",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        784
+      ],
+      "id": "faab228b-7cc1-4faf-92d3-f16c8506aebd",
+      "name": "Jira get issue by customfield",
+      "credentials": {
+        "jsmApi": {
+          "id": "Fdh93GHFHPlbp0vK",
+          "name": "Jira Service Management Api account-AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\nreturn {\"data\": {\"note_lists\": input, \"alert_ids\": $('Loop Over Items').first().json.alertIds, \"case_note\": $('Loop Over Items').first().json.detailsMarkdown }};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        -96
+      ],
+      "id": "266cb359-b430-471a-9f15-648433b346a8",
+      "name": "prepare AI body"
+    },
+    {
+      "parameters": {
+        "resource": "Issues",
+        "operation": "Search Issues",
+        "jql": "=project in ({{ $json.project_key }}) and id = {{ $('Check empty note').first().json.id }}",
+        "maxResults": 10,
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.Jira Service Management",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        400
+      ],
+      "id": "bf901c6e-e53b-48d0-9272-7c5a3150b8ea",
+      "name": "Jira get issue by ID",
+      "credentials": {
+        "jsmApi": {
+          "id": "Fdh93GHFHPlbp0vK",
+          "name": "Jira Service Management Api account-AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Check empty note').item.json.type }}",
+                    "rightValue": "issue",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "48dff1b6-dc9f-42cc-bab4-b991f7d0d5c2"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "issue_type"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c628af50-f7df-4fb8-a272-1e3bee93b021",
+                    "leftValue": "={{ $('Check empty note').item.json.type }}",
+                    "rightValue": "alert",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "alert_type"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -416,
+        592
+      ],
+      "id": "16e6043d-dbfa-4b48-b589-87edd142dc39",
+      "name": "Check ref type"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d13f1d2f-a078-48da-bde4-825146d92250",
+              "leftValue": "={{ $json.note }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -800,
+        624
+      ],
+      "id": "065bf508-2dbe-416e-b24c-ba77c8c75b23",
+      "name": "Check empty note"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Base_URL_Kibana}}/api/cases/{{ $('Create Case').item.json.id }}/comments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; Elastic-Api-Version=2023-10-31"
+            },
+            {
+              "name": "kbn-xsrf",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"type\": \"user\",\n  \"owner\": \"securitySolution\",\n  \"comment\": \"**Details**\\\\n{{ $('Json Clean Format').item.json.cleanedOutput.details }}\\n\\n**Timeline**\\\\n{{ $('Json Clean Format').item.json.cleanedOutput.timeline }}\\\\n\\\\n**Observables:**\\n\\n**AttackerIPs**: {{ $('Ai Analysis(Case Analysis)').item.json.data.attackerIps }}\\\\n**TargetIPs**: {{ $('Ai Analysis(Case Analysis)').item.json.data.targetIps }}\\\\n**TargetNames**: {{ $('Ai Analysis(Case Analysis)').item.json.data.targetNames }}\\\\n**Users**: {{ $('Ai Analysis(Case Analysis)').item.json.data.users }}\\\\n**URLs**: {{ $('Ai Analysis(Case Analysis)').item.json.data.urls }}\\\\n**Processess**: {{ $('Ai Analysis(Case Analysis)').item.json.data.processes }}\\\\n\\\\n**Attack Category**: {{ $('Ai Analysis(Case Analysis)').item.json.data.attack_category }}\\\\n\\\\n{{ $('Ai Analysis(Case Analysis)').item.json.data.reference }}\"\n}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        -96
+      ],
+      "id": "8c596238-6fe8-4522-95c9-59bae51396b1",
+      "name": "Add Commants to Case",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ZL1oRFnXzFHRlQGX",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/ZL1oRFnXzFHRlQGX",
+          "cachedResultName": "ES — ES-AI Authentication"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        -2960,
+        672
+      ],
+      "id": "727d342b-d65e-4545-8c70-d6bae1fa3d42",
+      "name": "Token Received",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all hits\nconst hits = $('loop for on NameSpace').first().json.sample_docs.hits.hits;\n\n// Extract all Final fields\nconst alert = hits.map(item => item._source?.Final).filter(Boolean);\n\n// Return the array as output\nreturn [{ json: { alert } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2736,
+        672
+      ],
+      "id": "40eeafae-72e3-4f9f-ba72-efd91e08cd64",
+      "name": "Extract Final Analyses"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input array of notes from the previous node\nlet notes =$input.first().json.alert ;\n\n// Ensure we have an array\nif (!Array.isArray(notes)) {\n    throw new Error(\"The 'notes' field is not an array.\");\n}\n\n// Function to clean each note\nconst cleanNote = (note) => {\n    // Remove unwanted markdown characters (like ** for bold, etc.)\n    let cleaned = note.replace(/\\*\\*(.*?)\\*\\*/g, '$1'); // Remove bold markdown\n\n    // Remove \"_id,\" exactly\n    cleaned = cleaned.replace(/_id,/g, ''); // Remove exact match of \"_id,\"\n\n    // Handle other possible formatting like links, special characters\n    cleaned = cleaned.replace(/<[^>]+>/g, ''); // Remove any HTML tags\n\n    // Replace newlines with a space or keep the format\n    cleaned = cleaned.replace(/\\n/g, ' ').trim(); // Replace newline with space and trim extra spaces\n\n    return cleaned;\n};\n\n// Clean the array by processing each note and returning an object with the 'alert' key\nlet Cleannote = notes.map(note => {\n    return {\n        alert: cleanNote(note) // Return the cleaned note under the 'alert' key\n    };\n});\n\n// Return the cleaned array in the desired format\nreturn {\n    Cleannote\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2528,
+        672
+      ],
+      "id": "981c133b-048a-4b5f-ad0f-3db4cf394272",
+      "name": "Check it for clean Format"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c8cf8233-9f25-47cf-9890-4aad6c41c8c8",
+              "leftValue": "={{ $json.Cleannote }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2304,
+        672
+      ],
+      "id": "f6b5be25-b2f9-4ef6-b822-a803d5c54258",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: ES_Al_Case_Creation_Schaeduler_24h\n### Workflow-Version: 1.0.1\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Modifying variables\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3456,
+        160
+      ],
+      "typeVersion": 1,
+      "id": "777b8379-01aa-48c6-b6e3-beda1742e3cb",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.ES_Local}}:9200/timeline/_search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"size\": 0,\n  \"query\": {\n    \"bool\": {\n      \"must\": [\n        { \"term\": { \"Device.keyword\": \"Elastic\" } },\n        { \"term\": { \"OrgNickname.keyword\": \"{{$vars.ES_Org_Nickname}}\" } },\n        { \"range\": { \"@timestamp\": { \"gte\": \"now-1h\", \"lt\": \"now\" } } },\n        { \"exists\": { \"field\": \"Final\" } }\n      ],\n      \"must_not\": [\n        { \"match_phrase\": { \"Final\": \"**Result**:False Positive\" } }\n      ]\n    }\n  },\n  \"aggs\": {\n    \"by_namespace\": {\n      \"terms\": {\n        \"field\": \"namespace.keyword\",\n        \"size\": 10\n      },\n      \"aggs\": {\n        \"sample_docs\": {\n          \"top_hits\": {\n            \"size\": 10\n          }\n        }\n      }\n    }\n  }\n}\n",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3648,
+        688
+      ],
+      "id": "6bc92199-43dc-4d2d-a714-85d1728d25fc",
+      "name": "Get Final add by namespce1",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Zm2ZQ42acv9nDnwz",
+          "name": "Elastic Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -3216,
+        688
+      ],
+      "id": "9e2f749f-9ef2-4188-ac88-9d9bcb99ea4a",
+      "name": "loop for on NameSpace"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Read workflow variable (string or boolean)\nconst esMultiJira = String($vars.ES_MultiJiraProject).toLowerCase();\n\nlet project_key;\n\nif (esMultiJira === \"true\") {\n  try {\n    project_key = $('Split Out on Namespce').first().json.key || null;\n  } catch (err) {\n    project_key = null;\n  }\n} else {\n  project_key = $vars.JIRA_Project_Key_Field;\n}\n\nreturn [{ project_key }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        592
+      ],
+      "id": "f11ea9d2-62aa-47d1-af98-d75a9ba94000",
+      "name": "Check for Multi Jira Project"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "aggregations.by_namespace.buckets",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -3456,
+        688
+      ],
+      "id": "39f3e346-0c22-4406-b97f-5acc74de3999",
+      "name": "Split Out on Namespce"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8d032369-0acb-4734-82b9-b3c5aaf162eb",
+              "name": "AI Analyze ",
+              "value": "={{ $('Ai Analysis(Case Analysis)').item.json.data }}",
+              "type": "object"
+            },
+            {
+              "id": "ec8824a6-d86f-49db-bec6-7aba298f8ff9",
+              "name": "Namespace Category",
+              "value": "={{ $('loop for on NameSpace').first().json.key }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        752,
+        -96
+      ],
+      "id": "ea529998-0a8c-4841-9d5c-5edc5340731e",
+      "name": "Required Fields For Jira "
+    }
+  ],
+  "connections": {
+    "Schedule Trigger for 2Hour": {
+      "main": [
+        [
+          {
+            "node": "Get Final add by namespce1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ai Analysis(Case Suggestion)": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "loop for on NameSpace",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "json_notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Case": {
+      "main": [
+        [
+          {
+            "node": "for generate Right number of indexes  ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Json Clean Format": {
+      "main": [
+        [
+          {
+            "node": "Create Case",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "for generate Right number of indexes  ": {
+      "main": [
+        [
+          {
+            "node": "Add AlertID to Case",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add AlertID to Case": {
+      "main": [
+        [
+          {
+            "node": "Add Commants to Case",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call ES-Al-Case Creation-Jira": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "json_notes": {
+      "main": [
+        [
+          {
+            "node": "search_code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search_code": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ai Analysis(Case Analysis)": {
+      "main": [
+        [
+          {
+            "node": "Json Clean Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code5": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Loop Over Notes": {
+      "main": [
+        [
+          {
+            "node": "prepare AI body",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check empty note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jira get issue by customfield": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepare AI body": {
+      "main": [
+        [
+          {
+            "node": "Ai Analysis(Case Analysis)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jira get issue by ID": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check ref type": {
+      "main": [
+        [
+          {
+            "node": "Jira get issue by ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Jira get issue by customfield",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check empty note": {
+      "main": [
+        [
+          {
+            "node": "Check for Multi Jira Project",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Commants to Case": {
+      "main": [
+        [
+          {
+            "node": "Required Fields For Jira ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token Received": {
+      "main": [
+        [
+          {
+            "node": "Extract Final Analyses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Final Analyses": {
+      "main": [
+        [
+          {
+            "node": "Check it for clean Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check it for clean Format": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Ai Analysis(Case Suggestion)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Final add by namespce1": {
+      "main": [
+        [
+          {
+            "node": "Split Out on Namespce",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "loop for on NameSpace": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Token Received",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Multi Jira Project": {
+      "main": [
+        [
+          {
+            "node": "Check ref type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out on Namespce": {
+      "main": [
+        [
+          {
+            "node": "loop for on NameSpace",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Required Fields For Jira ": {
+      "main": [
+        [
+          {
+            "node": "Call ES-Al-Case Creation-Jira",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "fcd4b585-0ab5-46a7-879b-def84f37731a",
+  "owner": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

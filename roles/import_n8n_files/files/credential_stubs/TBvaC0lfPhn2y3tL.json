@@ -1,0 +1,15 @@
+{
+  "id": "TBvaC0lfPhn2y3tL",
+  "name": "Confluence",
+  "type": "httpBasicAuth",
+  "data": {
+    "user": "",
+    "password": ""
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "VkJ1fWswpm3ZmsSH",
+    "teamName": "SP"
+  },
+  "isGlobal": false
+}

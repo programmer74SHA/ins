@@ -1,0 +1,14 @@
+{
+  "id": "SHtnF2OcqtHIByU2",
+  "name": "AlienVault account",
+  "type": "alienVaultApi",
+  "data": {
+    "accessToken": ""
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "U3dBtr1FA3nBypwO",
+    "teamName": "RTX5090-ES"
+  },
+  "isGlobal": false
+}

@@ -1,0 +1,230 @@
+{
+  "id": "xDnWCcU9pxCYMvUf",
+  "name": "SP-AI-Find Uncompleted Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=http://elasticsearch:9200/timeline/_search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": {\n    \"bool\": {\n      \"must\": [\n        {\n          \"term\": {\n            \"Device.keyword\": \"Splunk\"\n          }\n        },\n        {\n          \"range\": {\n            \"@timestamp\": {\n              \"gte\": \"now-{{2*$vars.SP_Schedule_Trigger_Hours_Time}}m\",\n              \"lt\": \"now-{{$vars.SP_Schedule_Trigger_Hours_Time}}m\"\n            }\n          }\n        },\n        {\n          \"exists\": {\n            \"field\": \"AlertID\"\n          }\n        }\n      ],\n      \"must_not\": [\n        {\n          \"exists\": {\n            \"field\": \"Final\"\n          }\n        }\n      ]\n    }\n  },\n  \"size\": 200\n}\n",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -160,
+        -64
+      ],
+      "id": "c47ed2c7-e44e-450f-a631-33f9af0e657d",
+      "name": "Get",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "UttJfZcggpikviuq",
+          "name": "Local Elastic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "hits.hits",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        64,
+        -64
+      ],
+      "id": "acb9839f-6b95-44ca-b4e5-1ec4fd2783ec",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        320,
+        -64
+      ],
+      "id": "4575fcd1-e0cf-435f-984d-f20bb348344b",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Local}}/logs-apksoar.unchecked-default/_doc",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"AlertID\": \"{{ $('Split Out').item.json._source.AlertID }}\",\n  \"Alert.timestamp\": \"{{ $('Split Out').item.json._source.ai_ingested_time }}\",\n  \"@timestamp\": \"{{$now}}\",\n  \"SIEM.Type\":\"Splunk\",\n  \"monitoring.message\":\"Uncompleted\"\n}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        624,
+        -48
+      ],
+      "id": "55694fe6-3e9e-4ddb-8696-9089328804c8",
+      "name": "Add Uncompleted Alert to an SIEM",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Q4ozRoPLzUU1kO6c",
+          "name": "Elastic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": "={{$vars.SP_Schedule_Trigger_Hours_Time\n}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -368,
+        -64
+      ],
+      "id": "589e0cac-e05b-4a2e-88e4-1c3e5151d1c0",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "content": "## Scheduled Retrieval of Splunk Alerts from Timeline\nThis workflow segment runs on a scheduled interval to pull alert data from the `timeline` index related to the *Splunk* device. It retrieves entries within a defined time window where an `AlertID` exists but no `Final` status has been assigned, ensuring only active and pending alerts are captured. The results are then separated into individual items for downstream processing and analysis.",
+        "height": 320,
+        "width": 640,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -448,
+        -224
+      ],
+      "typeVersion": 1,
+      "id": "999ed0e5-b21b-48d7-ab46-87d48b0aa6b3",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Storing Uncompleted Splunk Alerts in SIEM\nThis workflow section processes Splunk alerts one by one and records them into the SIEM index. For each alert, key details such as AlertID, the original alert timestamp, the current processing time, and monitoring status are stored.",
+        "height": 380,
+        "width": 560,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        224,
+        -224
+      ],
+      "typeVersion": 1,
+      "id": "440341a5-c3fe-403d-af43-902b7d732431",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: SP-AI-Find Uncompleted Alerts\n### Workflow-Version: 1.0.1\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Create for first time\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -448,
+        -544
+      ],
+      "typeVersion": 1,
+      "id": "6e90e894-09dc-4c42-a2eb-32f448907668",
+      "name": "Sticky Note9"
+    }
+  ],
+  "connections": {
+    "Get": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Add Uncompleted Alert to an SIEM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Uncompleted Alert to an SIEM": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "9747904d-4c4a-43d5-8cb4-c13562f454bb",
+  "owner": {
+    "type": "team",
+    "teamId": "VkJ1fWswpm3ZmsSH",
+    "teamName": "SP"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

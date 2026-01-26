@@ -1,0 +1,15 @@
+{
+  "id": "qwTJmWRWRfAzQi9w",
+  "name": "Elastic",
+  "type": "httpBasicAuth",
+  "data": {
+    "user": "",
+    "password": ""
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "UGeLGq0MyOrfPaNj",
+    "teamName": "CDTIC-ES"
+  },
+  "isGlobal": false
+}

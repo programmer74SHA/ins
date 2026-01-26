@@ -1,0 +1,16 @@
+{
+  "id": "4BCMLAab68VECLIU",
+  "name": "MISP account",
+  "type": "mispApi",
+  "data": {
+    "apiKey": "",
+    "baseUrl": "",
+    "allowUnauthorizedCerts": true
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "VkJ1fWswpm3ZmsSH",
+    "teamName": "SP"
+  },
+  "isGlobal": false
+}

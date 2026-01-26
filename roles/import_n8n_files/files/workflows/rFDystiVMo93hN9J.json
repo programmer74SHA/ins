@@ -1,0 +1,1103 @@
+{
+  "id": "rFDystiVMo93hN9J",
+  "name": "ES-AI-Insert Timeline",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Elastic AI — ES-AI-Alert-Related Alerts- AI analysis\n- Elastic AI — ES-AI-EI & AI Analysis\n- Elastic AI — ES-AI-TI & AI Analysis\n- Elastic AI — ES-AI-Ticketing & AI Analysis\n- Elastic AI — ES-AI-RL & AI Analysis\n- Elastic AI — ES-AL-Aggregation 5A  & Final AI Analysis With Nessus",
+        "height": 260,
+        "width": 280,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1216,
+        -496
+      ],
+      "typeVersion": 1,
+      "id": "772a0704-0b61-4fc0-abaa-a1ac0be1ec6c",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## Data Cleaning and Formatting for AI Timeline Insertion\nThis section of the workflow standardizes and sanitizes input data from multiple AI result sources before inserting it into the timeline index in Elasticsearch. Each code node extracts the `detailsMarkdown`, `timeline`, and related enrichment data (`EI` and `TI` results), then applies string escaping to ensure compatibility with JSON formatting. It also sorts and flattens timeline entries for clarity. Cleaned outputs are used for updating the related timeline documents in Elasticsearch using HTTP requests.\n",
+        "height": 1120,
+        "width": 720,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        -1024
+      ],
+      "typeVersion": 1,
+      "id": "3fa719ac-e589-45cf-a082-8fe6fd352726",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json['First AI Result'] }}",
+                    "rightValue": "First AI Result",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "46f71298-4f2c-4490-ba36-e94f0c981ccc"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "First AI Result"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d8f5ac43-b6a6-4220-b0d3-5cb1c434ad3d",
+                    "leftValue": "={{ $json['Second AI Result'] }}",
+                    "rightValue": "Second AI Result",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Second AI Result"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "75e01d05-2c7c-4c76-b97d-2edc85c93c6e",
+                    "leftValue": "={{ $json['3th AI Result'] }}",
+                    "rightValue": "3th AI Result",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "3th AI Result"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a70ef738-e913-426c-bdc3-e5f0b1d4c08d",
+                    "leftValue": "={{ $json['4th AI Result'] }}",
+                    "rightValue": "4th AI Result",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "4th AI Result"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3fcb87ed-4767-49de-bab4-c0d7776738d3",
+                    "leftValue": "={{ $json['5th AI Result'] }}",
+                    "rightValue": "5th AI Result",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "5th AI Result"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "056c2cd0-01c0-4ad2-a7b4-037b053c2acc",
+                    "leftValue": "={{ $json['Final AI Result'] }}",
+                    "rightValue": "Final AI Result",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Final AI Result"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -704,
+        -80
+      ],
+      "id": "e3dd17e8-151d-4890-9ede-7a5490d95cee",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function to safely get nested properties\nconst getSafe = (fn, defaultVal = '') => {\n    try {\n        const result = fn();\n        return result === undefined || result === null ? defaultVal : result;\n    } catch (e) {\n        return defaultVal;\n    }\n};\n\n// Extract values with existence checks\nconst inputJson = $input.first().json || {};\nconst firstAiResult = inputJson['First AI Result'] || [{}];\nconst firstResult = firstAiResult[0] || {};\nconst eiIpResult = inputJson['EI IP result'] || {};\nconst eiProcessResult = inputJson['EI Process result'];\nconst tiIpResult = inputJson['TI IP result'];\nconst timeline = getSafe(() => firstResult.timeline, []);\nconst reference = getSafe(() => firstResult.reference, []); // <- NEW FIELD\n\n// Format timeline into string with explicit \\\\n\nconst formatTimelineAsText = (timeline) => {\n    if (!Array.isArray(timeline)) return '';\n\n    const sortedTimeline = timeline.slice().sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));\n\n    const blocks = sortedTimeline.map(item => {\n        return `${item.timestamp}: ${item.description}`;\n    });\n\n    return blocks.join('\\n\\n');\n};\n\n// Format reference array into string\nconst formatReferenceAsText = (reference) => {\n    if (!Array.isArray(reference)) return '';\n    return reference.join('\\n');\n};\n\nconst formattedTimeline = formatTimelineAsText(timeline);\nconst formattedReference = formatReferenceAsText(reference);\n\nconst detailsMarkdown = getSafe(() => firstResult.detailsMarkdown);\nconst extraEvidence = getSafe(() => firstResult.extraEvidence);\nconst eiIpResultValue = getSafe(() => eiIpResult);\nconst eiProcessResultValue = getSafe(() => eiProcessResult);\nconst tiIpResultValue = getSafe(() => tiIpResult);\n\n// Function to clean the string (replace backslashes and newlines)\nconst cleanString = (str) => {\n    if (typeof str !== 'string') return '';\n    \n    return str\n        .replace(/\\\\/g, '\\\\\\\\')  // Replace all backslashes (\\) with double backslashes (\\\\)\n        .replace(/\\n/g, '\\\\n');  // Replace all real newlines with \\\\n\n};\n\n// Clean all values\nconst cleanedDetailsMarkdown = cleanString(detailsMarkdown);\nconst cleanedExtraEvidence = cleanString(extraEvidence);\nconst cleanedEiIpResult = cleanString(eiIpResultValue);\nconst cleanedEiProcessResult = cleanString(eiProcessResultValue);\nconst cleanedTiIpResult = cleanString(tiIpResultValue);\nconst cleanedTimeline = cleanString(formattedTimeline);\nconst cleanedReference = cleanString(formattedReference); // <- NEW CLEANED FIELD\n\n// Return the result as an object\nreturn {\n    cleanedDetailsMarkdown,\n    cleanedExtraEvidence,\n    cleanedEiIpResult,\n    cleanedEiProcessResult,\n    cleanedTiIpResult,\n    cleanedTimeline,\n    cleanedReference // <- ADDED OUTPUT\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        -848
+      ],
+      "id": "0f42cb8b-ee0d-40cb-a87f-905edc9a6850",
+      "name": "required format for Insert TimeLine First"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Safely extract detailsMarkdown with fallback for missing data\nconst detailsMarkdown = $input.first()?.json?.['Second AI Result']?.[0]?.detailsMarkdown ?? '';\n\n// Escape newlines and other JSON-sensitive characters\nconst cleanedString = detailsMarkdown\n  .replace(/\\\\/g, '\\\\\\\\')  // Escape backslashes first\n  .replace(/\\n/g, '\\\\n')   // Escape newlines\n  .replace(/\\r/g, '\\\\r')   // Escape carriage returns\n  .replace(/\\t/g, '\\\\t')   // Escape tabs\n  .replace(/\"/g, '\\\\\"');   // Escape double quotes (if needed)\n\n// Return the result (alternative: return as JSON string if needed)\nreturn {\n  cleanedString: cleanedString,\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        -656
+      ],
+      "id": "80f204a0-95c4-4220-a973-e2370c80c3ee",
+      "name": "required format for Insert TimeLine Second "
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract the value from the previous node\nconst detailsMarkdown = $input.first().json['3th AI Result'][0].detailsMarkdown;\n\n// Escape backslashes and double quotes, and replace newlines\nconst cleanedString = detailsMarkdown\n  .replace(/\\\\/g, '\\\\\\\\')       // Escape backslashes\n  .replace(/\"/g, '\\\\\"')         // Escape double quotes (optional but good for JSON safety)\n  .replace(/\\n/g, '\\\\n');       // Replace newlines with literal \\n\n\n// Return the result as an object\nreturn {\n  cleanedString: cleanedString,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        -464
+      ],
+      "id": "8a4fea5f-b4e7-4b64-ac7b-784b70fe7470",
+      "name": "required format for Insert TimeLine 3th"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function to safely get nested properties\nconst getSafe = (fn, defaultVal = '') => {\n    try {\n        const result = fn();\n        return result === undefined || result === null ? defaultVal : result;\n    } catch (e) {\n        return defaultVal;\n    }\n};\n\n// Extract input data safely\nconst inputJson = $input.first().json || {};\nconst fourthAiResult = getSafe(() => inputJson['4th AI Result'], [{}]);\nconst firstResult = getSafe(() => fourthAiResult[0], {});\nconst timeline = getSafe(() => firstResult.timeline, []);\nconst reference = getSafe(() => firstResult.reference, []); // <- NEW FIELD\nconst detailsMarkdown = getSafe(() => firstResult.detailsMarkdown, '');\n\n// --- Timeline formatter ---\nconst formatTimelineAsText = (timeline) => {\n    if (!Array.isArray(timeline)) return '';\n    const sortedTimeline = timeline.slice().sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));\n\n    const blocks = sortedTimeline.map(item => {\n        return `${item.timestamp}\\nDescription: ${item.description}`;\n    });\n\n    return blocks.join('\\n\\n');\n};\n\n// --- Reference formatter ---\nconst formatReferenceAsText = (reference) => {\n    if (!Array.isArray(reference)) return '';\n    return reference.join('\\n');\n};\n\n// --- Clean string function ---\nconst cleanString = (str) => {\n    if (typeof str !== 'string') return '';\n    return str\n        .replace(/\\\\/g, '\\\\\\\\')   // Escape backslashes\n        .replace(/\\n/g, '\\\\n');   // Replace real newlines with literal \\n\n};\n\n// --- Apply formatting ---\nconst formattedTimeline = formatTimelineAsText(timeline);\nconst formattedReference = formatReferenceAsText(reference);\n\n// --- Clean all strings ---\nconst cleanedString = cleanString(detailsMarkdown);\nconst cleanedTimeline = cleanString(formattedTimeline);\nconst cleanedReference = cleanString(formattedReference); // <- NEW CLEANED FIELD\n\n// --- Return output object ---\nreturn {\n    cleanedString,\n    cleanedTimeline,\n    cleanedReference // <- NEW OUTPUT FIELD\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        -256
+      ],
+      "id": "d09ecea0-a9de-41c9-9517-7b008ba77e7f",
+      "name": "required format for Insert TimeLine 4th"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function to safely get nested properties\nconst getSafe = (fn, defaultVal = '') => {\n    try {\n        const result = fn();\n        return result === undefined || result === null ? defaultVal : result;\n    } catch (e) {\n        return defaultVal;\n    }\n};\n\n// Extract values with existence checks\nconst inputJson = $input.first().json || {};\nconst fifthAiResult = inputJson['5th AI Result'] || [{}];\nconst firstResult = fifthAiResult[0] || {};\nconst eiIpResult = inputJson['EI IP result'] || {};\nconst eiProcessResult = inputJson['EI Process result'];\nconst tiIpResult = inputJson['TI IP result'];\nconst timeline = getSafe(() => firstResult.timeline, []);\nconst reference = getSafe(() => firstResult.reference, []); // <- NEW\n\n// Format timeline into string with explicit \\\\n\nconst formatTimelineAsText = (timeline) => {\n    if (!Array.isArray(timeline)) return '';\n    const sortedTimeline = timeline.slice().sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));\n    const blocks = sortedTimeline.map(item => {\n        return `${item.timestamp} --> ${item.description}`;\n    });\n    return blocks.join('\\n\\n');\n};\n\n// Format reference array into text (like timeline)\nconst formatReferenceAsText = (reference) => {\n    if (!Array.isArray(reference)) return '';\n    return reference.join('\\n');\n};\n\nconst formattedTimeline = formatTimelineAsText(timeline);\nconst formattedReference = formatReferenceAsText(reference);\n\nconst detailsMarkdown = getSafe(() => firstResult.detailsMarkdown);\nconst extraEvidence = getSafe(() => firstResult.extraEvidence);\nconst eiIpResultValue = getSafe(() => eiIpResult);\nconst eiProcessResultValue = getSafe(() => eiProcessResult);\nconst tiIpResultValue = getSafe(() => tiIpResult);\n\n// Function to clean the string (replace backslashes and newlines)\nconst cleanString = (str) => {\n    if (typeof str !== 'string') return '';\n    return str\n        .replace(/\\\\/g, '\\\\\\\\')  // Escape backslashes\n        .replace(/\\n/g, '\\\\n')   // Replace newlines with literal \\\\n\n        .replace(/\\//g, '//')    // Escape forward slashes\n        .replace(/\"/g, '\\\\\"');   // Escape double quotes\n};\n\n// Clean all values\nconst cleanedDetailsMarkdown = cleanString(detailsMarkdown);\nconst cleanedExtraEvidence = cleanString(extraEvidence);\nconst cleanedEiIpResult = cleanString(eiIpResultValue);\nconst cleanedEiProcessResult = cleanString(eiProcessResultValue);\nconst cleanedTiIpResult = cleanString(tiIpResultValue);\nconst cleanedTimeline = cleanString(formattedTimeline);\nconst cleanedReference = cleanString(formattedReference); // <- NEW\n\n// Return the result as an object\nreturn {\n    cleanedDetailsMarkdown,\n    cleanedExtraEvidence,\n    cleanedEiIpResult,\n    cleanedEiProcessResult,\n    cleanedTiIpResult,\n    cleanedTimeline,\n    cleanedReference // <- NEW OUTPUT FIELD\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        -64
+      ],
+      "id": "503dfca2-a5e4-4998-a228-5a73095201d6",
+      "name": "required format for Insert TimeLine 5th"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 🔹 Get the input object\nconst inputArray = $input.first().json['Final AI Result'];\nconst input = Array.isArray(inputArray) ? inputArray[0] : inputArray;\n\n// 🔹 Your original sanitize rules — keep them as requested\nfunction sanitize(str) {\n  if (typeof str !== 'string') return str;\n  return str\n    .replace(/\\\\/g, '\\\\\\\\')  // Escape backslashes\n    .replace(/\\n/g, '\\\\n')   // Replace newlines with literal \\n\n    .replace(/\\//g, '//')    // Escape forward slashes\n    .replace(/\"/g, '\\\\\"');   // Escape double quotes\n}\n\n// 🔹 Extract AI_result and AI_Confidence if pattern matches\nfunction extractAIResult(value) {\n  if (typeof value !== 'string') return null;\n  const match = value.match(/^(.+?)\\s*\\((\\d+(?:\\.\\d+)?)%\\)$/);\n  if (match) {\n    return {\n      AI_result: match[1].trim(),\n      AI_Confidence: parseFloat(match[2])\n    };\n  }\n  return null;\n}\n\n// 🔹 Recursive sanitize + result extraction\nfunction deepSanitize(value) {\n  if (Array.isArray(value)) {\n    return value.map(deepSanitize);\n  } else if (value && typeof value === 'object') {\n    const sanitizedObj = {};\n    for (const [key, val] of Object.entries(value)) {\n      const sanitizedVal = deepSanitize(val);\n\n      // Handle \"result\" specially\n      if (key === 'result' && typeof sanitizedVal === 'string') {\n        const extracted = extractAIResult(sanitizedVal);\n        if (extracted) {\n          sanitizedObj['AI_result'] = sanitize(extracted.AI_result);\n          sanitizedObj['AI_Confidence'] = extracted.AI_Confidence;\n          continue;\n        }\n      }\n\n      sanitizedObj[key] = sanitizedVal;\n    }\n    return sanitizedObj;\n  } else if (typeof value === 'string') {\n    return sanitize(value);\n  } else {\n    return value;\n  }\n}\n\n// 🔹 Apply recursively\nconst sanitized = deepSanitize(input);\n\n// 🔹 Return same structure as input (avoid double-escape by not stringifying)\nreturn [\n  {\n    json: {\n      'Final AI Result': [sanitized]\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        400
+      ],
+      "id": "bd9d0fce-af05-41a2-b45f-d94287f87eeb",
+      "name": "Create the required format for add note"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7ac139ca-29fe-4448-9b73-d2caf7897af2",
+              "leftValue": "={{ $json['Final AI Result'][0].AI_as_analyzer.AI_result }}",
+              "rightValue": "True",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "4b5455b6-2c0c-4dcd-8dd7-0acb9f34a5c5",
+              "leftValue": "={{ $json['Final AI Result'][0].AI_as_analyzer.AI_result }}",
+              "rightValue": "Benign",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        720
+      ],
+      "id": "5e9e2a05-1a1f-4a79-8c7b-aad6fa3d7c8a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "Alert",
+        "operation": "Create Alert",
+        "fields": "={\n  \"project\": {\n    \"key\": \"{{ $json.Project_Key }}\"\n  },\n  \"issuetype\": {\n    \"name\": \"{{$vars.JIRA_Security_Event_IssueType}}\"\n  },\n  \"summary\": \"{{ $('Create the required format for add note').item.json['Final AI Result'][0].title }}\",\n  \"{{$vars.JIRA_Severity_Field}}\": {\n    \"value\": \"{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._source['kibana.alert.rule.parameters'].severity.replace('high','High').replace('medium','Medium').replace('low','Low').replace('critical','Critical') }}\"\n  },\n  \"{{$vars.JIRA_Source_Type_Field}}\": {\n    \"value\": \"Alerting\"\n  },\n  \"{{$vars.JIRA_Alert_ID_Field}}\": \"{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._id }}\",\n  \"{{$vars.JIRA_Related_Logs_Field}}\": \"{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json.Final.related_logs }}\",\n  \"{{$vars.JIRA_Related_Alerts_Field}}\": \"{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json.Final.related_alerts }}\",\n  \"{{$vars.JIRA_Threat_Intelligence_Field}}\": \"{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json.Final.TI }}\",\n  \"{{$vars.JIRA_EI_Summary_Field}}\": \"{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json.Final.EI }}\",\n\"{{$vars.JIRA_Ticketing_Field}}\": \"{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json.Final.ticketing }}\",\n\"{{$vars.JIRA_AI_Result_Field}}\": {\n    \"value\": \"{{ $('Create the required format for add note').item.json['Final AI Result'][0].AI_as_analyzer.AI_result }}\"},\n\"{{$vars.JIRA_AI_Confidence_Field}}\": {{ $('Create the required format for add note').item.json['Final AI Result'][0].AI_as_analyzer.AI_Confidence }},\n\"{{$vars.JIRA_Conclusion_Field}}\": \"{{ $('Create the required format for add note').item.json['Final AI Result'][0].detailsMarkdown.conclusion }}\",\n\"{{$vars.JIRA_Rule_Name_Field}}\": \"{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').first().json['Original Rule'][0].json.latest_doc.hits.hits[0]._source['kibana.alert.rule.name'] }}\",\n\"{{$vars.JIRA_Main_Alert_Analysis_Field}}\": \"{{ $('Create the required format for add note').item.json['Final AI Result'][0].detailsMarkdown.mainAlertAnalysis.replaceAll('//',' or ') }}\",\n\"{{$vars.JIRA_Related_Logs_Summary_Field}}\": \"{{ $('Create the required format for add note').item.json['Final AI Result'][0].detailsMarkdown.relatedLogsHighlights }}\",\n\"{{$vars.JIRA_Related_Alerts_Summary_Field}}\": \"{{ $('Create the required format for add note').item.json['Final AI Result'][0].detailsMarkdown.relatedAlertsHighlights }}\",\n\"{{$vars.JIRA_Related_Tickets_Summary_Field}}\": \"{{ $('Create the required format for add note').item.json['Final AI Result'][0].detailsMarkdown.relatedTicketsHighlights }}\",\n\"{{$vars.JIRA_EI_Summary_Field}}\": \"{{ $('Create the required format for add note').item.json['Final AI Result'][0].detailsMarkdown.environmentalIntelligenceHighlights }}\",\n\"{{$vars.JIRA_Threat_Intelligence_Summary_Field}}\": \"{{ $('Create the required format for add note').item.json['Final AI Result'][0].detailsMarkdown.threatIntelligenceHighlights }}\",\n\"{{$vars.JIRA_Vulnerability_Field}}\": \"{{ $('Create the required format for add note').item.json['Final AI Result'][0].detailsMarkdown.vulnerabilityHighlights }}\",\n\"{{$vars.JIRA_Timeline_Field}}\": \"{{$('Called by SP-AI-Alert-Related Alerts- AI analysis').first().json['Final AI Result'][0].timeline.map(e => `${e.timestamp}\\\\n${e.description}`).join('\\\\n\\\\n')}}\",\n\"{{$vars.JIRA_References_Field}}\": \"{{ $('Create the required format for add note').item.json['Final AI Result'][0].reference.toJsonString().replaceAll('\"','').replaceAll('[','').replaceAll(']','').replaceAll(',','\\\\n') }}\",\n\"{{$vars.JIRA_Auto_Action_Field}}\": \"{{ $('Create the required format for add note').item.json['Final AI Result'][0].auto_action.toJsonString().replaceAll(',','\\\\n').replaceAll('\"','').replaceAll('[{','').replaceAll('}]','').replaceAll('{','').replaceAll('}','').replaceAll('value:','') }}\",\n\"{{$vars.JIRA_Response_Recommendations_Field}}\": \"Mitigation:\\n {{ $('Create the required format for add note').item.json['Final AI Result'][0].recommended_actions.response_recommendations.mitigation }}\\nEradication:\\n {{ $('Create the required format for add note').item.json['Final AI Result'][0].recommended_actions.response_recommendations.eradication }}\\nRecovery:\\n {{ $('Create the required format for add note').item.json['Final AI Result'][0].recommended_actions.response_recommendations.recovery }}\",\n\"{{$vars.JIRA_Investigation_Recommendations_Field}}\": \"{{ $('Create the required format for add note').item.json['Final AI Result'][0].recommended_actions.investigation_recommendations }}\",\n\"{{$vars.JIRA_Attacker_IP_Field}}\": [\"{{ $('Create the required format for add note').item.json['Final AI Result'][0].attackerIps.toJsonString().replaceAll(',','\\\\n').replaceAll('\"','').replaceAll('[{','').replaceAll('}]','').replaceAll('{','').replaceAll('}','').replaceAll('[','').replaceAll(']','') }}\"],\n\"{{$vars.JIRA_Target_IP_Field}}\": [\"{{ $('Create the required format for add note').item.json['Final AI Result'][0].targetIps.toJsonString().replaceAll(',','\\\\n').replaceAll('\"','').replaceAll('[{','').replaceAll('}]','').replaceAll('{','').replaceAll('}','').replaceAll('[','').replaceAll(']','') }}\"],\n\"{{$vars.JIRA_User_Name_Field}}\": \"{{ $('Create the required format for add note').item.json['Final AI Result'][0].users.toJsonString().replaceAll(',','\\\\n').replaceAll('\"','').replaceAll('[{','').replaceAll('}]','').replaceAll('{','').replaceAll('}','').replaceAll('[','').replaceAll(']','') }}\",\n\"{{$vars.JIRA_Process_Name_Field}}\": \"{{ $('Create the required format for add note').item.json['Final AI Result'][0].processes.toJsonString().replaceAll(',','\\\\n').replaceAll('\"','').replaceAll('[{','').replaceAll('}]','').replaceAll('{','').replaceAll('}','').replaceAll('[','').replaceAll(']','') }}\",\n\"{{$vars.JIRA_URL_Field}}\": \"{{ $('Create the required format for add note').item.json['Final AI Result'][0].urls.toJsonString().replaceAll(',','\\\\n').replaceAll('\"','').replaceAll('[{','').replaceAll('}]','').replaceAll('{','').replaceAll('}','').replaceAll('[','').replaceAll(']','') }}\",\n\"{{$vars.JIRA_Rick_Score_Field}}\":{{ $('Create the required format for add note').item.json['Final AI Result'][0].risk_score }},\n\"{{$vars.JIRA_Count_Field}}\":1,\n  \"assignee\": {\n    \"name\": \"{{$vars.JIRA_Assignee_Name}}\"\n  },\n  \"labels\": [\n    \"{{$vars.JIRA_Labels_AI_Analyzer_Field}}-APKSIEM\",\"Zone-{{ $json.Lable }}\"\n  ],\n  \"description\": \"<b>Description:</b> {{ $('Create the required format for add note').first().json['Final AI Result'][0].persian_analysis.replace(/\\\\/g, '').replace(/\\n/g, '\\\\n') }}\"\n}",
+        "requestOptions": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "CUSTOM.Jira Service Management",
+      "typeVersion": 1,
+      "position": [
+        992,
+        512
+      ],
+      "id": "303bd560-1a12-482f-80e6-e8532335d53f",
+      "name": "Create Issue Alert",
+      "credentials": {
+        "jsmApi": {
+          "id": "l597CchS20GYrsZ3",
+          "name": "Jira Service Management Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        864,
+        880
+      ],
+      "id": "334fb7e4-cf59-47f9-9a27-a539b647ee0b",
+      "name": "Required Fields "
+    },
+    {
+      "parameters": {
+        "content": "## Add Note to Kibana Timeline (HTTP Request)\nSends PATCH request to Kibana's note API\nNote content includes:\nAlert ID, AI analysis (in Markdown format), Investigation reasoning and conclusion, Timeline ID (for investigation linking)",
+        "height": 420,
+        "width": 300,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        432,
+        128
+      ],
+      "typeVersion": 1,
+      "id": "871762f2-5ce4-46d2-aff9-f1f225580528",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## True Positive Evaluation and Data Routing\nAt this stage, the workflow performs a **conditional check** to determine whether the AI analysis result is a **True Positive**. If confirmed, the process continues toward **Jira ticket creation**. If not, the data is redirected for **rule tuning** purposes. Prior to this decision point, data is formatted and structured to ensure compatibility with both **Jira ticketing** and **rule refinement workflows**, enabling seamless branching based on the outcome.",
+        "height": 340,
+        "width": 640,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        80,
+        560
+      ],
+      "typeVersion": 1,
+      "id": "95c94c98-021e-4d7b-9d47-94ae7d83a3fa",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Create & Dispatch AI-Based Security Alert to Jira and Trigger Observable Analysis\nThis section of the workflow creates a detailed security alert in Jira Service Management based on AI-driven analysis. It compiles data such as severity, related logs, threat intelligence, attacker/target details, and automated response recommendations. Once the alert is created, essential fields are set for further use, and the process continues by executing the next workflow for additional observable enrichment and correlation.",
+        "height": 360,
+        "width": 820,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        752,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "652bbe8b-392f-4961-9968-82a63b4500a6",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Rule Tuning Data Finalization and Workflow Trigger\nThis section finalizes the data packaging by adding the original rule context, preparing a complete and structured payload for the tuning process. Once finalized, it triggers the **ES-Al-Tunning-Creation** workflow, which handles alerts requiring rule adjustments, passing essential data such as false positive justifications to optimize detection accuracy.",
+        "height": 380,
+        "width": 600,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        752,
+        704
+      ],
+      "typeVersion": 1,
+      "id": "7c26b4a1-556b-4264-9c9b-1cdda25ad91d",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Local}}:9200/timeline/_update/{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Create TimeLine'] }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"doc\": {\n    \"@timestamp\":\"{{$now.toString()}}\",\n    \"RA\": \"{{ $json.cleanedDetailsMarkdown.replaceAll('\\\"','\\\\\"') }}\\nreference:{{ $json.cleanedReference }}\"\n  }\n}",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        64,
+        -848
+      ],
+      "id": "fb979f9f-435d-48c2-a739-0da523079ccc",
+      "name": "Update Timeline First",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Zm2ZQ42acv9nDnwz",
+          "name": "Elastic Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Local}}:9200/timeline/_update/{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Create TimeLine'] }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"doc\": {\n    \"@timestamp\":\"{{$now.toString()}}\",\n    \"EI\": \"{{ $json.cleanedString }}\"\n  }\n}",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        64,
+        -656
+      ],
+      "id": "cb7900c6-1d6a-43ec-8b14-a39fee1e5362",
+      "name": "Update Timeline Second ",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Zm2ZQ42acv9nDnwz",
+          "name": "Elastic Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Local}}:9200/timeline/_update/{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Create TimeLine'] }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"doc\": {\n    \"@timestamp\":\"{{$now.toString()}}\",\n    \"TI\": \"{{ $json.cleanedString }}\"\n  }\n}",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        64,
+        -464
+      ],
+      "id": "b8bdb147-e1d1-4a04-a178-94ece1ba7e95",
+      "name": "Update Timeline 3th",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Zm2ZQ42acv9nDnwz",
+          "name": "Elastic Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Local}}:9200/timeline/_update/{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Create TimeLine'] }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"doc\": {\n    \"@timestamp\":\"{{$now.toString()}}\",\n    \"Ticket\": \"{{ $json.cleanedString.replaceAll('\\\\','\\\\\\\\').replaceAll('\\\"','\\\\\"') }}\\nreference:{{ $json.cleanedReference }}\"\n  }\n}",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        64,
+        -256
+      ],
+      "id": "9684cf37-2930-48fb-95a2-4862d683e448",
+      "name": "Update Timeline 4th",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Zm2ZQ42acv9nDnwz",
+          "name": "Elastic Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Local}}:9200/timeline/_update/{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Create TimeLine'] }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"doc\": {\n    \"@timestamp\":\"{{$now.toString()}}\",\n    \"RL\": \"{{ $json.cleanedDetailsMarkdown }}\\nreference:{{ $json.cleanedReference }}\"\n  }\n}",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        64,
+        -64
+      ],
+      "id": "a21e621c-f626-41f1-a861-23dcbb899293",
+      "name": "Update Timeline 5th",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Zm2ZQ42acv9nDnwz",
+          "name": "Elastic Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Local}}:9200/timeline/_update/{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Create TimeLine'] }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"doc\": {\n    \"@timestamp\":\"{{$now.toString()}}\",\n    \"Final\": \"**Alert Analysis**\\\\nAlert ID:{{ $('Switch').item.json['Final AI Result'][0].alertId }} \\\\n\\\\n**Details**: {{ $json['Final AI Result'][0].detailsMarkdown.mainAlertAnalysis }}\\\\n\\\\n**Result**:{{ $json['Final AI Result'][0].AI_as_analyzer.AI_result }}\\\\n\\\\n**Attacker IPs**:{{ $('Switch').item.json['Final AI Result'][0].attackerIps }}\\\\n**Target IPs**:{{ $('Switch').item.json['Final AI Result'][0].targetIps }}\\\\n**Target Names**:{{ $('Switch').item.json['Final AI Result'][0].targetNames }}\\\\n**Users**:\\\\n**URLs**:{{ $json['Final AI Result'][0].users }}{{ $('Switch').item.json['Final AI Result'][0].urls }}\\\\n**Processess**:{{ $('Switch').item.json['Final AI Result'][0].processes }}\\\\n\\\\n**Timeline**\\\\n{{\n  $json['Final AI Result'][0].timeline\n    .map(e => `${e.timestamp}\\\\n${e.description}`)\n    .join('\\\\n\\\\n')\n}} }}\\\\n\\\\n**Refrences**{{ $json['Final AI Result'][0].reference.toJsonString().replaceAll(',','\\\\n').replaceAll('\"','').replaceAll('[{','').replaceAll('}]','').replaceAll('{','').replaceAll('}','').replaceAll('\\\\n','\\\\\\\\n') }} }}\\\\n\\\\n\\\\n**Investigation Actions**: {{  $json['Final AI Result'][0].auto_action.value.toJsonString().replaceAll(',','\\\\n').replaceAll('\"','').replaceAll('[{','').replaceAll('}]','').replaceAll('{','').replaceAll('}','').replaceAll('\\\\n','\\\\\\\\n') }} }}\\\\n\\\\n**Response Recommendations**\\\\n**Mitigation:**{{ $json['Final AI Result'][0].recommended_actions.response_recommendations.mitigation.replaceAll('\\\\n','\\\\\\\\n') }} \\\\n**Eradication:**{{ $json['Final AI Result'][0].recommended_actions.response_recommendations.eradication.replaceAll('\\\\n','\\\\\\\\n') }}\\\\n**Recovery**: {{ $json['Final AI Result'][0].recommended_actions.response_recommendations.recovery.replaceAll('\\\\n','\\\\\\\\n') }}\\\\n\\\\n**Auto Action**:{{ $json['Final AI Result'][0].auto_action.value }}\"\n  }\n}",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        400
+      ],
+      "id": "25559d1d-e4f1-4031-9522-8227ac1ad5e2",
+      "name": "Update Timeline 5th1",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Zm2ZQ42acv9nDnwz",
+          "name": "Elastic Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d0fb7159-ac9a-4198-972b-57af0a0a44e4",
+              "name": "Final AI Result",
+              "value": "={{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Final AI Result'] }}",
+              "type": "array"
+            },
+            {
+              "id": "4bc3e469-61d9-43f6-8bec-b737f91d576f",
+              "name": "TimeLine ID",
+              "value": "={{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['TimeLine ID'] }}",
+              "type": "string"
+            },
+            {
+              "id": "7ae31f47-e1b9-40ed-a599-b7b715b560a1",
+              "name": "Alert Timestamp",
+              "value": "={{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Alert Timestamp'] }}",
+              "type": "string"
+            },
+            {
+              "id": "6e3d2e3d-f9f2-499d-9935-3c00bf489f44",
+              "name": "Original Rule",
+              "value": "={{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Original Rule'] }}",
+              "type": "array"
+            },
+            {
+              "id": "7b0d58b9-a3d7-4100-96e5-c7a78bea9736",
+              "name": "Final",
+              "value": "={{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json.Final }}",
+              "type": "object"
+            },
+            {
+              "id": "7b6bc80a-a9d7-45ef-bf64-67ac61173665",
+              "name": "Alert Key",
+              "value": "={{ $json.key }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1168,
+        512
+      ],
+      "id": "d2f6d95f-78a1-4db9-8976-e8e90e788689",
+      "name": "Required Fields for Observable"
+    },
+    {
+      "parameters": {
+        "content": "## AI-Based Alert Filtering and Validation\nThis section of the workflow is triggered by another workflow. It uses a **Switch** node to evaluate the presence and validity of AI-generated results from different stages of alert enrichment. Each condition checks whether the respective AI result is **not empty**, indicating that it contains meaningful data.",
+        "height": 420,
+        "width": 620
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1040,
+        -224
+      ],
+      "typeVersion": 1,
+      "id": "8bdcef85-3856-41cc-939b-b4e47ee600ad",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        -16
+      ],
+      "id": "96ff8a0c-f25e-4072-9020-b74c3ae95008",
+      "name": "Called by SP-AI-Alert-Related Alerts- AI analysis"
+    },
+    {
+      "parameters": {
+        "content": "## Prepare AI Analysis Results for Notable Note Formatting\nThis code node extracts and processes specific fields from the AI analysis results. It formats the incident timeline, sanitizes the content, and prepares all required components (e.g., result, reason, mitigation, eradication, recovery) to be added as a structured note in the next step.",
+        "height": 400,
+        "width": 380,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        160
+      ],
+      "typeVersion": 1,
+      "id": "c34a1571-3c7a-4e23-ba55-15ddd3d59588",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## Create Timeline & Add Detailed Note in Kibana\nThis section first creates a new Kibana timeline using alert data, then adds a detailed note to that timeline. ",
+        "height": 360,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        128
+      ],
+      "typeVersion": 1,
+      "id": "6e7c7115-8d57-4a1c-b7d0-16ac813dd60e",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Base_URL_Kibana}}/api/timeline",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; Elastic-Api-Version=2023-10-31"
+            },
+            {
+              "name": "kbn-xsrf",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"status\": \"active\",\n    \"timeline\": {\n        \"columns\": [],\n        \"created\": 42.0,\n        \"createdBy\": \"AI\",\n        \"dataProviders\": [\n            {\n                \"and\": [],\n                \"enabled\": true,\n                \"excluded\": false,\n                \"id\": \"\",\n                \"kqlQuery\": \"{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._id }}\",\n                \"name\": \"{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._id }}\",\n                \"queryMatch\": {\n                    \"field\": \"_id\",\n                    \"value\": \"{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._id }}\",\n                    \"operator\": \":\"\n                }\n            }\n        ],\n        \"dateRange\": {\n            \"start\": \"{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._source['@timestamp'] }}\",\n            \"end\": \"{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._source['@timestamp'] }}\"\n        },\n        \"description\": \"\",\n        \"eqlOptions\": {\n            \"eventCategoryField\": \"event.category\",\n            \"query\": \"\",\n            \"size\": 100,\n            \"timestampField\": \"@timestamp\"\n        },\n        \"eventType\": \"all\",\n        \"excludedRowRendererIds\": [],\n        \"favorite\": [],\n        \"filters\": [],\n        \"indexNames\": [],\n        \"kqlMode\": \"filter\",\n        \"kqlQuery\": {\n            \"filterQuery\": {\n                \"kuery\": {\n                    \"expression\": \"\",\n                    \"kind\": \"kuery\"\n                },\n                \"serializedQuery\": \"\"\n            }\n        },\n        \"sort\": {\n            \"columnId\": \"@timestamp\",\n            \"columnType\": \"date\",\n            \"sortDirection\": \"desc\"\n        },\n        \"status\": \"active\",\n        \"timelineType\": \"default\",\n        \"title\": \"{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._source['kibana.alert.rule.name'] }}-{{ $('Called by SP-AI-Alert-Related Alerts- AI analysis').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._source['kibana.alert.rule.parameters'].severity }}\",\n        \"updated\": 42.0,\n        \"updatedBy\": \"AI Analyzer\"\n    },\n    \"timelineType\": \"default\",\n    \"version\": \"WzEwMjA1NCw2N10=\"\n} ",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        64,
+        288
+      ],
+      "id": "d2e33423-44f9-4df1-b221-c779aa68ccdd",
+      "name": "Create Timeline kibana",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{$vars.ES_Base_URL_Kibana}}/api/note",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; Elastic-Api-Version=2023-10-31"
+            },
+            {
+              "name": "kbn-xsrf",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"eventDataView\": \"\",\n  \"eventIngested\": \"\",\n  \"eventTimestamp\": \"\",\n  \"note\": {\n    \"created\": 42.0,\n    \"createdBy\": \"APKSmartAnalyzer\",\n    \"eventId\": \"\",\n    \"note\": \"**Alert Analysis**\\\\nAlert ID:{{ $('Switch').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._id }} \\\\n\\\\n**Details**: {{ $('Create the required format for add note').item.json.cleanedString }}\\\\n\\\\n**Reason**:{{ $('Create the required format for add note').item.json.cleanedString_Reason }}\\\\n\\\\n**Result**:{{ $('Create the required format for add note').item.json.cleanedString_Result }}\\\\n\\\\n**Attacker IPs**:{{ $('Switch').item.json['Final AI Result'][0].attackerIps }}\\n**Target IPs**:{{ $('Switch').item.json['Final AI Result'][0].targetIps }}\\\\n**Target Names**:{{ $('Switch').item.json['Final AI Result'][0].targetNames }}\\\\n**Users**:{{ $('Switch').item.json['Final AI Result'][0].users }}\\\\n**URLs**:{{ $('Switch').item.json['Final AI Result'][0].urls }}\\\\n**Processess**:{{ $('Switch').item.json['Final AI Result'][0].processes }}\\\\n\\\\n**Timeline**{{ $('Create the required format for add note').item.json.cleanedTimeline }}\\\\n\\\\n\\\\n**Refrences**:{{ $('Switch').item.json['Final AI Result'][0].reference }}\\\\n\\\\n\\\\n**Investigation Actions**: {{ $('Create the required format for add note').item.json.cleanedInvestigation }}\\\\n\\\\n**Response Recommendations**\\\\n**Mitigation:**: {{ $('Create the required format for add note').item.json.cleanedMitigation }}\\\\n**Eradication:**:{{ $('Create the required format for add note').item.json.cleanedEradication }}\\\\n**Recovery**: {{ $('Create the required format for add note').item.json.cleanedRecovery }}\\\\n\\\\n**Auto Action**:{{ $('Switch').item.json['Final AI Result'][0].auto_action.value }}\",\n    \"timelineId\":  \"{{ $json.data.persistTimeline.timeline.savedObjectId }}\",\n    \"updated\": 42.0,\n    \"updatedBy\": \"APKSmartAnalyzer\"\n  },\n  \"overrideOwner\": true,\n  \"version\": \"string\"\n}\n\n",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        288
+      ],
+      "id": "019197ef-b90d-42bb-b0c2-204852253e59",
+      "name": "Add Note Detail",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Xa6XvHQ9GRxA4nq1",
+          "mode": "list",
+          "cachedResultName": "ES — ES-AI-Observable",
+          "cachedResultUrl": "/workflow/Xa6XvHQ9GRxA4nq1"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        512
+      ],
+      "id": "e7a080da-ddc7-4665-bf42-d9e1fb49cd49",
+      "name": "Call  ES-AI-Observable"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "VDduT8U2Gu8QVXeX",
+          "mode": "list",
+          "cachedResultName": "ES — ES-Al-Tunning-Creation",
+          "cachedResultUrl": "/workflow/VDduT8U2Gu8QVXeX"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1104,
+        880
+      ],
+      "id": "41c86ded-1f87-4368-a73a-1164310f499a",
+      "name": "Call ES-Al-Tunning-Creation"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: ES-AI-Insert Tmeline\n### Workflow-Version: 1.2.3\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Add Jira New Sctructure\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1216,
+        -816
+      ],
+      "typeVersion": 1,
+      "id": "225c9348-6f73-4316-b91b-6124bab51384",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === READ VARIABLES ===\nconst esMultiJira = String($vars.ES_MultiJiraProject).toLowerCase() === \"true\";\nconst esMultiZone = String($vars.ES_MultiZone).toLowerCase() === \"true\";\nconst jiraProjectKey = $vars.JIRA_Project_Key_Field;\n\n// === TRY TO READ NAMESPACE SAFELY ===\nlet namespace;\n\ntry {\n  // Use .first().json (confirmed from your working version)\n  const sourceNode = $('Called by SP-AI-Alert-Related Alerts- AI analysis').first().json;\n\n  namespace =\n    sourceNode?.['Original Rule']?.[0]?.json?.latest_doc?.hits?.hits?.[0]?._source?.data_stream?.namespace ||\n    null;\n} catch (err) {\n  namespace = null;\n}\n\n// Default fallback\nif (!namespace) namespace = 'Unknown_Namespace';\n\n// === APPLY LOGIC ===\nlet Project_Key;\nlet Lable;\n\nif (esMultiJira === true) {\n  // Condition 1: MultiJiraProject = true\n  Project_Key = namespace;\n  Lable = namespace;\n} else if (esMultiZone === true) {\n  // Condition 2: MultiJiraProject = false, MultiZone = true\n  Project_Key = jiraProjectKey;\n  Lable = namespace;\n} else {\n  // Condition 3: both false\n  Project_Key = jiraProjectKey;\n  Lable = jiraProjectKey;\n}\n\n// === REPLACE \"default\" VALUES WITH JIRA PROJECT KEY ===\nif (String(Project_Key).toLowerCase() === \"default\") {\n  Project_Key = jiraProjectKey;\n}\n\nif (String(Lable).toLowerCase() === \"default\") {\n  Lable = jiraProjectKey;\n}\n\n// === DEBUG LOGS (visible in n8n execution logs) ===\nconsole.log('ES_MultiJiraProject:', esMultiJira);\nconsole.log('ES_MultiZone:', esMultiZone);\nconsole.log('Namespace:', namespace);\nconsole.log('Project_Key:', Project_Key);\nconsole.log('Lable:', Lable);\n\n// === RETURN OUTPUT ===\nreturn [\n  {\n    json: {\n      Project_Key,\n      Lable,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        512
+      ],
+      "id": "7eeae650-271a-4463-9359-6a6c2da522c3",
+      "name": "Check for Multi Jira Project"
+    }
+  ],
+  "connections": {
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "required format for Insert TimeLine First",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "required format for Insert TimeLine Second ",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "required format for Insert TimeLine 3th",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "required format for Insert TimeLine 4th",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "required format for Insert TimeLine 5th",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create the required format for add note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "required format for Insert TimeLine First": {
+      "main": [
+        [
+          {
+            "node": "Update Timeline First",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "required format for Insert TimeLine Second ": {
+      "main": [
+        [
+          {
+            "node": "Update Timeline Second ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "required format for Insert TimeLine 3th": {
+      "main": [
+        [
+          {
+            "node": "Update Timeline 3th",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "required format for Insert TimeLine 4th": {
+      "main": [
+        [
+          {
+            "node": "Update Timeline 4th",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "required format for Insert TimeLine 5th": {
+      "main": [
+        [
+          {
+            "node": "Update Timeline 5th",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create the required format for add note": {
+      "main": [
+        [
+          {
+            "node": "Update Timeline 5th1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Timeline kibana",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Check for Multi Jira Project",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Required Fields ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Required Fields ": {
+      "main": [
+        [
+          {
+            "node": "Call ES-Al-Tunning-Creation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Issue Alert": {
+      "main": [
+        [
+          {
+            "node": "Required Fields for Observable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Required Fields for Observable": {
+      "main": [
+        [
+          {
+            "node": "Call  ES-AI-Observable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Called by SP-AI-Alert-Related Alerts- AI analysis": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Timeline kibana": {
+      "main": [
+        [
+          {
+            "node": "Add Note Detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Multi Jira Project": {
+      "main": [
+        [
+          {
+            "node": "Create Issue Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "da1c9a77-e2ac-4e66-adaa-54e4d6e4d035",
+  "owner": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

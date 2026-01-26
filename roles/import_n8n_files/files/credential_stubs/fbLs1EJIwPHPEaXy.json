@@ -1,0 +1,16 @@
+{
+  "id": "fbLs1EJIwPHPEaXy",
+  "name": "MISP account",
+  "type": "mispApi",
+  "data": {
+    "apiKey": "",
+    "baseUrl": "",
+    "allowUnauthorizedCerts": true
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "UGeLGq0MyOrfPaNj",
+    "teamName": "CDTIC-ES"
+  },
+  "isGlobal": false
+}

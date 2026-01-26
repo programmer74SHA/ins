@@ -1,0 +1,183 @@
+{
+  "id": "xEyijIueukpcAeQQ",
+  "name": "SP-AI-Unchecked Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "fieldToSplitOut": "remaining",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "1390e0f0-dcdc-4124-b1e1-0ca563e3b4b8",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        432,
+        32
+      ],
+      "id": "db96d4ae-c2e8-4385-b3be-72f8f0602f2c",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Local}}/logs-apksoar.unchecked-default/_doc",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"Sample.AlertID\": \"{{ $json.source_event_id }}\",\n  \"Alert.reason\": \"null\",\n  \"RuleName\": \"{{ $json.search_name }}\",\n  \"Alert.timestamp\": \"{{ $json._time }}\",\n  \"@timestamp\": \"{{$now}}\",\n  \"SIEM.Type\":\"Splunk\",\n  \"monitoring.message\":\"unchecked\"\n}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        704,
+        48
+      ],
+      "id": "fb37ffd5-0d16-4fa6-a39b-6cf172735f77",
+      "name": "Add Unchecked Alert to an SIEM",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Q4ozRoPLzUU1kO6c",
+          "name": "Elastic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b2b68912-7343-4a5b-b504-6567a878d513",
+      "name": "Called By ES-AI-Alert-Schaeduler 2h "
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: SP-AI-Unchecked Alerts\n### Workflow-Version: 1.0.1\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Create for first time\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        64,
+        -416
+      ],
+      "typeVersion": 1,
+      "id": "0babc4c7-d59c-45f7-a197-58f77ff8dfcc",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "content": "## Unchecked Alerts Forwarding to SIEM\nThis workflow is triggered by the **ES-AI-Alert-Scheduler (2h)**. It splits out remaining Splunk notable alerts, loops through them in batches, and forwards each one as an **unchecked alert** into Elasticsearch (SIEM). ",
+        "height": 320,
+        "width": 980
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "c5fe1244-bb8c-4740-ba97-4687ceab7c47",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Splunk AI — SP-AI-Alert-Schaeduler 2h with unchecked info",
+        "height": 220,
+        "width": 300,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -256,
+        -336
+      ],
+      "typeVersion": 1,
+      "id": "837192ca-7a89-402f-b587-83c022007b6f",
+      "name": "Sticky Note10"
+    }
+  ],
+  "connections": {
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Add Unchecked Alert to an SIEM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Unchecked Alert to an SIEM": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Called By ES-AI-Alert-Schaeduler 2h ": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "182bdf32-4c20-4cd0-997e-02e8ecf12cb4",
+  "owner": {
+    "type": "team",
+    "teamId": "VkJ1fWswpm3ZmsSH",
+    "teamName": "SP"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

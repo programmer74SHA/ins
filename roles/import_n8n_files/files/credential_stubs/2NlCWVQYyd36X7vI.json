@@ -1,0 +1,15 @@
+{
+  "id": "2NlCWVQYyd36X7vI",
+  "name": "Jira Service Management Api account",
+  "type": "jsmApi",
+  "data": {
+    "token": "",
+    "jsmdomain": ""
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "UGeLGq0MyOrfPaNj",
+    "teamName": "CDTIC-ES"
+  },
+  "isGlobal": false
+}

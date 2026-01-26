@@ -1,0 +1,15 @@
+{
+  "id": "OV3Lv4gAqQLIfGUm",
+  "name": "Elastic",
+  "type": "httpBasicAuth",
+  "data": {
+    "user": "",
+    "password": ""
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "ql2NMrkQhceMhQlm",
+    "teamName": "ES-Functions"
+  },
+  "isGlobal": false
+}

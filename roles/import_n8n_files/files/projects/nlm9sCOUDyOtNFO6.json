@@ -1,0 +1,848 @@
+{
+  "id": "nlm9sCOUDyOtNFO6",
+  "name": "APK-ES",
+  "icon": null,
+  "description": "",
+  "type": "team",
+  "owner": {
+    "type": "team",
+    "teamId": "nlm9sCOUDyOtNFO6",
+    "teamName": "APK-ES"
+  },
+  "variableStubs": [
+    {
+      "id": "LB7hJqUHf0eNRKbe",
+      "key": "SA_API_Login_UserName",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "BsYNpBWtnwyZ12Ee",
+      "key": "JIRA_Assignee_Name",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "Jpc9nu46Uh9vicTE",
+      "key": "JIRA_Alert_ID_CF_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "VYHrxOQ8ft00eXMZ",
+      "key": "JIRA_Email_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "rf7LLYFyc5waoLqZ",
+      "key": "JIRA_Mitre_Technique_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "GgXS7Z1NS1tUJGII",
+      "key": "JIRA_Target_Name_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "bfCFmxulNS57sJvq",
+      "key": "JIRA_ACF_Category_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "7NhToOMQKK2xBmVK",
+      "key": "JIRA_CSAT_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "p572dfjYTvqpF1gy",
+      "key": "JIRA_Linked_Issues_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "klwr4aptSnGoPtVV",
+      "key": "JIRA_Component_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "GYFY0jhqwq61lmCF",
+      "key": "JIRA_Severity_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "t9gHFHxhqU5HLNhC",
+      "key": "JIRA_Mitre_Tactic_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "I0XFDHFwCMUzVb5T",
+      "key": "JIRA_User_Name_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "5CfiZG0stFcldZlz",
+      "key": "JIRA_Event_Action_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "kMhdv5Rzz0hELZBn",
+      "key": "JIRA_Permanent_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "6m7vMS92XhTY49oA",
+      "key": "JIRA_TLP_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "tDI35j2bARwHY5sI",
+      "key": "JIRA_PAP_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "Fut1qLFC2q52fw5k",
+      "key": "JIRA_Process_Name_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "jx8dFQOrenvajwBd",
+      "key": "JIRA_Source_IP_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "tAKcAgX3lQzr0o2w",
+      "key": "JIRA_Destination_IP_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "IWvWJeUSjSsD8QOl",
+      "key": "JIRA_Device_IP_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "qfwrAAkTJncH2ox1",
+      "key": "JIRA_Observable_Value_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "Tn2Oirz0G34lkCyQ",
+      "key": "JIRA_IOC_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "zGi752CqWPApEjug",
+      "key": "JIRA_Client_IP_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "9fVRBYNOxv0VHRo7",
+      "key": "JIRA_IP_Condition_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "Ro34ShMjeXJfqDQQ",
+      "key": "JIRA_SMS_Text_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "jxfYtSGYUJgGKtiG",
+      "key": "JIRA_Bale_Text_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "dyGim6SN6yQRYYJZ",
+      "key": "JIRA_Related_Alerts_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "W4yKok2O7UPGesq6",
+      "key": "JIRA_Environment_Intelligence_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "d8Ust0Kz20qEAiTB",
+      "key": "JIRA_Ticketing_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "2HMKBPC1kSrsWSSA",
+      "key": "JIRA_Comment_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "E2AUo85UbvCgLGNb",
+      "key": "JIRA_Analysis_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "yGi7srraPbkF3EnC",
+      "key": "JIRA_Final_Analysis_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "GJaeUkKlehapr0HP",
+      "key": "JIRA_Priority_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "WsJyi5dx0Md5xDzo",
+      "key": "JIRA_URL_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "idxFVk1PVvSxdMd9",
+      "key": "JIRA_Reason_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "dGJZEsBAOXU1kYtc",
+      "key": "JIRA_Sensor_IP_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "Difpdf8wbRPqYVI3",
+      "key": "JIRA_Result_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "rEbsthweD9iNqtSO",
+      "key": "JIRA_Original_Value_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "QZHqkmdRUU8cuFSD",
+      "key": "JIRA_Query_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "F9BSdMrA3Ed00PbC",
+      "key": "JIRA_Source_Name_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "cxuyhCUAvCOjY6qz",
+      "key": "JIRA_Source_Type_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "Qwf8ihP9wR5xZLsB",
+      "key": "JIRA_Tuning_Type_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "zhdUiqIgoJG6S2VY",
+      "key": "JIRA_Initial_Reason_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "kSHaLpdGnAveyHrV",
+      "key": "JIRA_Threat_Intelligence_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "jqN5owQXVIfJcsvI",
+      "key": "JIRA_Reliability_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "uKF0zPJQQEzW94aW",
+      "key": "JIRA_Data_Source_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "zqLCEUgxdjBcspzo",
+      "key": "JIRA_Issue_Type_Case_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "skNaxp801KJ2pISb",
+      "key": "JIRA_Observable_Management_Size",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "N2zZQSdzV9qVqzCv",
+      "key": "JIRA_Related_Logs_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "p6wPBNXW2qMVUhLQ",
+      "key": "JIRA_Labels_Automation_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "w182t3giDLHg4EXq",
+      "key": "JIRA_Asset_Value_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "buVnfqaoUMRaNUwq",
+      "key": "JIRA_Recommend_Actions_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "Et7UqRuizNVUnmzv",
+      "key": "JIRA_Last_Action_Time_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "kCZEVOu7mU10yTGZ",
+      "key": "JIRA_Issue_Type_Alert_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "aZI4LXMUmmZWzalD",
+      "key": "JIRA_Issue_Type_Observable_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "J8y1JZGuSOTy1BlQ",
+      "key": "JIRA_Issue_Type_Vulnerability_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "LgaB6PiVSvXK6w31",
+      "key": "JIRA_CVE_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "X6IkMW2IdL9098AU",
+      "key": "JIRA_Protocol_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "fomkaBqQzxawbgln",
+      "key": "JIRA_Solution_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "IvQsZUWuwIbZBAoC",
+      "key": "SA_API_Login_Password",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "Zia7FWhZfmjjCZpY",
+      "key": "JIRA_CSAT_Reason_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "Z8cIge0E5oxV9f0J",
+      "key": "JIRA_Detection_Method_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "2lHefhmjaNwxPAEQ",
+      "key": "JIRA_Related_Case_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "FaxjG8TndAlqSnAe",
+      "key": "JIRA_Target_IP_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "eEGywhczi4EpIzfE",
+      "key": "JIRA_History_of_Target_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "avXCbZWTbnb9JWdM",
+      "key": "JIRA_Attacker_IP_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "XgvpZUAGEWISbAkZ",
+      "key": "JIRA_History_of_Attacker_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "iXuq3hwO4tFa1YqK",
+      "key": "JIRA_Last_Viewed_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "0OYTuyItgLHFh8vj",
+      "key": "JIRA_Task_Time_in_Validative_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "1GPuj5dd9yPC4n2S",
+      "key": "JIRA_Task_Time_to_Clousuer_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "WVcTT3L7uMisU1oh",
+      "key": "JIRA_Original_Estimate_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "qvpxQXG7oFslFjg9",
+      "key": "JIRA_Host_IP_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "4U80hp1ZDeCrCumX",
+      "key": "JIRA_Port_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "NFwT3cnrFFR8G4eg",
+      "key": "JIRA_Plugin_output_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "273JGcMOkyUJY7GZ",
+      "key": "JIRA_Synopsis_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "3gHpgSDTI7nFMXGi",
+      "key": "JIRA_Observable_Type_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "AYFGFClb9dGClHnZ",
+      "key": "JIRA_Response_Action_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "14OLJf9me53jC8rd",
+      "key": "JIRA_Recommend_Mitigation_Actions_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "JUkM2gs6JNJ1kRQj",
+      "key": "JIRA_End_Time_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "YboNi4c7BwVuLFKC",
+      "key": "JIRA_Project_Key_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "B4o3gXeDt4nL1yNk",
+      "key": "JIRA_Security_Event_IssueType",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "ca886q86bcQ75SgB",
+      "key": "JIRA_Response_Side_Effect_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "KD2OeGCR0og0mBbf",
+      "key": "JIRA_Base_URL",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "8bj7cjQzPLQmAMwv",
+      "key": "JIRA_Alert_ID_Custom_Filed",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "Zq0BssxJpWIul9Eq",
+      "key": "ES_Schedule_Trigger_Hours_Time",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "lwwXEtJh3iFkWepT",
+      "key": "ES_MultiJiraProject",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "veosPkGreRDgtMUU",
+      "key": "ES_Base_URL_Elastic",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "y4lBKhLKxpMxeVlV",
+      "key": "ES_Local",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "bdv41eEXaJUGznuq",
+      "key": "SA_API_Base_URL",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "xE1xcQWzHEjbTdnT",
+      "key": "ES_Base_URL_Kibana",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "9bTxeoBDCr4syNOW",
+      "key": "ES_kibana_alert_original_event_module",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "BztJJ6PkXW8GAVxE",
+      "key": "ES_data_stream_namespace",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "MsznNs0AVPL5uPDe",
+      "key": "ES_EQL_Query_Result_Size",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "q3YBE6IAKzu5ukTn",
+      "key": "ES_kibana_alert_severity",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "cEwFY9YcPSMxDbQt",
+      "key": "ES_KQL_Query_Result_Size",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "UPb3foAnMZUn2a05",
+      "key": "ES_Related_Alerts_Aggregation_Size",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "oHHYYnMDG6DGzi4F",
+      "key": "ES_Top_Hits_Aggregation_Size",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "yDCEuisyhwG9iJty",
+      "key": "ES_kiabana_alert_rulename",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "ZBKUyknr30GL7PEp",
+      "key": "ES_Org_Nickname",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "kopnTbyHZ1Ocs0Oi",
+      "key": "JIRA_AI_Confidence_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "fvSjYcfvXXEtgndP",
+      "key": "JIRA_Conclusion_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "hlfoROzbRFqMXArg",
+      "key": "JIRA_Count_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "MF1uRyBppo7dzlnb",
+      "key": "JIRA_Rule_Name_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "p5FL2RCKFuB2vurn",
+      "key": "JIRA_Alert_ID_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "gFQazT6FLXKYx0se",
+      "key": "JIRA_Main_Alert_Analysis_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "C8Yva9GkIUNHi0gz",
+      "key": "JIRA_Related_Logs_Summary_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "xUphFUyiLEXt029b",
+      "key": "JIRA_Related_Alerts_Summary_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "0VMD3yDqZVywX2UO",
+      "key": "JIRA_Related_Tickets_Summary_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "aaJsVzn5Mp8saMJS",
+      "key": "JIRA_EI_Summary_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "4gj9BMrXOVtAePsV",
+      "key": "JIRA_Threat_Intelligence_Summary_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "MuUfbbwo65j5Ealw",
+      "key": "JIRA_Vulnerability_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "ngzmyHLf6pDdQhAv",
+      "key": "JIRA_Timeline_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "Z275iQzPzduEWHNK",
+      "key": "JIRA_References_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "56dkqdf4vYJBbLkz",
+      "key": "JIRA_Auto_Action_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "3MBoFUUjgpi0ojLF",
+      "key": "JIRA_Response_Recommendations_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "tiRMFMtNwfZ6jFS5",
+      "key": "JIRA_Investigation_Recommendations_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "W8mKpCbTa7dEf842",
+      "key": "JIRA_Description_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "LW1OD8cfpPTgxzd5",
+      "key": "JIRA_Process_Parent_Name_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "ny7JL0X3U6IRHZho",
+      "key": "JIRA_Rick_Score_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "Ub1nTZ3ZMjpReTKc",
+      "key": "JIRA_Target_Host_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "D8EmaaJhVADWVK41",
+      "key": "JIRA_AI_Result_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "DWLnDZCzljYtDOGl",
+      "key": "AT_ES_Webhook_URL",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "dhmO6FwMFCNhK5Q2",
+      "key": "ES_AbuseIPdbAPI_key",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "53lMa47EQn5e9Akz",
+      "key": "ES_Confluence_Assets_Page",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "zyv8JJ8rNck8HZSW",
+      "key": "ES_Confluence_Base_URL",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "62urZtHKGpe8CApY",
+      "key": "ES_Confluence_Default_Space",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "Yk0nnHDvATmeKeq1",
+      "key": "ES_Confluence_Network_Zone_Page",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "Lo2bhMmK4VKCkKGK",
+      "key": "ES_Confluence_Organization_Working_Time_Page",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "W65p8BqTj0UZaZai",
+      "key": "ES_Confluence_Server_Access_Control_Page",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "3Eb7GSOrDWei2snh",
+      "key": "ES_Confluence_TOIC_Page",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "qFWbQhdfYxg7ZZqH",
+      "key": "ES_Confluence_Users_Access_Control_Page",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "CQ2C3XAdHBX0QNlS",
+      "key": "APK_ES_kibana_alert_rulename",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "TefUQvvcjIIQtdUx",
+      "key": "ES_MultiZone",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "etYWwDC5AqJIhK2O",
+      "key": "Test",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "QrkRfOZprEVUNRi9",
+      "key": "ES_Alert_Limit_size",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "H3PwQXxxFLhChBiE",
+      "key": "JIRA_Labels_AI_Analyzer_Field",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "Q5f3N74uSozmQB7C",
+      "key": "JIRA_Fine_Tuning_IssueType",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "a84ECC1yblGArrrx",
+      "key": "ES_kibana_alert_rule_tags",
+      "type": "string",
+      "value": ""
+    }
+  ]
+}

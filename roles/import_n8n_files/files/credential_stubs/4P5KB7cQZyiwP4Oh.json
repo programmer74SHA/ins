@@ -1,0 +1,15 @@
+{
+  "id": "4P5KB7cQZyiwP4Oh",
+  "name": "ntest",
+  "type": "httpBasicAuth",
+  "data": {
+    "password": ""
+  },
+  "ownedBy": {
+    "type": "personal",
+    "projectId": "f31yMQcHTiI56D7d",
+    "projectName": "admin admin <apksoar@apksoar.com>",
+    "personalEmail": "apksoar@apksoar.com"
+  },
+  "isGlobal": false
+}

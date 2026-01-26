@@ -1,0 +1,2474 @@
+{
+  "id": "DSqXlzQ7bbIJ37QO",
+  "name": "ES-AI-TI & AI Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -784,
+        -1632
+      ],
+      "id": "873aa84f-66fb-4375-bed0-b6ce2d4e910a",
+      "name": "Called by ES-AI-5A-Create Time line & Check"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve the data array from the previous node\nconst data = $input.all();\n\n// Initialize empty arrays to store IPs and domains\nlet sourceip = [];\nlet destinationip = [];\nlet domains = [];\n\n// Reusable function to check if an IP is public\nfunction isPublicIp(ip) {\n  const privateIpRanges = [\n    /^10\\./,\n    /^172\\.(1[6-9]|2[0-9]|3[0-1])\\./,\n    /^192\\.168\\./,\n    /^127\\./,\n    /^169\\.254\\./,\n  ];\n  return !privateIpRanges.some(range => range.test(ip));\n}\n\n// Loop through each item in the data array\nfor (const item of data) {\n  const doc = item.json['Original Rule']?.[0]?.json?.latest_doc?.hits?.hits?.[0]?._source;\n\n  if (doc) {\n    // Check sensor IP\n    const sensorIp = doc?.['sensor.ip'];\n    if (sensorIp && isPublicIp(sensorIp)) {\n      sourceip.push(sensorIp);\n    }\n\n    // Check source IP\n    const sourceIp = doc?.source?.ip;\n    if (sourceIp && isPublicIp(sourceIp)) {\n      sourceip.push(sourceIp);\n    }\n\n    // Check destination IP\n    const destinationIp = doc?.destination?.ip;\n    if (destinationIp && isPublicIp(destinationIp)) {\n      destinationip.push(destinationIp);\n    }\n\n    // Check url.domain\n    const urlDomain = doc?.url?.domain;\n    if (urlDomain) {\n      domains.push(urlDomain);\n    }\n  }\n}\n\n// Join all collected values into strings\nconst SourceIP = sourceip.join(\", \");\nconst DestinationIP = destinationip.join(\", \");\nconst Domains = domains.join(\", \");\n\n// Return all the collected data in a single JSON object\nreturn [{ json: { SourceIP, DestinationIP, Domains } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        -1712
+      ],
+      "id": "a1438849-f316-43dc-9c04-2ed599892f81",
+      "name": "Extract Field in Alert"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.SourceIP }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "ff410a21-5574-40ca-860a-6e1428d0b7f8"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Source IP"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ebd6f850-5ab4-4b3d-92b5-f59a7a60ebe3",
+                    "leftValue": "={{ $json.DestinationIP }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Destination IP"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f8ef29f0-b15f-43bc-87d0-8818c215f8e7",
+                    "leftValue": "={{ $json.Domains }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "url domain"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -64,
+        -1728
+      ],
+      "id": "3b873160-001c-4385-b943-33791dc95bb6",
+      "name": "Split Data Types"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "value": "={{ $('Split Data Types').item.json.SourceIP }}\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.misp",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -3040
+      ],
+      "id": "24c17999-b76c-43dd-9b14-672b3574e0fb",
+      "name": "MISP Check Source IP",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mispApi": {
+          "id": "F0a8XIBkbnOC8b5X",
+          "name": "MISP account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "value": "={{ $('Split Data Types').item.json.DestinationIP }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.misp",
+      "typeVersion": 1,
+      "position": [
+        672,
+        -1760
+      ],
+      "id": "b02d6cbc-5ae5-430f-83c4-ebc5e4d1d6e9",
+      "name": "MISP Check Destination IP",
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "credentials": {
+        "mispApi": {
+          "id": "F0a8XIBkbnOC8b5X",
+          "name": "MISP account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1dc0e77-0fd7-472d-8f70-8e05edbbec3c",
+              "leftValue": "={{ $json.value }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        -3040
+      ],
+      "id": "e4978670-c0dd-4f77-a711-74406ca178bc",
+      "name": "If the Source IP exists in MISP DataBase"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1dc0e77-0fd7-472d-8f70-8e05edbbec3c",
+              "leftValue": "={{ $json.value }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        944,
+        -1856
+      ],
+      "id": "5ff98088-858a-44d7-a0d9-d45e4700df5e",
+      "name": "If the Destination IP exists in MISP DataBase"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6b348b65-7901-4690-b030-dce74c39a99f",
+              "name": "MISP Result for Source IP",
+              "value": "=category: {{ $json.category }},info: {{ $json.Event.info }},ip:{{ $('No Operation, do nothing').item.json.SourceIP }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1520,
+        -3168
+      ],
+      "id": "07790cb8-42a5-426a-b4a5-ea8faddf6fd7",
+      "name": "Collect Misp Info for Source IP"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1f190642-c79d-487e-8f9c-23177705cc03",
+              "name": "MISP Result for Destination IP",
+              "value": "=category: {{ $json.category }},info: {{ $json.Event.info }},ip:{{ $('Extract Field in Alert').item.json.DestinationIP }},",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1536,
+        -1968
+      ],
+      "id": "86c20d30-4659-447c-8a02-723c9b22d38d",
+      "name": "Collect Misp Info for Destination IP"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26c52a44-a8c3-4df5-bacf-a8b000bc5134",
+              "name": "source IP not found on MISP",
+              "value": "=The IP address: {{ $('Called by ES-AI-5A-Create Time line & Check').first().json['Original Rule'][0].json.latest_doc.hits.hits[0]._source.source.ip }}  was not found in the MISP database.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1536,
+        -2848
+      ],
+      "id": "276946aa-4593-4269-a582-37fa05ca26bd",
+      "name": "Result of Source IP Not Found"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26c52a44-a8c3-4df5-bacf-a8b000bc5134",
+              "name": "Destination IP not found on MISP",
+              "value": "=The IP address:{{ $('No Operation, do nothing1').item.json.DestinationIP }} was not found in the MISP database.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1520,
+        -1616
+      ],
+      "id": "2bce3d5a-27c6-4e43-a09b-71a97077394e",
+      "name": "Result of Destination IP Not Found"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -3296
+      ],
+      "id": "3d61e22d-3c27-4285-91ec-48c6e5a622c8",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -2080
+      ],
+      "id": "707302f0-237e-4df3-b5d6-2f75f1b94e65",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1dc0e77-0fd7-472d-8f70-8e05edbbec3c",
+              "leftValue": "={{ $json.data.abuseConfidenceScore }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        -3568
+      ],
+      "id": "c8a4f3b8-c782-4691-aed7-68420d4a20d5",
+      "name": "If the Source IP exists in Abuse IP DB"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b39845b5-0e96-4b55-9266-28df1533e9d8",
+              "name": "AbuseIPDB Result for SourceIP",
+              "value": "=[{\"data\": {\"abuseConfidenceScore\": {{ $json.data.abuseConfidenceScore }},\"usageType\": \"{{ $json.data.usageType }}\",\"countryName\": \"{{ $json.data.countryName }}\",\"totalReports\": {{ $json.data.totalReports }},\"IP\":\"{{ $('Extract Field in Alert').item.json.SourceIP }} \"}}]",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1296,
+        -3808
+      ],
+      "id": "e72d1642-788c-4c2a-aa02-ee7a5befc873",
+      "name": "Collect  Abuse IP DB Info for Source IP"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26c52a44-a8c3-4df5-bacf-a8b000bc5134",
+              "name": "Source IP not found on Abuse IP",
+              "value": "=The IP address: {{ $('Extract Field in Alert').item.json.SourceIP }} was not found in the AbuseIPDB database.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1296,
+        -3616
+      ],
+      "id": "1d88be7a-1000-47d2-bd72-4f23938d21e5",
+      "name": "Result of Source IP Not Found  Abuse IP DB"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0031810e-e6e0-4fe0-ad40-e1df702d6934",
+              "leftValue": "={{ $json.SourceIP }}",
+              "rightValue": "Field does not exist",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "00064448-2735-42f3-9f74-22fac882a123",
+              "leftValue": "={{ $json.DestinationIP }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -304,
+        -1712
+      ],
+      "id": "87ebe94c-a39e-472a-b0d4-f9c57b9d0d98",
+      "name": "If",
+      "alwaysOutputData": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1dc0e77-0fd7-472d-8f70-8e05edbbec3c",
+              "leftValue": "={{ $json.data.abuseConfidenceScore }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        -2384
+      ],
+      "id": "021c1d72-6520-4e8c-bf5a-fee03069c12d",
+      "name": "If the Destination IP exists in Abuse IP DB"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a54a0866-4a62-4a55-9bc2-5735d02c3d02",
+              "name": "AbuseIPDB Result for DestinationIP",
+              "value": "=[{\"data\": {\"abuseConfidenceScore\": {{ $json.data.abuseConfidenceScore }},\"usageType\": \"{{ $json.data.usageType }}\",\"countryName\": \"{{ $json.data.countryName }}\",\"totalReports\": {{ $json.data.totalReports }},\"ip\":\"{{ $('Extract Field in Alert').item.json.DestinationIP }}\"}}]",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1264,
+        -2464
+      ],
+      "id": "ad89a150-d41b-4f6d-834d-33069bb3e645",
+      "name": "Collect  Abuse IP DB Info for Destination IP"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26c52a44-a8c3-4df5-bacf-a8b000bc5134",
+              "name": "Destination IP not found on Abuse IP",
+              "value": "= IP address:{{ $('Extract Field in Alert').item.json.DestinationIP }} was not found in the AbuseIPDB database.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        -2288
+      ],
+      "id": "546bb79c-09bc-4d54-b4c5-e608ab3fc422",
+      "name": "Result of Destination IP Not Found  Abuse IP DB"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -960
+      ],
+      "id": "6c3616a9-2cb7-4d18-8da3-1a9d1a0e6456",
+      "name": "No Operation, do nothing2"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "value": "={{ $('Split Data Types').item.json.Domains }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.misp",
+      "typeVersion": 1,
+      "position": [
+        784,
+        -1200
+      ],
+      "id": "3794a933-a697-46fd-b08a-28d960f8f942",
+      "name": "MISP Check URL",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mispApi": {
+          "id": "F0a8XIBkbnOC8b5X",
+          "name": "MISP account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1dc0e77-0fd7-472d-8f70-8e05edbbec3c",
+              "leftValue": "={{ $json.value }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1056,
+        -1200
+      ],
+      "id": "6700af97-1582-44fa-9358-a559a82e1637",
+      "name": "If the URL exists in MISP DataBase"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1c5db05b-6426-43e9-9236-3b5d516c1929",
+              "name": "MISP Result for URL",
+              "value": "=category: {{ $json.category }},info: {{ $json.Event.info }},ip:{{ $('Extract Field in Alert').item.json.Domains }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1552,
+        -1344
+      ],
+      "id": "cc4bc32c-1a00-4619-acc4-6134688d0038",
+      "name": "Collect Misp Info for URL"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26c52a44-a8c3-4df5-bacf-a8b000bc5134",
+              "name": "URL not found on MISP",
+              "value": "=The URL address:{{ $('Extract Field in Alert').item.json.Domains }} was not found in the MISP database.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        -1024
+      ],
+      "id": "0f5a663c-ed95-4987-a0bc-2fb74ad79b51",
+      "name": "Result of URL Not Found"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1dc0e77-0fd7-472d-8f70-8e05edbbec3c",
+              "leftValue": "={{ $json.pulse_info.count }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        -496
+      ],
+      "id": "a990258a-48d6-451b-ad64-b745588b0eaf",
+      "name": "If the URL exists in AlienVault DataBase"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "32430c63-5beb-4c76-a0c6-1032f8707540",
+              "name": "AlienVault Result for URL",
+              "value": "={{ $json.pulse_info.pulses }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1584,
+        -608
+      ],
+      "id": "ddcda06c-f501-4516-b6b2-72b83c3486e0",
+      "name": "Collect AlienVault Info for URL"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26c52a44-a8c3-4df5-bacf-a8b000bc5134",
+              "name": "URL not found on AlienVault",
+              "value": "=The URL address:{{ $('Extract Field in Alert').item.json.Domains }} was not found in the AlienVault database.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1584,
+        -400
+      ],
+      "id": "b1cc7d74-624b-444d-aa4e-05e1ad4f1642",
+      "name": "Result of URL Not Found on AlienVault"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Initialize an array to hold the related alerts\nconst TIResult = [];\n\n// Get input data\nconst items = $input.all(); // Get all input items\n\n// Function to safely extract values from input data and escape newlines\nfunction getValue(fieldName) {\n  const item = items.find(i => i.json && i.json[fieldName] !== undefined);\n  return item ? String(item.json[fieldName]).replace(/\\n/g, '\\\\n') : null; // Escape \\n\n}\n\n// Extract values using the function\nconst AbuseSourceIP = getValue('AbuseIPDB Result for SourceIP');\nconst SourceIPNotAbuse = getValue('Source IP not found on Abuse IP');\nconst MISPSourceIP = getValue('MISP Result for Source IP');\nconst sourceIPNotMISP = getValue('source IP not found on MISP');\nconst AbuseDestinationIP = getValue('AbuseIPDB Result for DestinationIP');\nconst DestinationIPNotAbuse = getValue('Destination IP not found on Abuse IP'); // Fixed typo\nconst MISPDestinationIP = getValue('MISP Result for Destination IP');\nconst DestinationIPNotMISP = getValue('Destination IP not found on MISP');\nconst MISPURL = getValue('MISP Result for URL');\nconst URLNotMISP = getValue('URL not found on MISP');\nconst AlienVaultURL = getValue('AlienVault Result for URL');\nconst URLNotAlienVault = getValue('URL not found on AlienVault');\n\n// Helper function to add alert if value exists\nfunction addAlert(value, name) {\n  if (value) {\n    TIResult.push({\n      Result: value,\n      Source: name\n    });\n  }\n}\n\n// Add alerts to array\naddAlert(AbuseSourceIP, \"Abuseipdb\");\naddAlert(SourceIPNotAbuse, \"Abuseipdb\");\naddAlert(MISPSourceIP, \"MISP\");\naddAlert(sourceIPNotMISP, \"MISP\");\naddAlert(AbuseDestinationIP, \"Abuseipdb\");\naddAlert(DestinationIPNotAbuse, \"Abuseipdb\");\naddAlert(MISPDestinationIP, \"MISP\");\naddAlert(DestinationIPNotMISP, \"MISP\");\naddAlert(MISPURL, \"MISP\");\naddAlert(URLNotMISP, \"MISP\");\naddAlert(AlienVaultURL, \"AlienVault\");\naddAlert(URLNotAlienVault, \"AlienVault\");\n\n// Construct the final JSON object\nconst result = {\n  TIResult: TIResult,\n  size: TIResult.length // Make size dynamic\n};\n\n// Return the result in n8n format\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3104,
+        -1760
+      ],
+      "id": "c06ccbfc-d35f-4285-9ce6-f92252109c7f",
+      "name": "Code"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1856,
+        -3600
+      ],
+      "id": "8a3a45d5-f2cd-4d75-9f13-f47e1ec2463f",
+      "name": "No Operation, do nothing3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1888,
+        -3024
+      ],
+      "id": "a759a591-f3bf-499f-bcf4-0066858335ae",
+      "name": "No Operation, do nothing4"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        -2368
+      ],
+      "id": "87e19c0a-3cd8-4dd8-9a9e-5e7722f39f2c",
+      "name": "No Operation, do nothing5"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1888,
+        -1824
+      ],
+      "id": "47cc5811-4cc0-419f-904d-a3e78077ab68",
+      "name": "No Operation, do nothing6"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1904,
+        -1232
+      ],
+      "id": "4036b551-6ec7-422d-93fe-128fd7bc0d21",
+      "name": "No Operation, do nothing7"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        -496
+      ],
+      "id": "f198a12c-c11f-4cc0-a7bb-05b8d4651698",
+      "name": "No Operation, do nothing8"
+    },
+    {
+      "parameters": {
+        "numberInputs": 7
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2912,
+        -1840
+      ],
+      "id": "9b265841-27af-4826-aa66-b18d61b8d5e8",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ai/alert_threat",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer  {{ $('Called by ES-AI-5A-Create Time line & Check').first().json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"alert\":{{ $('Clean Original Rule ').first().json.CleanOriginalRule.toJsonString() }},\n    \"threat_info\": {{ $json.TIResult.toJsonString() }}\n\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3408,
+        -1760
+      ],
+      "id": "a3c0e9fd-982d-4601-a5ce-99ac06adc62e",
+      "name": "AI analysis(TI Info)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0e8e9309-fa16-409a-b02d-a623dc5d2c12",
+              "name": "3th AI Result",
+              "value": "={{ $json.data }}",
+              "type": "array"
+            },
+            {
+              "id": "4c979e51-8e69-43b3-99ff-409b563474fb",
+              "name": "Alert Timestamp",
+              "value": "={{ $('Called by ES-AI-5A-Create Time line & Check').first().json['Original Rule'][0].json.latest_doc.hits.hits[0]._source['@timestamp'] }}",
+              "type": "string"
+            },
+            {
+              "id": "de0fd8f1-d587-40d8-aef4-93b5a84de66c",
+              "name": "Create TimeLine",
+              "value": "={{ $('Called by ES-AI-5A-Create Time line & Check').first().json['Create TimeLine'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3680,
+        -1760
+      ],
+      "id": "6e3bf938-72cd-48a2-b580-27d607aeeef8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "rFDystiVMo93hN9J",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/rFDystiVMo93hN9J",
+          "cachedResultName": "ES — ES-AI-Insert Timeline"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        3952,
+        -1760
+      ],
+      "id": "487b1134-d028-405f-a94f-59c63b5bafb8",
+      "name": "Call ES-AI-TI-Insert Note"
+    },
+    {
+      "parameters": {
+        "content": "## Data Input (Trigger)\nTriggered by ES-AI-5A-Create Time line & Check workflow\n",
+        "height": 320,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -864,
+        -1792
+      ],
+      "typeVersion": 1,
+      "id": "233e13ea-e908-4fa5-ba8a-a616c65c7644",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Extract and Classify Public IPs and Domains from Alert Rule\nThis section of the workflow extracts relevant networking data from alert rule documents. It filters out private IP ranges and collects only **public source IPs**, **destination IPs**, and **domain names**. Then, it routes the output based on which data types are present using conditional logic. ",
+        "height": 400,
+        "width": 760,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -608,
+        -1872
+      ],
+      "typeVersion": 1,
+      "id": "407ab76e-be2a-41fb-a426-45d8cda86514",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## No Operation, do nothing\nStart point of the workflow, routes input to both MISP and AbuseIPDB IP checks.",
+        "height": 340,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        304,
+        -3456
+      ],
+      "typeVersion": 1,
+      "id": "fb465d32-d954-4c45-922c-12ef1a767416",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Check Source IP in MISP Threat Database and Generate Output Message\nIn this part of the workflow, the extracted Source IP is queried against the MISP threat intelligence database to determine whether it has been previously reported as a threat or Indicator of Compromise (IOC). If the IP exists in MISP, relevant information such as the category, event info, and the IP itself is collected and formatted into a structured message. If the IP is not found, a message is generated indicating that the IP was not present in the MISP database. This step aims to enrich the data and support security analysts in making more informed decisions during threat investigation.",
+        "height": 500,
+        "width": 1200,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        560,
+        -3280
+      ],
+      "typeVersion": 1,
+      "id": "520d28f6-6042-43ee-bdb2-dd8eb362c931",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## Check Source IP Against AbuseIPDB\nThis part of the workflow checks whether the source IP from the alert exists in the AbuseIPDB database. It sends a query to AbuseIPDB, evaluates the returned `abuseConfidenceScore`, and determines if the IP is considered suspicious (score > 1). If so, it extracts relevant details such as usage type, country, and total reports, and stores them for further processing. If the IP is not found or the score is too low, a message is generated to indicate that the IP does not appear to be abusive.",
+        "height": 640,
+        "width": 1200,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        560,
+        -3936
+      ],
+      "typeVersion": 1,
+      "id": "1a978efa-c784-4578-9418-ea6fb91f19f2",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "content": "## No Operation, do nothing1\nEntry point: sends Destination IP to both MISP and AbuseIPDB workflows.",
+        "height": 340,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        304,
+        -2240
+      ],
+      "typeVersion": 1,
+      "id": "1105e0e7-255e-4953-9d0e-deca86a25ef9",
+      "name": "Sticky Note15"
+    },
+    {
+      "parameters": {
+        "content": "## MISP Lookup for Destination IP\nThis part of the workflow checks whether the destination IP address appears in the MISP threat intelligence database. If the IP is found, key details such as its threat category and related event information are extracted and formatted. If the IP does not exist in MISP, a notification message is generated stating that no match was found. This process enables automated enrichment of alert data with threat intelligence context to support incident triage and analysis.\n",
+        "height": 540,
+        "width": 1248,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        560,
+        -2080
+      ],
+      "typeVersion": 1,
+      "id": "9d5c391f-6129-4e14-b706-de0cf0a65070",
+      "name": "Sticky Note18"
+    },
+    {
+      "parameters": {
+        "content": "## AbuseIPDB Lookup for Destination IP\nThis section of the workflow performs an automated lookup of the destination IP address using the AbuseIPDB service to assess its reputation. Based on the `abuseConfidenceScore` returned, the workflow determines whether the IP is potentially malicious. If the IP has been reported with a score above a defined threshold, detailed information including its usage type, country, and number of reports is captured for further processing. If no significant abuse is detected, a simple notification message is generated. This logic ensures the system can flag risky IPs and support threat detection without manual intervention.\n",
+        "height": 500,
+        "width": 1248,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        560,
+        -2608
+      ],
+      "typeVersion": 1,
+      "id": "b6f062e6-7292-4459-89c8-e4a16c3c3750",
+      "name": "Sticky Note21"
+    },
+    {
+      "parameters": {
+        "content": "## AI analysis(TI Info)\nSends alert metadata and TIResult to internal AI API for threat analysis and enrichment.",
+        "height": 340,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3344,
+        -1936
+      ],
+      "typeVersion": 1,
+      "id": "c088b2a5-901d-45bf-98f9-3c21a59b3169",
+      "name": "Sticky Note24"
+    },
+    {
+      "parameters": {
+        "content": "## No Operation, do nothing2\nEntry point: sends domain value to both MISP and AlienVault workflows.",
+        "height": 400,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        272,
+        -1120
+      ],
+      "typeVersion": 1,
+      "id": "278a9ba4-e87a-4910-a445-1b21802a0c28",
+      "name": "Sticky Note27"
+    },
+    {
+      "parameters": {
+        "content": "## AlienVault OTX Lookup for Suspicious Domains\nThis workflow queries the AlienVault OTX threat intelligence API to check if a given domain appears in any threat intelligence pulses. It sends an authenticated GET request to the OTX domain API. If pulses are found, it extracts and stores the pulse details labeled as “AlienVault Result for URL.” If no data is found, it logs that the domain is not present in the AlienVault database. A No Operation node completes the workflow silently on both outcomes.",
+        "height": 724,
+        "width": 1248
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        560,
+        -720
+      ],
+      "typeVersion": 1,
+      "id": "df6cb58a-784c-4a2f-9493-55220c945f46",
+      "name": "Sticky Note28"
+    },
+    {
+      "parameters": {
+        "content": "## MISP Lookup for URL (Domain) Indicators\nThis workflow segment queries the MISP threat intelligence platform to verify if a given domain (URL) is associated with any known threats. If a match is found, it captures key threat attributes like category and event info. If no match exists, it logs a message stating the domain was not found. This step enriches domain-based indicators with contextual threat intelligence to support automated alert enrichment and threat analysis.\n",
+        "height": 756,
+        "width": 1248,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        560,
+        -1520
+      ],
+      "typeVersion": 1,
+      "id": "fff200b2-b8f2-4bdb-ac0f-507c7016bf3e",
+      "name": "Sticky Note32"
+    },
+    {
+      "parameters": {
+        "content": "## Flatten and Clean Elasticsearch Hits\nThis node contains a code node that processes an array of Elasticsearch hits from a nested JSON structure. It recursively flattens each hit object by converting nested keys into a single-level object with underscores replacing dots in keys. Additionally, it escapes special characters in all string fields to ensure JSON safety. The final output is a clean, flattened, and escaped array of hits labeled as “CleanOriginalRule” for easier downstream processing or storage.\n",
+        "height": 340,
+        "width": 800,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        832,
+        128
+      ],
+      "typeVersion": 1,
+      "id": "3d2f2961-1e72-44f6-8e3a-edb7c2bc7323",
+      "name": "Sticky Note37"
+    },
+    {
+      "parameters": {
+        "content": "## Merge\nCollects results from all TI checks (MISP, AbuseIPDB, AlienVault) for both Source and Destination IPs, and Domain.",
+        "height": 520,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2832,
+        -2032
+      ],
+      "typeVersion": 1,
+      "id": "e3e68a90-d6d2-4d34-aa81-21c8a1b52fd1",
+      "name": "Sticky Note38"
+    },
+    {
+      "parameters": {
+        "content": "##  Code\nAggregates all available threat intelligence results into a structured array (TIResult) and calculates the total number of items.",
+        "height": 340
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3088,
+        -1936
+      ],
+      "typeVersion": 1,
+      "id": "c6934beb-e788-4e48-ae0e-28bec9490c23",
+      "name": "Sticky Note39"
+    },
+    {
+      "parameters": {
+        "content": "## Call ES-AI-TI-Insert Note\nTriggers the final workflow to insert a note into the timeline based on enriched threat intel and alert context.",
+        "height": 340,
+        "width": 280,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3872,
+        -1936
+      ],
+      "typeVersion": 1,
+      "id": "76acf579-8eea-4927-ba2b-d1ece4b6f0df",
+      "name": "Sticky Note40"
+    },
+    {
+      "parameters": {
+        "content": "## Edit Fields\nPrepares final AI analysis output with alert timestamp, timeline object, and enriched threat intel.",
+        "height": 340,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3600,
+        -1936
+      ],
+      "typeVersion": 1,
+      "id": "0f1c59a3-798e-4a00-870d-462be2cee8e0",
+      "name": "Sticky Note41"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Function Node\n\n// Get the array of hits\nconst hitsArray = $input.first().json['Original Rule'][0].json.latest_doc.hits.hits;\n\n// Flatten function\nfunction flattenObject(ob) {\n    const toReturn = {};\n\n    for (let i in ob) {\n        if (!ob.hasOwnProperty(i)) continue;\n\n        if (typeof ob[i] === 'object' && ob[i] !== null && !Array.isArray(ob[i])) {\n            const flatObject = flattenObject(ob[i]);\n            for (let x in flatObject) {\n                if (!flatObject.hasOwnProperty(x)) continue;\n                // Replace dots in the key with underscores\n                const newKey = i.replace(/\\./g, '_') + '_' + x.replace(/\\./g, '_');\n                toReturn[newKey] = flatObject[x];\n            }\n        } else {\n            // Replace dots in the key with underscores\n            const newKey = i.replace(/\\./g, '_');\n            toReturn[newKey] = ob[i];\n        }\n    }\n    return toReturn;\n}\n\n// Escape function to make JSON safe\nfunction escapeString(value) {\n    if (typeof value === 'string') {\n        return value\n            .replace(/\\\\/g, '\\\\\\\\') // Escape backslashes first\n            .replace(/\\n/g, '\\\\n')   // Escape newlines\n            .replace(/\\r/g, '\\\\r')   // Escape carriage returns\n            .replace(/\\t/g, '\\\\t')   // Escape tabs\n            .replace(/\\\"/g, '\\\\\"');  // Escape double quotes\n    }\n    return value;\n}\n\n// Flatten and escape each hit\nconst flattenedHits = hitsArray.map(hit => {\n    const flattened = flattenObject(hit);\n\n    // Escape all string fields inside flattened object\n    const escaped = {};\n    for (const key in flattened) {\n        escaped[key] = escapeString(flattened[key]);\n    }\n\n    return escaped;\n});\n\n// Return everything\nreturn [\n  {\n    json: {\n      CleanOriginalRule: flattenedHits\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        320
+      ],
+      "id": "dd684d1c-699d-462b-9b19-2443b7bdbe47",
+      "name": "Clean Original Rule "
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Elastic AI — ES-AI-5A-Create Time line & Check",
+        "height": 220,
+        "width": 300,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1024,
+        -2048
+      ],
+      "typeVersion": 1,
+      "id": "ae156260-c729-4499-b11b-ff465b41e06f",
+      "name": "Sticky Note42"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: ES-AI-TI & AI Analysis\n### Workflow-Version: 1.1.2\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Bug Fixes\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -832,
+        -2528
+      ],
+      "typeVersion": 1,
+      "id": "47b1a35d-ad20-4cc8-8769-3de78c38e97b",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "b0xdqEfVPSE268q4",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/b0xdqEfVPSE268q4",
+          "cachedResultName": "ES — ES-Error Monitoring"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -832,
+        -4160
+      ],
+      "id": "2ede6d3a-ff3a-4c4a-990a-b12e3bcc0a98",
+      "name": "Execute Error WorkFlow",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\ninfo:{\n  \"WirkFlowID\":\"{{ $workflow.id }}\",\n  \"ExecutionID\": {{ $execution.id }},\n  \"mode\":\"{{ $execution.mode }}\",\n  \"workflowName\": \"{{ $workflow.name }}\",\n  \"nodeName\":{{ $prevNode }},\n  \"NodeError\":{{ $json.error.message.toJsonString() }},\n  \"nodeErrorStatusCode\":\"{{ $json.error.status }}\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1072,
+        -4144
+      ],
+      "id": "3c27f8b2-a6e5-442b-b0b0-2dd2e2fd876a",
+      "name": "Required Fields ",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.abuseipdb.com/api/v2/check",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ipAddress",
+              "value": "={{ $('Split Data Types').item.json.SourceIP }}"
+            },
+            {
+              "name": "maxAgeInDays",
+              "value": "90"
+            },
+            {
+              "name": "verbose",
+              "value": "true"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Key",
+              "value": "={{$vars.ES_AbuseIPdbAPI_key}}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        624,
+        -3568
+      ],
+      "id": "62992a13-3f38-4e9c-8243-0b8c00308698",
+      "name": "AbuseIPDB Source Check",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://otx.alienvault.com/api/v1/indicators/domain/{{ $json.Domains }}/general",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "alienVaultApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        768,
+        -544
+      ],
+      "id": "8bf0d522-d018-45d4-a841-b21168b5677a",
+      "name": "AlienVault HTTP Request",
+      "credentials": {
+        "alienVaultApi": {
+          "id": "gjGTfpp7I5Pa102b",
+          "name": "AlienVault account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bcfe64f5-177a-42ee-bd09-ef73c7c5a1fb",
+              "name": "AbuseIPDB Result for SourceIP",
+              "value": "Connection to the AbuseIPDB server could not be established.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1296,
+        -3440
+      ],
+      "id": "14d5974b-1717-45fe-9c25-464823087867",
+      "name": "Result of Source IP Error Abuse IP DB"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bcfe64f5-177a-42ee-bd09-ef73c7c5a1fb",
+              "name": "MISP Result for SourceIP",
+              "value": "Connection to the MISP server could not be established.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1504,
+        -3008
+      ],
+      "id": "c16c587d-5ae6-42d4-8a0d-6041241466e6",
+      "name": "Result of Source IP Error MISP"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bcfe64f5-177a-42ee-bd09-ef73c7c5a1fb",
+              "name": "AbuseIPDB Result for Destination ip",
+              "value": "Connection to the AbuseIPDB server could not be established.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        -2112
+      ],
+      "id": "4491203b-921b-4cbb-82fd-1b53d6dbec7d",
+      "name": "Result of Destination IP Error Abuse IP DB"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bcfe64f5-177a-42ee-bd09-ef73c7c5a1fb",
+              "name": "MISP Result for Destination IP",
+              "value": "Connection to the MISP server could not be established.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1536,
+        -1792
+      ],
+      "id": "3d5a8e58-d6e9-4382-b69f-bbfcf56d54ee",
+      "name": "Result of Destination IP Error MISP"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bcfe64f5-177a-42ee-bd09-ef73c7c5a1fb",
+              "name": "AlienVault Result for URL",
+              "value": "Connection to the AlienVault server could not be established.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1616,
+        -208
+      ],
+      "id": "3ec0c115-3555-4abc-9119-7675bff4ba98",
+      "name": "Result of URL Error AlienVault"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5a21242a-61ea-46f2-af9f-1344d36e9b1e",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1312,
+        -1696
+      ],
+      "id": "a214841a-0fea-4e0b-9140-ca8eb6746dfb",
+      "name": "Check For Error Existance"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5a21242a-61ea-46f2-af9f-1344d36e9b1e",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1392,
+        -1120
+      ],
+      "id": "2a775922-cbfd-491c-9d0a-90ef6ce7eaf4",
+      "name": "Check For Error Existance1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bcfe64f5-177a-42ee-bd09-ef73c7c5a1fb",
+              "name": "MISP Result for URL",
+              "value": "Connection to the MISP server could not be established.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1552,
+        -1200
+      ],
+      "id": "21ff299c-8090-4525-99c1-ecf5fdd5887e",
+      "name": "Result of URL Error MISP"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5a21242a-61ea-46f2-af9f-1344d36e9b1e",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1328,
+        -2928
+      ],
+      "id": "370dadd0-2221-46eb-a4b6-56c82a7c0f1a",
+      "name": "Check For Error Existance2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "13d98012-dd54-4c03-b277-7fc26eecdf7e",
+              "leftValue": "={{ $json.size }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3248,
+        -1744
+      ],
+      "id": "15809588-61e8-4a34-8158-c560484b58a8",
+      "name": "Check For Existence TI "
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0e8e9309-fa16-409a-b02d-a623dc5d2c12",
+              "name": "3th AI Result",
+              "value": "=[{\"detailsMarkdown\":\"The log contains no public IP or URL that needs to be checked in threat intelligence.\"}]",
+              "type": "array"
+            },
+            {
+              "id": "4c979e51-8e69-43b3-99ff-409b563474fb",
+              "name": "Alert Timestamp",
+              "value": "={{ $('Called by ES-AI-5A-Create Time line & Check').first().json['Original Rule'][0].json.latest_doc.hits.hits[0]._source['@timestamp'] }}",
+              "type": "string"
+            },
+            {
+              "id": "de0fd8f1-d587-40d8-aef4-93b5a84de66c",
+              "name": "Create TimeLine",
+              "value": "={{ $('Called by ES-AI-5A-Create Time line & Check').first().json['Create TimeLine'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3568,
+        -1568
+      ],
+      "id": "cd6cf939-f4f0-4535-bec9-f5bde57fa83c",
+      "name": "Message For not Existence TI "
+    },
+    {
+      "parameters": {
+        "url": "=https://api.abuseipdb.com/api/v2/check",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ipAddress",
+              "value": "={{ $('Split Data Types').item.json.DestinationIP }}"
+            },
+            {
+              "name": "maxAgeInDays",
+              "value": "90"
+            },
+            {
+              "name": "verbose",
+              "value": "true"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Key",
+              "value": "={{$vars.ES_AbuseIPdbAPI_key}}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        592,
+        -2352
+      ],
+      "id": "365ef868-66a0-46f2-a950-2980e04031de",
+      "name": "AbuseIPDB Destination Check",
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "Called by ES-AI-5A-Create Time line & Check": {
+      "main": [
+        [
+          {
+            "node": "Extract Field in Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Clean Original Rule ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Field in Alert": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Data Types": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MISP Check Source IP": {
+      "main": [
+        [
+          {
+            "node": "If the Source IP exists in MISP DataBase",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "MISP Check Destination IP": {
+      "main": [
+        [
+          {
+            "node": "If the Destination IP exists in MISP DataBase",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "If the Source IP exists in MISP DataBase": {
+      "main": [
+        [
+          {
+            "node": "Collect Misp Info for Source IP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check For Error Existance2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If the Destination IP exists in MISP DataBase": {
+      "main": [
+        [
+          {
+            "node": "Collect Misp Info for Destination IP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check For Error Existance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Misp Info for Source IP": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Misp Info for Destination IP": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Result of Source IP Not Found": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Result of Destination IP Not Found": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "MISP Check Source IP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AbuseIPDB Source Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing1": {
+      "main": [
+        [
+          {
+            "node": "MISP Check Destination IP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AbuseIPDB Destination Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If the Source IP exists in Abuse IP DB": {
+      "main": [
+        [
+          {
+            "node": "Collect  Abuse IP DB Info for Source IP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Result of Source IP Not Found  Abuse IP DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect  Abuse IP DB Info for Source IP": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Result of Source IP Not Found  Abuse IP DB": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Split Data Types",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If the Destination IP exists in Abuse IP DB": {
+      "main": [
+        [
+          {
+            "node": "Collect  Abuse IP DB Info for Destination IP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Result of Destination IP Not Found  Abuse IP DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect  Abuse IP DB Info for Destination IP": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Result of Destination IP Not Found  Abuse IP DB": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing2": {
+      "main": [
+        [
+          {
+            "node": "MISP Check URL",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AlienVault HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MISP Check URL": {
+      "main": [
+        [
+          {
+            "node": "If the URL exists in MISP DataBase",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "If the URL exists in MISP DataBase": {
+      "main": [
+        [
+          {
+            "node": "Collect Misp Info for URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check For Error Existance1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Misp Info for URL": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Result of URL Not Found": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If the URL exists in AlienVault DataBase": {
+      "main": [
+        [
+          {
+            "node": "Collect AlienVault Info for URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Result of URL Not Found on AlienVault",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect AlienVault Info for URL": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Result of URL Not Found on AlienVault": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Check For Existence TI ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing4": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing5": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing6": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing7": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing8": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI analysis(TI Info)": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Call ES-AI-TI-Insert Note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Original Rule ": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "Required Fields ": {
+      "main": [
+        [
+          {
+            "node": "Execute Error WorkFlow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AbuseIPDB Source Check": {
+      "main": [
+        [
+          {
+            "node": "If the Source IP exists in Abuse IP DB",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Required Fields ",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Result of Source IP Error Abuse IP DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AlienVault HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If the URL exists in AlienVault DataBase",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Required Fields ",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Result of URL Error AlienVault",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Result of Source IP Error Abuse IP DB": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Result of Source IP Error MISP": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Required Fields ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Result of Destination IP Error Abuse IP DB": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Result of Destination IP Error MISP": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing6",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Required Fields ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Result of URL Error AlienVault": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check For Error Existance": {
+      "main": [
+        [
+          {
+            "node": "Result of Destination IP Error MISP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Result of Destination IP Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check For Error Existance1": {
+      "main": [
+        [
+          {
+            "node": "Result of URL Error MISP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Result of URL Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Result of URL Error MISP": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing7",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Required Fields ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check For Error Existance2": {
+      "main": [
+        [
+          {
+            "node": "Result of Source IP Error MISP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Result of Source IP Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check For Existence TI ": {
+      "main": [
+        [
+          {
+            "node": "AI analysis(TI Info)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message For not Existence TI ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message For not Existence TI ": {
+      "main": [
+        [
+          {
+            "node": "Call ES-AI-TI-Insert Note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AbuseIPDB Destination Check": {
+      "main": [
+        [
+          {
+            "node": "If the Destination IP exists in Abuse IP DB",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Result of Destination IP Error Abuse IP DB",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Required Fields ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "a162fc87-d823-47d6-9d27-91c86233a72c",
+  "owner": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

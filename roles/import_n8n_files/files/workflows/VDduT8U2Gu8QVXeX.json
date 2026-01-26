@@ -1,0 +1,309 @@
+{
+  "id": "VDduT8U2Gu8QVXeX",
+  "name": "ES-Al-Tunning-Creation",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -624,
+        416
+      ],
+      "id": "ca4611cb-f7c0-4402-a286-685f356bdf7a",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "resource": "Issues",
+        "operation": "Search Issues",
+        "jql": "=project =  \"{{ $json.Project_Key }}\" AND issuetype = \"{{$vars.JIRA_Fine_Tuning_IssueType}}\" AND status in (Open, Investigation, \"Waiting for customer\")  AND summary ~ \"{{ $('When Executed by Another Workflow').item.json['Final AI Result'][0].title }}\"",
+        "maxResults": 10,
+        "requestOptions": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "CUSTOM.Jira Service Management",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        416
+      ],
+      "id": "ef5f9517-830a-4f60-bb9c-702754a49052",
+      "name": "Search For Existence Issue",
+      "credentials": {
+        "jsmApi": {
+          "id": "l597CchS20GYrsZ3",
+          "name": "Jira Service Management Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "979654fb-f7b7-4f16-8adc-ede0423b0ae3",
+              "leftValue": "={{ $('Search For Existence Issue').item.json.total }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        416
+      ],
+      "id": "31003844-9fed-4884-990b-c433bff32bb3",
+      "name": "Check For Existence"
+    },
+    {
+      "parameters": {
+        "resource": "Issues",
+        "operation": "Add Comment",
+        "issueKey": "={{ $('Search For Existence Issue').item.json.issues[0].key }}",
+        "body": "=<div style=\"text-align: justify; width: 100%; margin: 0; padding: 0;\">\n  <div style=\"text-align: left;\">\n    <b>Description:</b> {{ $json.cleanedStringDescription.replaceAll('\\\\','') }}{{ $('When Executed by Another Workflow').item.json.data[0].reference }}<br>\n    <b>Result:</b>{{ $('Delete Extra Characters').item.json['Final AI Result'][0].AI_as_analyzer.AI_result }}-{{ $('Delete Extra Characters').item.json['Final AI Result'][0].AI_as_analyzer.AI_Confidence }}%<br>\n    <b>Reason:</b> {{ $('Delete Extra Characters').item.json['Final AI Result'][0].AI_as_analyzer.reason.replaceAll('\\\\','') }}\n  </div>\n</div>\n",
+        "requestOptions": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "CUSTOM.Jira Service Management",
+      "typeVersion": 1,
+      "position": [
+        640,
+        272
+      ],
+      "id": "0e6fa4e2-4265-49b9-a15f-46d1371a220f",
+      "name": "Add Comment ",
+      "credentials": {
+        "jsmApi": {
+          "id": "l597CchS20GYrsZ3",
+          "name": "Jira Service Management Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 🔹 Get the input object\nconst inputArray =$('When Executed by Another Workflow').first().json['Final AI Result'] ;\nconst input = Array.isArray(inputArray) ? inputArray[0] : inputArray;\n\n// 🔹 Your original sanitize rules — keep them as requested\nfunction sanitize(str) {\n  if (typeof str !== 'string') return str;\n  return str\n    .replace(/\\\\/g, '\\\\\\\\')  // Escape backslashes\n    .replace(/\\n/g, '\\\\n')   // Replace newlines with literal \\n\n    .replace(/\\//g, '//')    // Escape forward slashes\n    .replace(/\"/g, '\\\\\"');   // Escape double quotes\n}\n\n// 🔹 Extract AI_result and AI_Confidence if pattern matches\nfunction extractAIResult(value) {\n  if (typeof value !== 'string') return null;\n  const match = value.match(/^(.+?)\\s*\\((\\d+(?:\\.\\d+)?)%\\)$/);\n  if (match) {\n    return {\n      AI_result: match[1].trim(),\n      AI_Confidence: parseFloat(match[2])\n    };\n  }\n  return null;\n}\n\n// 🔹 Recursive sanitize + result extraction\nfunction deepSanitize(value) {\n  if (Array.isArray(value)) {\n    return value.map(deepSanitize);\n  } else if (value && typeof value === 'object') {\n    const sanitizedObj = {};\n    for (const [key, val] of Object.entries(value)) {\n      const sanitizedVal = deepSanitize(val);\n\n      // Handle \"result\" specially\n      if (key === 'result' && typeof sanitizedVal === 'string') {\n        const extracted = extractAIResult(sanitizedVal);\n        if (extracted) {\n          sanitizedObj['AI_result'] = sanitize(extracted.AI_result);\n          sanitizedObj['AI_Confidence'] = extracted.AI_Confidence;\n          continue;\n        }\n      }\n\n      sanitizedObj[key] = sanitizedVal;\n    }\n    return sanitizedObj;\n  } else if (typeof value === 'string') {\n    return sanitize(value);\n  } else {\n    return value;\n  }\n}\n\n// 🔹 Apply recursively\nconst sanitized = deepSanitize(input);\n\n// 🔹 Return same structure as input (avoid double-escape by not stringifying)\nreturn [\n  {\n    json: {\n      'Final AI Result': [sanitized]\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        416
+      ],
+      "id": "22c13150-af14-4757-9174-36f697749e91",
+      "name": "Delete Extra Characters"
+    },
+    {
+      "parameters": {
+        "content": "## Check for Existing Tuning Ticket in Jira\nThis section of the workflow is triggered by another workflow and is responsible for checking whether a *Tuning* type issue already exists in Jira for the same alert rule. It performs a JQL-based search against the Jira Service Management instance, filtering issues by project name, issue type (`Tuning`), and specific statuses (`Open`, `Investigation`, or `Waiting for customer`). The query also matches the alert rule name found in the latest document from Kibana. This step helps prevent duplicate tuning tickets and ensures existing issues are reused or updated accordingly.",
+        "height": 340,
+        "width": 1160,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -672,
+        256
+      ],
+      "typeVersion": 1,
+      "id": "ce8035d5-2fdc-4625-9063-c767f56f2299",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Add Comment\nThis node adds a formatted comment to an existing Jira issue, including the alert's description, result, reason, and reference, enhancing the issue with additional context.",
+        "height": 300,
+        "width": 360,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        512,
+        144
+      ],
+      "typeVersion": 1,
+      "id": "df95941a-e7fd-408b-9702-7e83f47c8896",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Jira Service Management\nThis node creates a new Tuning issue in Jira Service Management if no existing issue is found, populating fields like project, summary, assignee, labels, and custom fields with alert details.",
+        "height": 300,
+        "width": 360
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        512,
+        464
+      ],
+      "typeVersion": 1,
+      "id": "261c3aa6-730f-49aa-87ba-c43f001b6e89",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Elastic AI — ES-AL-Aggregation 5A -Insert Note\n- Elastic AI — ES-Al-Tunning-Schaeduler 2h\n- Elastic AI — ES-AI-Insert Timeline",
+        "height": 220,
+        "width": 280,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -592,
+        16
+      ],
+      "typeVersion": 1,
+      "id": "d476e2b1-024d-4f26-9357-b37e7c00a046",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "resource": "Tuning",
+        "operation": "Create Tuning",
+        "fields": "={\n  \"project\": {\n    \"key\": \"{{ $('Check for Multi Jira Project').item.json.Project_Key }}\"\n  },\n  \"issuetype\": {\n    \"name\": \"{{$vars.JIRA_Fine_Tuning_IssueType}}\"\n  },\n  \"summary\": \"{{ $json['Final AI Result'][0].title }}\",\n  \"assignee\": {\n    \"name\": \"{{$vars.JIRA_Assignee_Name}}\"\n  },\n  \"labels\": [\n    \"{{$vars.JIRA_Labels_AI_Analyzer_Field}}-APKSIEM\",\"Zone-{{ $('Check for Multi Jira Project').item.json.Lable }}\"\n  ],\n  \"{{$vars.JIRA_Alert_ID_Field}}\": \"{{ $json['Final AI Result'][0].alertId }}\",\n  \"{{$vars.JIRA_Source_Name_Field}}\": \"Alerting\",\n  \"{{$vars.JIRA_Query_Field}}\": \"{{ $json['Final AI Result'][0].query }}\",\n  \"{{$vars.JIRA_Initial_Reason_Field}}\": \"{{ $json['Final AI Result'][0].AI_as_analyzer.reason }}\",\n  \"{{$vars.JIRA_Related_Logs_Field}}\": \"{{ $('When Executed by Another Workflow').item.json.Final.related_logs }}\",\n  \"{{$vars.JIRA_Related_Alerts_Field}}\": \"{{ $('When Executed by Another Workflow').item.json.Final.related_alerts }}\",\n  \"{{$vars.JIRA_Threat_Intelligence_Field}}\": \"{{ $('When Executed by Another Workflow').item.json.Final.TI }}\",\n  \"{{$vars.JIRA_EI_Summary_Field}}\": \"{{ $('When Executed by Another Workflow').item.json.Final.EI }}\",\n\"{{$vars.JIRA_Ticketing_Field}}\": \"{{ $('When Executed by Another Workflow').item.json.Final.ticketing }}\",\n\"{{$vars.JIRA_AI_Result_Field}}\": {\n    \"value\": \"{{ $json['Final AI Result'][0].AI_as_analyzer.AI_result }}\"},\n\"{{$vars.JIRA_AI_Confidence_Field}}\": {{ $json['Final AI Result'][0].AI_as_analyzer.AI_Confidence }},\n\"{{$vars.JIRA_Conclusion_Field}}\": \"{{ $json['Final AI Result'][0].detailsMarkdown.conclusion }}\",\n\"{{$vars.JIRA_Rule_Name_Field}}\": \"{{ $('When Executed by Another Workflow').first().json['Original Rule'][0].json.latest_doc.hits.hits[0]._source['kibana.alert.rule.name'] }}\",\n\"{{$vars.JIRA_Main_Alert_Analysis_Field}}\": \"{{ $json['Final AI Result'][0].detailsMarkdown.mainAlertAnalysis.replaceAll('//',' or ') }}\",\n\"{{$vars.JIRA_Related_Logs_Summary_Field}}\": \"{{ $json['Final AI Result'][0].detailsMarkdown.relatedLogs }}\",\n\"{{$vars.JIRA_Related_Alerts_Summary_Field}}\": \"{{ $json['Final AI Result'][0].detailsMarkdown.relatedAlerts }}\",\n\"{{$vars.JIRA_Related_Tickets_Summary_Field}}\": \"{{ $json['Final AI Result'][0].detailsMarkdown.relatedTickets }}\",\n\"{{$vars.JIRA_EI_Summary_Field}}\": \"{{ $json['Final AI Result'][0].detailsMarkdown.environmentalIntelligence }}\",\n\"{{$vars.JIRA_Threat_Intelligence_Summary_Field}}\": \"{{ $json['Final AI Result'][0].detailsMarkdown.threatIntelligence }}\",\n\"{{$vars.JIRA_Vulnerability_Field}}\": \"{{ $json['Final AI Result'][0].detailsMarkdown.vulnerability }}\",\n\"{{$vars.JIRA_Timeline_Field}}\": \"{{\n  $json['Final AI Result'][0].timeline\n    .map(e => `${e.timestamp}\\\\n${e.description}`)\n    .join('\\\\n\\\\n')\n}}\"\n,\n\"{{$vars.JIRA_References_Field}}\": \"{{ $json['Final AI Result'][0].reference.toJsonString().replaceAll('\"','').replaceAll('[','').replaceAll(']','').replaceAll(',','\\\\n') }}\",\n  \"{{$vars.JIRA_Source_Type_Field}}\": {\n    \"value\": \"Alerting\"\n  },\n  \"{{$vars.JIRA_Tuning_Type_Field}}\": {\n    \"value\": \"Logical\"\n  }\n}",
+        "requestOptions": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "CUSTOM.Jira Service Management",
+      "typeVersion": 1,
+      "position": [
+        656,
+        608
+      ],
+      "id": "451227b0-6eab-4ac3-960a-d20e75b20636",
+      "name": "Create Tunning Issue ",
+      "credentials": {
+        "jsmApi": {
+          "id": "l597CchS20GYrsZ3",
+          "name": "Jira Service Management Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: ES-Al-Tunning-Creation\n### Workflow-Version: 1.0.2\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Create for first time\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -592,
+        -304
+      ],
+      "typeVersion": 1,
+      "id": "43edda8b-b670-4384-94d0-beed8c6b0e2e",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === READ VARIABLES ===\nconst esMultiJira = String($vars.ES_MultiJiraProject).toLowerCase() === \"true\";\nconst esMultiZone = String($vars.ES_MultiZone).toLowerCase() === \"true\";\nconst jiraProjectKey = $vars.JIRA_Project_Key_Field;\n\n// === TRY TO READ NAMESPACE SAFELY ===\nlet namespace;\n\ntry {\n  // Use .first().json (confirmed from your working version)\n  const sourceNode = $('When Executed by Another Workflow').first().json;\n\n  namespace =\n    sourceNode?.['Original Rule']?.[0]?.json?.latest_doc?.hits?.hits?.[0]?._source?.data_stream?.namespace ||\n    null;\n} catch (err) {\n  namespace = null;\n}\n\n// Default fallback\nif (!namespace) namespace = 'Unknown_Namespace';\n\n// === APPLY LOGIC ===\nlet Project_Key;\nlet Lable;\n\nif (esMultiJira === true) {\n  // Condition 1: MultiJiraProject = true\n  Project_Key = namespace;\n  Lable = namespace;\n} else if (esMultiZone === true) {\n  // Condition 2: MultiJiraProject = false, MultiZone = true\n  Project_Key = jiraProjectKey;\n  Lable = namespace;\n} else {\n  // Condition 3: both false\n  Project_Key = jiraProjectKey;\n  Lable = jiraProjectKey;\n}\n\n// === REPLACE \"default\" VALUES WITH JIRA PROJECT KEY ===\nif (String(Project_Key).toLowerCase() === \"default\") {\n  Project_Key = jiraProjectKey;\n}\n\nif (String(Lable).toLowerCase() === \"default\") {\n  Lable = jiraProjectKey;\n}\n\n// === DEBUG LOGS (visible in n8n execution logs) ===\nconsole.log('ES_MultiJiraProject:', esMultiJira);\nconsole.log('ES_MultiZone:', esMultiZone);\nconsole.log('Namespace:', namespace);\nconsole.log('Project_Key:', Project_Key);\nconsole.log('Lable:', Lable);\n\n// === RETURN OUTPUT ===\nreturn [\n  {\n    json: {\n      Project_Key,\n      Lable,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        416
+      ],
+      "id": "adfcb350-b443-4e63-a7a7-23090a47746d",
+      "name": "Check for Multi Jira Project"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Check for Multi Jira Project",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search For Existence Issue": {
+      "main": [
+        [
+          {
+            "node": "Delete Extra Characters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check For Existence": {
+      "main": [
+        [
+          {
+            "node": "Add Comment ",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Tunning Issue ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Extra Characters": {
+      "main": [
+        [
+          {
+            "node": "Check For Existence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Multi Jira Project": {
+      "main": [
+        [
+          {
+            "node": "Search For Existence Issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "446a12f5-ef6b-4c25-b00b-0c06b4a9931e",
+  "owner": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

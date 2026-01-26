@@ -1,0 +1,14 @@
+{
+  "id": "gjGTfpp7I5Pa102b",
+  "name": "AlienVault account",
+  "type": "alienVaultApi",
+  "data": {
+    "accessToken": ""
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "isGlobal": false
+}
