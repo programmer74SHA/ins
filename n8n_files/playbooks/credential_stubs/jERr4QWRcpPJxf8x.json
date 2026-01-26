@@ -1,0 +1,15 @@
+{
+  "id": "jERr4QWRcpPJxf8x",
+  "name": "Confluence",
+  "type": "httpBasicAuth",
+  "data": {
+    "user": "",
+    "password": ""
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "nlm9sCOUDyOtNFO6",
+    "teamName": "APK-ES"
+  },
+  "isGlobal": false
+}

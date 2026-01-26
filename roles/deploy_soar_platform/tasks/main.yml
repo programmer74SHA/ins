@@ -1,5 +1,14 @@
 ---
-# SOAR Platform deployment tasks
+# =============================================================================
+# DEPLOY SOAR PLATFORM ROLE - Main Tasks
+# =============================================================================
+# This role deploys the n8n-based SOAR platform with PostgreSQL, Redis,
+# Nginx, and optional WebDriver for automation
+# =============================================================================
+
+- name: Include pre-deployment validation tasks
+  ansible.builtin.include_tasks: validate.yml
+  tags: ['validate']
 
 - name: Ensure deployment directory exists
   ansible.builtin.file:
@@ -15,6 +24,39 @@
   loop:
     - nginx-data/nginx_logs
     - nginx-data/ssl_certs
+    - template
+
+- name: Ensure n8n data directories exist
+  ansible.builtin.file:
+    path: "{{ soar_deploy_dir }}/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - n8n-data
+    - postgres-data
+    - redis-data
+
+- name: Check for existing SSL certificates
+  ansible.builtin.stat:
+    path: "{{ soar_deploy_dir }}/nginx-data/ssl_certs/server.crt"
+  register: ssl_cert_check
+
+- name: Generate self-signed SSL certificate (if not exists)
+  ansible.builtin.shell: |
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+      -keyout {{ soar_deploy_dir }}/nginx-data/ssl_certs/server.key \
+      -out {{ soar_deploy_dir }}/nginx-data/ssl_certs/server.crt \
+      -subj "/C=US/ST=State/L=City/O=Organization/CN={{ soar_host }}"
+  when: not ssl_cert_check.stat.exists and soar_generate_ssl_cert | default(true)
+
+- name: Set proper permissions on SSL certificates
+  ansible.builtin.file:
+    path: "{{ soar_deploy_dir }}/nginx-data/ssl_certs/{{ item }}"
+    mode: '0600'
+  loop:
+    - server.key
+    - server.crt
+  when: not ssl_cert_check.stat.exists and soar_generate_ssl_cert | default(true)
 
 - name: Copy nginx configuration
   ansible.builtin.copy:
@@ -34,8 +76,9 @@
   ansible.builtin.template:
     src: .env.j2
     dest: "{{ soar_deploy_dir }}/.env"
-    mode: '0644'
+    mode: '0600'
   notify: Restart SOAR platform
+  no_log: true
 
 - name: Create docker network
   community.docker.docker_network:
@@ -43,12 +86,160 @@
     state: present
   when: soar_network_external
 
+- name: Verify network creation
+  ansible.builtin.command: docker network ls --format '{{ '{{' }}.Name{{ '}}' }}'
+  register: docker_networks_check
+  changed_when: false
+
+- name: Stop existing containers if redeploying
+  ansible.builtin.shell:
+    cmd: docker compose down --remove-orphans
+    chdir: "{{ soar_deploy_dir }}"
+  when: soar_force_redeploy | default(false)
+  failed_when: false
+
+- name: Pull Docker images (if configured)
+  ansible.builtin.shell:
+    cmd: docker compose pull
+    chdir: "{{ soar_deploy_dir }}"
+  when: soar_pull_images | default(false)
+  register: pull_result
+  failed_when: false
+
 - name: Deploy SOAR platform with Docker Compose
-  community.docker.docker_compose_v2:
-    project_src: "{{ soar_deploy_dir }}"
-    state: present
+  ansible.builtin.shell:
+    cmd: docker compose up -d --remove-orphans
+    chdir: "{{ soar_deploy_dir }}"
   register: soar_deployment
+  retries: 3
+  delay: 10
+  until: soar_deployment.rc == 0
+
+- name: Wait for PostgreSQL to be ready
+  ansible.builtin.wait_for:
+    host: localhost
+    port: 5432
+    delay: 5
+    timeout: 60
+    state: started
+  when: not soar_postgres_internal_only | default(true)
+
+- name: Verify PostgreSQL health
+  ansible.builtin.shell:
+    cmd: docker compose exec -T postgres pg_isready -U {{ soar_postgres_user }}
+    chdir: "{{ soar_deploy_dir }}"
+  register: pg_health
+  retries: 10
+  delay: 3
+  until: pg_health.rc == 0
+  changed_when: false
+
+- name: Wait for Redis to be ready
+  ansible.builtin.shell:
+    cmd: docker compose exec -T redis redis-cli ping
+    chdir: "{{ soar_deploy_dir }}"
+  register: redis_health
+  retries: 10
+  delay: 2
+  until: redis_health.stdout == "PONG"
+  changed_when: false
+
+- name: Wait for n8n to be ready
+  ansible.builtin.wait_for:
+    host: localhost
+    port: 5678
+    delay: 10
+    timeout: 120
+    state: started
+
+- name: Check n8n health
+  ansible.builtin.uri:
+    url: "http://localhost:5678/healthz"
+    method: GET
+    status_code: 200
+  register: n8n_health
+  retries: 15
+  delay: 5
+  until: n8n_health.status == 200
+
+- name: Wait for Nginx to be ready
+  ansible.builtin.wait_for:
+    host: localhost
+    port: 443
+    delay: 5
+    timeout: 60
+    state: started
+
+- name: Verify Nginx SSL
+  ansible.builtin.uri:
+    url: "https://localhost"
+    validate_certs: false
+    method: GET
+    status_code: [200, 302, 401]
+  register: nginx_health
+  retries: 5
+  delay: 3
+  until: nginx_health.status in [200, 302, 401]
+
+- name: Initialize n8n admin user (if configured)
+  ansible.builtin.include_tasks: init_n8n.yml
+  when: soar_init_admin_user | default(false)
+  tags: ['init']
+
+- name: Verify container status
+  ansible.builtin.shell:
+    cmd: docker compose ps --format json
+    chdir: "{{ soar_deploy_dir }}"
+  register: container_status
+  changed_when: false
+
+- name: Parse container status
+  ansible.builtin.set_fact:
+    containers_running: "{{ container_status.stdout | from_json | selectattr('State', 'equalto', 'running') | list }}"
 
 - name: Display deployment status
   ansible.builtin.debug:
-    var: soar_deployment
+    msg:
+      - "============================================"
+      - "SOAR Platform Deployment Complete!"
+      - "============================================"
+      - "n8n UI: https://{{ soar_host }}"
+      - "Internal n8n: http://localhost:5678"
+      - "PostgreSQL: {{ soar_postgres_user }}@localhost:5432/{{ soar_postgres_db }}"
+      - "Redis: localhost:6379"
+      - "Containers Running: {{ containers_running | length }}"
+      - "============================================"
+
+- name: Create backup script
+  ansible.builtin.template:
+    src: backup.sh.j2
+    dest: "{{ soar_deploy_dir }}/backup.sh"
+    mode: '0755'
+  when: soar_create_backup_script | default(true)
+
+- name: Create monitoring script
+  ansible.builtin.template:
+    src: monitor.sh.j2
+    dest: "{{ soar_deploy_dir }}/monitor.sh"
+    mode: '0755'
+  when: soar_create_monitoring_script | default(true)
+
+- name: Display post-deployment instructions
+  ansible.builtin.debug:
+    msg:
+      - "Next Steps:"
+      - "1. Access n8n UI at https://{{ soar_host }}"
+      - "2. Complete initial setup if this is first deployment"
+      - "3. Configure workflows and integrations"
+      - "4. Monitor services: {{ soar_deploy_dir }}/monitor.sh"
+      - "5. Regular backups: {{ soar_deploy_dir }}/backup.sh"
+      - "6. View logs: docker compose logs -f"
+      - ""
+      - "Default credentials (if configured):"
+      - "  Email: {{ soar_admin_email }}"
+      - "  Password: {{ soar_admin_password }}"
+      - "  (Change immediately after first login!)"
+
+- name: Display WebDriver status
+  ansible.builtin.debug:
+    msg: "WebDriver is {{ 'enabled' if soar_enable_web_driver else 'disabled' }}. To enable, set soar_enable_web_driver: true"

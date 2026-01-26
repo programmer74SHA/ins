@@ -1,0 +1,56 @@
+---
+# =============================================================================
+# DEPLOY SECRET MANAGEMENT - Default Variables
+# =============================================================================
+
+# Deployment Configuration
+secret_management_deploy_dir: "/data/ai/secret-management"
+secret_management_force_redeploy: false
+secret_management_create_backup_script: true
+
+# Network Configuration
+secret_management_network_name: "ai-infrastructure-network"
+
+# Vault Configuration
+secret_management_vault_port: 8200
+secret_management_vault_image: "registry.apk-group.net/automation/vault"
+secret_management_vault_version: "1.20.1"
+secret_management_vault_addr: "http://127.0.0.1:8200"
+secret_management_vault_api_addr: "http://127.0.0.1:8200"
+
+# Vault Storage
+secret_management_vault_storage_backend: "file"
+secret_management_vault_default_lease_ttl: "168h"
+secret_management_vault_max_lease_ttl: "720h"
+
+# PostgreSQL Configuration
+secret_management_postgres_port: 5432
+secret_management_postgres_image: "registry.apk-group.net/automation/postgres"
+secret_management_postgres_version: "14.18"
+secret_management_postgres_user: "dokcer-hub"
+secret_management_postgres_password: "pgpssw0rd"
+secret_management_postgres_db: "my-db"
+
+# Logging Configuration
+secret_management_log_driver: "json-file"
+secret_management_log_max_size: "10m"
+secret_management_log_max_file: "5"
+
+# Health Check Configuration
+secret_management_health_check_retries: 5
+secret_management_health_check_delay: 3
+
+# Backup Configuration
+secret_management_backup_retention_days: 30
+secret_management_backup_dir: "{{ secret_management_deploy_dir }}/backups"
+
+# Environment Variables for Applications
+secret_management_api_base_url: "https://smart-analyzer.local/api/v1"
+secret_management_n8n_host: "https://localhost"
+secret_management_n8n_port: 443
+secret_management_sa_host: "http://ai-service"
+secret_management_sa_port: 2181
+
+# Docker Registry
+secret_management_docker_registry_url: "registry.apk-group.net"
+secret_management_docker_image_version: "present"

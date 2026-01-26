@@ -1,0 +1,20 @@
+---
+# Handlers for deploy_secret_management role
+
+- name: Restart Secret Management
+  ansible.builtin.shell:
+    cmd: docker compose restart
+    chdir: "{{ secret_management_deploy_dir }}"
+  listen: "Restart Secret Management"
+
+- name: Restart Vault
+  ansible.builtin.shell:
+    cmd: docker compose restart vault
+    chdir: "{{ secret_management_deploy_dir }}"
+  listen: "Restart Vault"
+
+- name: Restart PostgreSQL
+  ansible.builtin.shell:
+    cmd: docker compose restart postgresdb
+    chdir: "{{ secret_management_deploy_dir }}"
+  listen: "Restart PostgreSQL"

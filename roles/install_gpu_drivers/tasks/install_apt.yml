@@ -1,0 +1,67 @@
+---
+# Install NVIDIA drivers via APT repository
+
+- name: Determine driver package name
+  ansible.builtin.set_fact:
+    nvidia_driver_package: >-
+      {% if target_driver_version is defined %}
+      nvidia-driver-{{ target_driver_version }}
+      {% elif gpu_inventory.recommended_driver is defined %}
+      nvidia-driver-{{ gpu_inventory.recommended_driver }}
+      {% else %}
+      nvidia-driver-535
+      {% endif %}
+
+- name: Display selected driver package
+  ansible.builtin.debug:
+    msg: "Installing driver package: {{ nvidia_driver_package }}"
+
+- name: Search for available driver versions
+  ansible.builtin.shell: |
+    apt-cache search nvidia-driver- | grep '^nvidia-driver-[0-9]' | sort -V
+  register: available_drivers
+  changed_when: false
+
+- name: Display available driver versions
+  ansible.builtin.debug:
+    msg: "{{ available_drivers.stdout_lines }}"
+
+- name: Verify driver package exists
+  ansible.builtin.shell: |
+    apt-cache show {{ nvidia_driver_package }} 2>/dev/null
+  register: package_check
+  changed_when: false
+  failed_when: false
+
+- name: Fail if driver package not found
+  ansible.builtin.fail:
+    msg: |
+      Driver package {{ nvidia_driver_package }} not found in repositories.
+      Available drivers: {{ available_drivers.stdout_lines | join(', ') }}
+      Please specify a valid driver version with target_driver_version variable.
+  when: package_check.rc != 0
+
+- name: Install NVIDIA driver
+  ansible.builtin.apt:
+    name:
+      - "{{ nvidia_driver_package }}"
+      - nvidia-utils-{{ gpu_inventory.recommended_driver | default(target_driver_version) }}
+      - nvidia-settings
+    state: present
+    install_recommends: true
+  register: driver_install
+  retries: 3
+  delay: 10
+  until: driver_install is succeeded
+
+- name: Install CUDA toolkit (if requested)
+  ansible.builtin.apt:
+    name:
+      - nvidia-cuda-toolkit
+    state: present
+  when: install_cuda_toolkit | default(false)
+
+- name: Display installation result
+  ansible.builtin.debug:
+    msg: "NVIDIA driver {{ nvidia_driver_package }} installed successfully"
+  when: driver_install is succeeded

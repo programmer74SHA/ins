@@ -131,10 +131,6 @@
           "version": ""
         },
         {
-          "name": "libc-l10n",
-          "version": ""
-        },
-        {
           "name": "libc6",
           "version": ""
         },
@@ -231,10 +227,6 @@
           "version": ""
         },
         {
-          "name": "linux-image-amd64",
-          "version": ""
-        },
-        {
           "name": "locales",
           "version": ""
         },
@@ -300,6 +292,202 @@
         },
         {
           "name": "rsync",
+          "version": ""
+        },
+        {
+          "name": "apt-transport-https",
+          "version": ""
+        },
+        {
+          "name": "ca-certificates",
+          "version": ""
+        },
+        {
+          "name": "software-properties-common",
+          "version": ""
+        },
+        {
+          "name": "curl",
+          "version": ""
+        },
+        {
+          "name": "wget",
+          "version": ""
+        },
+        {
+          "name": "git",
+          "version": ""
+        },
+        {
+          "name": "nano",
+          "version": ""
+        },
+        {
+          "name": "gzip",
+          "version": ""
+        },
+        {
+          "name": "unzip",
+          "version": ""
+        },
+        {
+          "name": "zip",
+          "version": ""
+        },
+        {
+          "name": "tree",
+          "version": ""
+        },
+        {
+          "name": "jq",
+          "version": ""
+        },
+        {
+          "name": "python3-pip",
+          "version": ""
+        },
+        {
+          "name": "python3-dev",
+          "version": ""
+        },
+        {
+          "name": "python3-venv",
+          "version": ""
+        },
+        {
+          "name": "net-tools",
+          "version": ""
+        },
+        {
+          "name": "iputils-ping",
+          "version": ""
+        },
+        {
+          "name": "traceroute",
+          "version": ""
+        },
+        {
+          "name": "nmap",
+          "version": ""
+        },
+        {
+          "name": "htop",
+          "version": ""
+        },
+        {
+          "name": "iotop",
+          "version": ""
+        },
+        {
+          "name": "sysstat",
+          "version": ""
+        },
+        {
+          "name": "lsof",
+          "version": ""
+        },
+        {
+          "name": "tcpdump",
+          "version": ""
+        },
+        {
+          "name": "ufw",
+          "version": ""
+        },
+        {
+          "name": "fail2ban",
+          "version": ""
+        },
+        {
+          "name": "unattended-upgrades",
+          "version": ""
+        },
+        {
+          "name": "aptitude",
+          "version": ""
+        },
+        {
+          "name": "tmux",
+          "version": ""
+        },
+        {
+          "name": "mtr",
+          "version": ""
+        },
+        {
+          "name": "strace",
+          "version": ""
+        },
+        {
+          "name": "ltrace",
+          "version": ""
+        },
+        {
+          "name": "man-db",
+          "version": ""
+        },
+        {
+          "name": "bash-completion",
+          "version": ""
+        },
+        {
+          "name": "chrony",
+          "version": ""
+        },
+        {
+          "name": "logwatch",
+          "version": ""
+        },
+        {
+          "name": "ethtool",
+          "version": ""
+        },
+        {
+          "name": "nvidia-driver-570",
+          "version": ""
+        },
+        {
+          "name": "nvidia-headless-570",
+          "version": ""
+        },
+        {
+          "name": "nvidia-utils-570",
+          "version": ""
+        },
+        {
+          "name": "nvidia-fabricmanager-570",
+          "version": ""
+        },
+        {
+          "name": "nvidia-cuda-toolkit",
+          "version": ""
+        },
+        {
+          "name": "nvidia-cuda-dev",
+          "version": ""
+        },
+        {
+          "name": "nvidia-cuda-samples",
+          "version": ""
+        },
+        {
+          "name": "docker-ce",
+          "version": ""
+        },
+        {
+          "name": "docker-ce-cli",
+          "version": ""
+        },
+        {
+          "name": "containerd.io",
+          "version": ""
+        },
+        {
+          "name": "docker-buildx-plugin",
+          "version": ""
+        },
+        {
+          "name": "docker-compose-plugin",
           "version": ""
         }
       ]

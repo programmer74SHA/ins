@@ -1,0 +1,109 @@
+---
+# Pre-installation tasks for NVIDIA drivers
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: Install required packages
+  ansible.builtin.package:
+    name:
+      - build-essential
+      - dkms
+      - linux-headers-{{ ansible_kernel }}
+      - pkg-config
+      - libglvnd-dev
+    state: present
+
+- name: Check for existing NVIDIA drivers
+  ansible.builtin.shell: |
+    dpkg -l | grep -i nvidia | grep -v nvidia-container || true
+  register: existing_nvidia
+  changed_when: false
+
+- name: Display existing NVIDIA packages
+  ansible.builtin.debug:
+    msg: "Found existing NVIDIA packages: {{ existing_nvidia.stdout_lines }}"
+  when: existing_nvidia.stdout_lines | length > 0
+
+- name: Remove existing NVIDIA drivers (if force reinstall)
+  ansible.builtin.shell: |
+    apt-get purge -y 'nvidia-*' || true
+    apt-get autoremove -y || true
+  when:
+    - force_driver_reinstall | default(false)
+    - existing_nvidia.stdout_lines | length > 0
+  register: purge_result
+
+- name: Check for nouveau driver
+  ansible.builtin.shell: lsmod | grep nouveau || true
+  register: nouveau_check
+  changed_when: false
+
+- name: Blacklist nouveau driver
+  ansible.builtin.copy:
+    content: |
+      blacklist nouveau
+      options nouveau modeset=0
+    dest: /etc/modprobe.d/blacklist-nouveau.conf
+    mode: '0644'
+  when: nouveau_check.stdout != ""
+  notify: Update initramfs
+
+- name: Disable nouveau in GRUB
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX='
+    line: 'GRUB_CMDLINE_LINUX="nouveau.modeset=0"'
+    state: present
+  when: nouveau_check.stdout != ""
+  notify:
+    - Update GRUB
+    - Update initramfs
+
+- name: Check if system supports secure boot
+  ansible.builtin.shell: mokutil --sb-state 2>/dev/null || echo "SecureBoot disabled"
+  register: secureboot_status
+  changed_when: false
+  failed_when: false
+
+- name: Display secure boot status
+  ansible.builtin.debug:
+    msg: "Secure Boot Status: {{ secureboot_status.stdout }}"
+
+- name: Warn about secure boot
+  ansible.builtin.debug:
+    msg:
+      - "⚠ WARNING: Secure Boot is enabled"
+      - "NVIDIA drivers may require signing or disabling Secure Boot"
+      - "Consider disabling Secure Boot in BIOS for easier driver installation"
+  when: "'enabled' in secureboot_status.stdout.lower()"
+
+- name: Create backup directory
+  ansible.builtin.file:
+    path: "{{ driver_backup_dir }}"
+    state: directory
+    mode: '0755'
+
+
+
+- name: Check available disk space
+  ansible.builtin.shell: df -BG /tmp | tail -1 | awk '{print $4}' | sed 's/G//'
+  register: available_space
+  changed_when: false
+
+- name: Fail if insufficient disk space
+  ansible.builtin.fail:
+    msg: "Insufficient disk space in /tmp. Required: 5GB, Available: {{ available_space.stdout }}GB"
+  when: available_space.stdout | int < 5
+
+- name: Display pre-installation summary
+  ansible.builtin.debug:
+    msg:
+      - "Pre-installation checks complete"
+      - "Nouveau driver: {{ 'Found (will be blacklisted)' if nouveau_check.stdout != '' else 'Not found' }}"
+      - "Secure Boot: {{ secureboot_status.stdout }}"
+      - "Available disk space: {{ available_space.stdout }}GB"
+      - "Proceeding with driver installation..."

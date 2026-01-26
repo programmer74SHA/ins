@@ -1,0 +1,240 @@
+{
+  "id": "OhDXgMW3olZug5qA",
+  "name": "ES-AI-Unchecked Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "fieldToSplitOut": "alerts",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "ffc2f67e-61f1-43d5-8397-5bd67ce7de53",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "d9e75698-641e-40f4-8646-64ececed6b65",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "548a7684-1a19-4c76-8dbb-de2a8a6db799",
+      "name": "Called By ES-AI-Alert-Schaeduler 2h "
+    },
+    {
+      "parameters": {
+        "content": "## Processing Incoming Alerts for Analysis\nThis workflow section is triggered by another process that delivers a batch of alerts. Once received, the alerts are broken down into individual items, allowing each alert to be handled separately in the downstream workflow.",
+        "height": 360,
+        "width": 400,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "45690c11-3939-4f0e-bcdd-e68a677f3f49",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Recording Unchecked Alerts in SIEM\nThis section takes each incoming alert from the batch and stores it as a new document in Elasticsearch. For every alert, details such as alert ID, reason, rule name, original timestamp, current processing time, and status are logged.",
+        "height": 360,
+        "width": 440,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        384,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "57b4dd2c-e6b5-4099-bf6d-70cb152f6996",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Elastic AI — ES-AI-Alert-Schaeduler 2h with unchecked info",
+        "height": 220,
+        "width": 280,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -304,
+        -416
+      ],
+      "typeVersion": 1,
+      "id": "e5b205d4-8ed2-4ef4-9b14-a4550abb6acb",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: ES-AI-Unchecked Alerts\n### Workflow-Version: 1.0.2\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Modifying variables\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -304,
+        -736
+      ],
+      "typeVersion": 1,
+      "id": "563a595f-45fd-41cb-8c21-9aff5430eb9e",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Local}}:9200/logs-apksoar.unchecked-default/_doc",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"Sample.AlertID\": \"{{ $json.id }}\",\n  \"Alert.reason\": \"{{ $json.reason.replaceAll('\\\\','\\\\\\\\') }}\",\n  \"RuleName\": \"{{ $json.name }}\",\n  \"Alert.timestamp\": \"{{ $('Called By ES-AI-Alert-Schaeduler 2h ').item.json.alerts[0].timestamp }}\",\n  \"@timestamp\": \"{{$now}}\",\n  \"SIEM.Type\":\"APKSIEM\",\n  \"monitoring.message\":\"unchecked\"\n}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "2bc46b57-433c-41d7-8388-3fa99c0c708f",
+      "name": "Add Unchecked Alert to an Local Elastic",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Zm2ZQ42acv9nDnwz",
+          "name": "Elastic Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Base_URL_Elastic}}/logs-apksoar.unchecked-default/_doc",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"Sample.AlertID\": \"{{ $('Loop Over Items').item.json.id }}\",\n  \"Alert.reason\": \"{{ $('Loop Over Items').item.json.reason.replaceAll('\\\\','\\\\\\\\') }}\",\n  \"RuleName\": \"{{ $('Loop Over Items').item.json.name }}\",\n  \"Alert.timestamp\": \"{{ $('Called By ES-AI-Alert-Schaeduler 2h ').item.json.alerts[0].timestamp }}\",\n  \"@timestamp\": \"{{$now}}\",\n  \"SIEM.Type\":\"APKSIEM\",\n  \"monitoring.message\":\"unchecked\"\n}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        864,
+        0
+      ],
+      "id": "6c8b22f5-74f1-4630-926b-3578c505616f",
+      "name": "Add Unchecked Alert to an SIEM",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Add Unchecked Alert to an Local Elastic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Called By ES-AI-Alert-Schaeduler 2h ": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Unchecked Alert to an Local Elastic": {
+      "main": [
+        [
+          {
+            "node": "Add Unchecked Alert to an SIEM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Unchecked Alert to an SIEM": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "76f9319e-a128-4135-bec2-8ae5b42685ab",
+  "owner": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

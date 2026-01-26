@@ -1,0 +1,116 @@
+---
+# Test GPU functionality with Docker
+
+- name: Pull NVIDIA CUDA test image
+  community.docker.docker_image:
+    name: nvidia/cuda:12.3.0-base-ubuntu22.04
+    source: pull
+    state: present
+
+- name: Test 1: Basic GPU access
+  ansible.builtin.command: docker run --rm --gpus all nvidia/cuda:12.3.0-base-ubuntu22.04 nvidia-smi
+  register: test1_basic
+  changed_when: false
+  failed_when: false
+
+- name: Display Test 1 result
+  ansible.builtin.debug:
+    msg:
+      - "Test 1 - Basic GPU Access: {{ 'PASS' if test1_basic.rc == 0 else 'FAIL' }}"
+      - "{{ test1_basic.stdout_lines }}"
+
+- name: Test 2: GPU device enumeration
+  ansible.builtin.command: docker run --rm --gpus all nvidia/cuda:12.3.0-base-ubuntu22.04 nvidia-smi -L
+  register: test2_enumerate
+  changed_when: false
+  failed_when: false
+
+- name: Display Test 2 result
+  ansible.builtin.debug:
+    msg:
+      - "Test 2 - GPU Enumeration: {{ 'PASS' if test2_enumerate.rc == 0 else 'FAIL' }}"
+      - "{{ test2_enumerate.stdout_lines }}"
+
+- name: Test 3: CUDA samples (if available)
+  ansible.builtin.command: >
+    docker run --rm --gpus all nvidia/cuda:12.3.0-base-ubuntu22.04
+    sh -c 'apt-get update && apt-get install -y cuda-samples-12-3 && cd /usr/local/cuda/samples/1_Utilities/deviceQuery && make && ./deviceQuery'
+  register: test3_cuda
+  changed_when: false
+  failed_when: false
+  when: run_cuda_samples | default(false)
+
+- name: Display Test 3 result
+  ansible.builtin.debug:
+    msg:
+      - "Test 3 - CUDA Samples: {{ 'PASS' if test3_cuda.rc == 0 else 'FAIL' }}"
+      - "{{ test3_cuda.stdout_lines[-20:] }}"
+  when: run_cuda_samples | default(false)
+
+- name: Test 4: Multi-GPU access
+  ansible.builtin.command: >
+    docker run --rm --gpus all nvidia/cuda:12.3.0-base-ubuntu22.04
+    nvidia-smi --query-gpu=index,name,uuid --format=csv
+  register: test4_multi
+  changed_when: false
+  failed_when: false
+  when: detected_gpu_count | default(1) | int > 1
+
+- name: Display Test 4 result
+  ansible.builtin.debug:
+    msg:
+      - "Test 4 - Multi-GPU Access: {{ 'PASS' if test4_multi.rc == 0 else 'FAIL' }}"
+      - "{{ test4_multi.stdout_lines }}"
+  when: detected_gpu_count | default(1) | int > 1
+
+- name: Test 5: GPU memory allocation
+  ansible.builtin.command: >
+    docker run --rm --gpus all nvidia/cuda:12.3.0-base-ubuntu22.04
+    nvidia-smi --query-gpu=memory.total,memory.free,memory.used --format=csv
+  register: test5_memory
+  changed_when: false
+  failed_when: false
+
+- name: Display Test 5 result
+  ansible.builtin.debug:
+    msg:
+      - "Test 5 - GPU Memory: {{ 'PASS' if test5_memory.rc == 0 else 'FAIL' }}"
+      - "{{ test5_memory.stdout_lines }}"
+
+- name: Create test summary
+  ansible.builtin.set_fact:
+    gpu_test_results:
+      test1_basic: "{{ 'PASS' if test1_basic.rc == 0 else 'FAIL' }}"
+      test2_enumerate: "{{ 'PASS' if test2_enumerate.rc == 0 else 'FAIL' }}"
+      test3_cuda: "{{ 'PASS' if test3_cuda.rc == 0 else 'SKIP' if not run_cuda_samples | default(false) else 'FAIL' }}"
+      test4_multi: "{{ 'PASS' if test4_multi.rc == 0 else 'SKIP' if detected_gpu_count | default(1) | int == 1 else 'FAIL' }}"
+      test5_memory: "{{ 'PASS' if test5_memory.rc == 0 else 'FAIL' }}"
+      overall: "{{ 'PASS' if test1_basic.rc == 0 and test2_enumerate.rc == 0 and test5_memory.rc == 0 else 'FAIL' }}"
+
+- name: Display GPU test summary
+  ansible.builtin.debug:
+    msg:
+      - "=================================="
+      - "GPU Docker Test Summary"
+      - "=================================="
+      - "Basic GPU Access:      {{ gpu_test_results.test1_basic }}"
+      - "GPU Enumeration:       {{ gpu_test_results.test2_enumerate }}"
+      - "CUDA Samples:          {{ gpu_test_results.test3_cuda }}"
+      - "Multi-GPU Access:      {{ gpu_test_results.test4_multi }}"
+      - "GPU Memory Check:      {{ gpu_test_results.test5_memory }}"
+      - "=================================="
+      - "Overall Result:        {{ gpu_test_results.overall }}"
+      - "=================================="
+
+- name: Save test results to file
+  ansible.builtin.copy:
+    content: "{{ gpu_test_results | to_nice_yaml }}"
+    dest: "{{ gpu_test_results_file }}"
+    mode: '0644'
+
+- name: Fail if critical tests failed
+  ansible.builtin.fail:
+    msg: "GPU Docker tests failed. Check test output above."
+  when:
+    - gpu_test_results.overall == 'FAIL'
+    - fail_on_test_failure | default(false)

@@ -1,0 +1,113 @@
+================================================================================
+NVIDIA GPU DETECTION REPORT
+================================================================================
+Generated: {{ ansible_date_time.iso8601 }}
+Hostname: {{ ansible_hostname }}
+IP Address: {{ ansible_default_ipv4.address }}
+
+================================================================================
+GPU HARDWARE INFORMATION
+================================================================================
+
+GPU Detected:           {{ 'Yes' if gpu_detected else 'No' }}
+Number of GPUs:         {{ detected_gpu_count }}
+GPU Model:              {{ detected_gpu_model }}
+GPU Architecture:       {{ gpu_generation }}
+Compute Capability:     {{ gpu_compute_capability }}
+
+{% if gpu_pci_buses.stdout_lines | length > 0 %}
+PCI Bus Addresses:
+{% for bus in gpu_pci_buses.stdout_lines %}
+  - {{ bus }}
+{% endfor %}
+{% endif %}
+
+================================================================================
+DRIVER INFORMATION
+================================================================================
+
+Current Driver Version: {{ current_nvidia_driver }}
+Recommended Driver:     {{ recommended_driver_version }}
+Driver Branch:          {{ recommended_driver_branch }}
+Installation Needed:    {{ 'Yes' if driver_installation_needed else 'No' }}
+
+{% if gpu_driver_mappings[detected_gpu_model] is defined %}
+Minimum Driver:         {{ gpu_driver_mappings[detected_gpu_model].min_driver }}
+Recommended CUDA:       {{ gpu_driver_mappings[detected_gpu_model].cuda_version }}
+{% endif %}
+
+================================================================================
+DETAILED GPU INFORMATION (from nvidia-smi)
+================================================================================
+
+{% if gpu_nvidia_smi_info | length > 0 %}
+{% for line in gpu_nvidia_smi_info %}
+{{ line }}
+{% endfor %}
+{% else %}
+NVIDIA drivers not installed or nvidia-smi not available
+{% endif %}
+
+================================================================================
+RAW DETECTION DATA
+================================================================================
+
+lspci output:
+{% if gpu_raw_info | length > 0 %}
+{% for line in gpu_raw_info %}
+{{ line }}
+{% endfor %}
+{% else %}
+No NVIDIA GPUs detected via lspci
+{% endif %}
+
+================================================================================
+SYSTEM INFORMATION
+================================================================================
+
+Operating System:       {{ ansible_distribution }} {{ ansible_distribution_version }}
+Kernel Version:         {{ ansible_kernel }}
+Architecture:           {{ ansible_architecture }}
+Total Memory:           {{ ansible_memtotal_mb }} MB
+CPU Model:              {{ ansible_processor[2] | default('Unknown') }}
+CPU Cores:              {{ ansible_processor_vcpus }}
+
+================================================================================
+RECOMMENDED NEXT STEPS
+================================================================================
+
+{% if not gpu_detected %}
+⚠ No NVIDIA GPU detected
+  - Verify GPU is properly seated in PCIe slot
+  - Check BIOS settings for PCIe configuration
+  - Ensure GPU has power connected
+
+{% elif driver_installation_needed %}
+✓ GPU Detected: {{ detected_gpu_model }}
+⚠ Driver installation/update needed
+
+Recommended actions:
+  1. Run the install_gpu_drivers role:
+     ansible-playbook -i inventory.yml gpu_setup.yml --tags install_drivers
+
+  2. Or install manually:
+     - Driver version: {{ recommended_driver_version }}+
+     - Download from: https://www.nvidia.com/drivers
+
+  3. After installation, verify:
+     nvidia-smi
+     docker run --rm --gpus all nvidia/cuda:12.3.0-base-ubuntu22.04 nvidia-smi
+
+{% else %}
+✓ GPU Detected: {{ detected_gpu_model }}
+✓ Driver installed: {{ current_nvidia_driver }}
+✓ System ready for GPU workloads
+
+Verification commands:
+  nvidia-smi
+  docker run --rm --gpus all nvidia/cuda:12.3.0-base-ubuntu22.04 nvidia-smi
+{% endif %}
+
+================================================================================
+END OF REPORT
+================================================================================

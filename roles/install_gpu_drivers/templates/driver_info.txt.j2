@@ -1,0 +1,129 @@
+================================================================================
+NVIDIA GPU DRIVER INSTALLATION REPORT
+================================================================================
+Installation Date: {{ ansible_date_time.iso8601 }}
+Hostname: {{ ansible_hostname }}
+IP Address: {{ ansible_default_ipv4.address }}
+
+================================================================================
+GPU INFORMATION
+================================================================================
+
+GPU Model:              {{ gpu_inventory.model | default(detected_gpu_model) }}
+GPU Count:              {{ gpu_inventory.count | default(detected_gpu_count) }}
+GPU Architecture:       {{ gpu_inventory.generation | default(gpu_generation) }}
+Compute Capability:     {{ gpu_inventory.compute_capability | default(gpu_compute_capability) }}
+
+================================================================================
+DRIVER INSTALLATION
+================================================================================
+
+Installation Method:    {{ driver_installation_method }}
+Driver Version:         {{ nvidia_smi_verify.stdout_lines[2] | regex_search('Driver Version: ([0-9.]+)', '\\1') | first | default('See nvidia-smi output') }}
+CUDA Version:           {{ nvidia_smi_verify.stdout_lines[2] | regex_search('CUDA Version: ([0-9.]+)', '\\1') | first | default('See nvidia-smi output') }}
+Installation Date:      {{ ansible_date_time.iso8601 }}
+
+Components Installed:
+{% if driver_installation_method == 'apt' %}
+  - NVIDIA Driver ({{ nvidia_driver_package | default('N/A') }})
+  - NVIDIA Utils
+  - NVIDIA Settings
+{% if install_cuda_toolkit %}
+  - CUDA Toolkit
+{% endif %}
+{% else %}
+  - NVIDIA Driver (runfile)
+{% endif %}
+{% if install_nvidia_container_toolkit %}
+  - NVIDIA Container Toolkit
+  - NVIDIA Container Runtime
+{% endif %}
+
+================================================================================
+DRIVER CONFIGURATION
+================================================================================
+
+Persistence Mode:       {{ 'Enabled' if enable_persistence_mode else 'Disabled' }}
+Default Docker Runtime: {{ 'nvidia' if configure_docker_for_nvidia else 'default' }}
+{% if gpu_power_limit is defined %}
+Power Limit:            {{ gpu_power_limit }}W
+{% endif %}
+{% if gpu_memory_clock is defined and gpu_graphics_clock is defined %}
+Memory Clock:           {{ gpu_memory_clock }} MHz
+Graphics Clock:         {{ gpu_graphics_clock }} MHz
+{% endif %}
+
+================================================================================
+VERIFICATION
+================================================================================
+
+nvidia-smi output:
+{{ nvidia_smi_verify.stdout }}
+
+{% if gpu_test_results is defined %}
+GPU Tests:
+  Basic Access:         {{ gpu_test_results.test1_basic }}
+  GPU Enumeration:      {{ gpu_test_results.test2_enumerate }}
+  CUDA Samples:         {{ gpu_test_results.test3_cuda }}
+  Multi-GPU:            {{ gpu_test_results.test4_multi }}
+  Memory Check:         {{ gpu_test_results.test5_memory }}
+  Overall:              {{ gpu_test_results.overall }}
+{% endif %}
+
+================================================================================
+SYSTEM INFORMATION
+================================================================================
+
+Operating System:       {{ ansible_distribution }} {{ ansible_distribution_version }}
+Kernel Version:         {{ ansible_kernel }}
+Architecture:           {{ ansible_architecture }}
+Total Memory:           {{ ansible_memtotal_mb }} MB
+CPU Model:              {{ ansible_processor[2] | default('Unknown') }}
+CPU Cores:              {{ ansible_processor_vcpus }}
+
+================================================================================
+MAINTENANCE COMMANDS
+================================================================================
+
+Check GPU status:
+  nvidia-smi
+
+Monitor GPU:
+  watch -n 1 nvidia-smi
+
+Test Docker GPU access:
+  docker run --rm --gpus all nvidia/cuda:12.3.0-base-ubuntu22.04 nvidia-smi
+
+Check driver version:
+  cat /proc/driver/nvidia/version
+
+List loaded NVIDIA modules:
+  lsmod | grep nvidia
+
+Check persistence daemon:
+  systemctl status nvidia-persistenced
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+If GPU not detected:
+  1. Verify GPU is properly seated
+  2. Check BIOS PCIe settings
+  3. Ensure power cables connected
+  4. Run: lspci | grep -i nvidia
+
+If driver not loading:
+  1. Check: dmesg | grep nvidia
+  2. Check: journalctl -xe | grep nvidia
+  3. Verify kernel modules: lsmod | grep nvidia
+  4. Reload modules: modprobe nvidia
+
+If Docker can't access GPU:
+  1. Verify: cat /etc/docker/daemon.json
+  2. Restart Docker: systemctl restart docker
+  3. Test: docker run --rm --gpus all nvidia/cuda:12.3.0-base-ubuntu22.04 nvidia-smi
+
+================================================================================
+END OF REPORT
+================================================================================

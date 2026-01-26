@@ -1,0 +1,73 @@
+---
+# Vault unsealing tasks
+
+- name: Load vault initialization data if exists
+  ansible.builtin.slurp:
+    src: "{{ secret_management_deploy_dir }}/vault/vault-init.json"
+  register: vault_init_data
+  when: vault_seal_status.json.sealed
+  failed_when: false
+  no_log: true
+
+- name: Parse vault initialization data
+  ansible.builtin.set_fact:
+    vault_unseal_keys: "{{ (vault_init_data.content | b64decode | from_json).keys }}"
+  when:
+    - vault_init_data is defined
+    - vault_init_data.content is defined
+  no_log: true
+
+- name: Unseal Vault with first key
+  ansible.builtin.uri:
+    url: "http://localhost:{{ secret_management_vault_port }}/v1/sys/unseal"
+    method: POST
+    body_format: json
+    body:
+      key: "{{ vault_unseal_keys[0] }}"
+    return_content: true
+  register: unseal_1
+  when:
+    - vault_unseal_keys is defined
+    - vault_seal_status.json.sealed
+  no_log: true
+
+- name: Unseal Vault with second key
+  ansible.builtin.uri:
+    url: "http://localhost:{{ secret_management_vault_port }}/v1/sys/unseal"
+    method: POST
+    body_format: json
+    body:
+      key: "{{ vault_unseal_keys[1] }}"
+    return_content: true
+  register: unseal_2
+  when:
+    - vault_unseal_keys is defined
+    - vault_seal_status.json.sealed
+  no_log: true
+
+- name: Unseal Vault with third key
+  ansible.builtin.uri:
+    url: "http://localhost:{{ secret_management_vault_port }}/v1/sys/unseal"
+    method: POST
+    body_format: json
+    body:
+      key: "{{ vault_unseal_keys[2] }}"
+    return_content: true
+  register: unseal_3
+  when:
+    - vault_unseal_keys is defined
+    - vault_seal_status.json.sealed
+  no_log: true
+
+- name: Verify Vault is unsealed
+  ansible.builtin.uri:
+    url: "http://localhost:{{ secret_management_vault_port }}/v1/sys/seal-status"
+    method: GET
+    return_content: true
+  register: final_seal_status
+  failed_when: final_seal_status.json.sealed
+
+- name: Display unseal success message
+  ansible.builtin.debug:
+    msg: "Vault has been successfully unsealed"
+  when: not final_seal_status.json.sealed

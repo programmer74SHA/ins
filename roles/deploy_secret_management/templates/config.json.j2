@@ -1,0 +1,22 @@
+{
+    "storage": {
+        "{{ secret_management_vault_storage_backend }}": {
+            "path": "/vault/storage"
+        }
+    },
+    "listener": [
+        {
+            "tcp": {
+                "address": "0.0.0.0:8200",
+                "tls_disable": true
+            }
+        }
+    ],
+    "default_lease_ttl": "{{ secret_management_vault_default_lease_ttl }}",
+    "max_lease_ttl": "{{ secret_management_vault_max_lease_ttl }}",
+    "ui": true,
+    "api_addr": "{{ secret_management_vault_api_addr }}",
+    "cluster_addr": "https://127.0.0.1:8201",
+    "disable_mlock": false,
+    "log_level": "INFO"
+}

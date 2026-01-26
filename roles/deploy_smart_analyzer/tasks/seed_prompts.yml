@@ -1,0 +1,49 @@
+---
+# Prompt seeding tasks for Smart Analyzer
+
+- name: Check if prompts directory has content
+  ansible.builtin.find:
+    paths: "{{ smart_analyzer_prompts_volume }}"
+    file_type: file
+  register: existing_prompts
+
+- name: Display prompts status
+  ansible.builtin.debug:
+    msg: "Found {{ existing_prompts.matched }} prompt files in {{ smart_analyzer_prompts_volume }}"
+
+- name: Seed prompts using Docker container
+  community.docker.docker_container:
+    name: seed_prompts_run
+    image: "{{ soar_platform_prompt_seeder }}"
+    auto_remove: true
+    env_file: "{{ smart_analyzer_deploy_dir }}/.env"
+    volumes:
+      - "{{ smart_analyzer_prompts_volume }}:/usr/share/mssp/prompts"
+    networks:
+      - name: "{{ smart_analyzer_network_name }}"
+    command: python seed_prompts.py
+    state: started
+    detach: false
+  register: seed_result
+  when: smart_analyzer_force_seed_prompts or existing_prompts.matched == 0
+
+- name: Display seed result
+  ansible.builtin.debug:
+    msg: "Prompts seeded successfully"
+  when: seed_result is succeeded
+
+- name: Generate Fernet key (if needed)
+  community.docker.docker_container:
+    name: gen_key_run
+    image: "{{ soar_platform_prompt_seeder }}"
+    auto_remove: true
+    command: python generate_key.py
+    state: started
+    detach: false
+  register: key_gen_result
+  when: smart_analyzer_generate_fernet_key | default(false)
+
+- name: Display key generation result
+  ansible.builtin.debug:
+    var: key_gen_result.container.Output
+  when: smart_analyzer_generate_fernet_key | default(false) and key_gen_result is succeeded

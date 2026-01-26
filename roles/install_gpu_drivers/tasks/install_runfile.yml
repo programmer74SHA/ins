@@ -1,0 +1,89 @@
+---
+# Install NVIDIA drivers via runfile installer
+
+- name: Set driver version for download
+  ansible.builtin.set_fact:
+    driver_version_full: >-
+      {% if driver_runfile_version is defined %}
+      {{ driver_runfile_version }}
+      {% elif gpu_inventory.recommended_driver is defined %}
+      {{ gpu_inventory.recommended_driver }}.{{ driver_minor_version | default('89') }}
+      {% else %}
+      535.183.01
+      {% endif %}
+
+- name: Construct download URL
+  ansible.builtin.set_fact:
+    nvidia_runfile_url: "https://us.download.nvidia.com/XFree86/Linux-x86_64/{{ driver_version_full }}/NVIDIA-Linux-x86_64-{{ driver_version_full }}.run"
+    nvidia_runfile_name: "NVIDIA-Linux-x86_64-{{ driver_version_full }}.run"
+
+- name: Display download information
+  ansible.builtin.debug:
+    msg:
+      - "Downloading NVIDIA driver runfile"
+      - "Version: {{ driver_version_full }}"
+      - "URL: {{ nvidia_runfile_url }}"
+
+- name: Download NVIDIA driver runfile
+  ansible.builtin.get_url:
+    url: "{{ nvidia_runfile_url }}"
+    dest: "/tmp/{{ nvidia_runfile_name }}"
+    mode: '0755'
+    timeout: 600
+  register: download_result
+  retries: 3
+  delay: 10
+  until: download_result is succeeded
+
+- name: Stop display manager (if running)
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+  loop:
+    - gdm
+    - lightdm
+    - sddm
+  failed_when: false
+  when: stop_display_manager | default(true)
+
+- name: Run NVIDIA driver installer
+  ansible.builtin.command:
+    cmd: >
+      /tmp/{{ nvidia_runfile_name }}
+      --silent
+      --no-questions
+      --ui=none
+      --disable-nouveau
+      --dkms
+      {{ '--no-opengl-files' if headless_mode | default(false) else '' }}
+      {{ '--run-nvidia-xconfig' if configure_xorg | default(false) else '' }}
+  register: runfile_install
+  changed_when: runfile_install.rc == 0
+  failed_when: runfile_install.rc != 0
+
+- name: Display installer output
+  ansible.builtin.debug:
+    var: runfile_install.stdout_lines
+  when: runfile_install.stdout_lines | length > 0
+
+- name: Display installer errors
+  ansible.builtin.debug:
+    var: runfile_install.stderr_lines
+  when: runfile_install.stderr_lines | length > 0
+
+- name: Clean up runfile
+  ansible.builtin.file:
+    path: "/tmp/{{ nvidia_runfile_name }}"
+    state: absent
+  when: cleanup_runfile | default(true)
+
+- name: Verify driver installation
+  ansible.builtin.command: nvidia-smi
+  register: verify_runfile
+  changed_when: false
+  failed_when: verify_runfile.rc != 0
+
+- name: Display verification
+  ansible.builtin.debug:
+    msg: "Driver installed successfully via runfile method"
+  when: verify_runfile.rc == 0

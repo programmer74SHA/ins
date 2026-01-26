@@ -1,0 +1,83 @@
+---
+# Smart Analyzer Docker Compose deployment tasks
+
+- name: Stop existing containers if redeploying
+  ansible.builtin.shell:
+    cmd: docker compose down --remove-orphans
+    chdir: "{{ smart_analyzer_deploy_dir }}"
+  when: smart_analyzer_force_redeploy | default(false)
+  failed_when: false
+  register: stop_result
+
+- name: Display stop result
+  ansible.builtin.debug:
+    msg: "Stopped existing containers"
+  when: stop_result is succeeded and smart_analyzer_force_redeploy | default(false)
+
+- name: Pull Docker images (if configured)
+  ansible.builtin.shell:
+    cmd: docker compose pull
+    chdir: "{{ smart_analyzer_deploy_dir }}"
+  when: smart_analyzer_pull_images | default(false)
+  register: pull_result
+  failed_when: false
+
+- name: Display pull result
+  ansible.builtin.debug:
+    var: pull_result.stdout_lines
+  when: smart_analyzer_pull_images | default(false) and pull_result is succeeded
+
+- name: Deploy Smart Analyzer with Docker Compose
+  ansible.builtin.shell:
+    cmd: docker compose up -d --force-recreate --remove-orphans
+    chdir: "{{ smart_analyzer_deploy_dir }}"
+  register: deploy_result
+  retries: 3
+  delay: 10
+  until: deploy_result.rc == 0
+
+- name: Display deployment output
+  ansible.builtin.debug:
+    var: deploy_result.stdout_lines
+
+- name: Wait for containers to initialize
+  ansible.builtin.pause:
+    seconds: 30
+    prompt: "Waiting for containers to initialize..."
+
+- name: Verify containers are running
+  ansible.builtin.shell:
+    cmd: docker compose ps --filter "status=running" --format json | jq -r '.[].Name'
+    chdir: "{{ smart_analyzer_deploy_dir }}"
+  register: running_containers
+  changed_when: false
+
+- name: Display running containers
+  ansible.builtin.debug:
+    msg: "Running containers: {{ running_containers.stdout_lines }}"
+
+- name: Check for any failed containers
+  ansible.builtin.shell:
+    cmd: docker compose ps --filter "status=exited" --format json
+    chdir: "{{ smart_analyzer_deploy_dir }}"
+  register: failed_containers
+  changed_when: false
+  failed_when: failed_containers.stdout != "[]" and failed_containers.stdout != ""
+
+- name: Display warning if containers failed
+  ansible.builtin.debug:
+    msg: "WARNING: Some containers failed to start. Check logs with: docker compose logs"
+  when: failed_containers.stdout != "[]" and failed_containers.stdout != ""
+
+- name: Show container logs summary
+  ansible.builtin.shell:
+    cmd: docker compose logs --tail=20
+    chdir: "{{ smart_analyzer_deploy_dir }}"
+  register: logs_summary
+  changed_when: false
+  when: smart_analyzer_show_logs | default(false)
+
+- name: Display logs
+  ansible.builtin.debug:
+    var: logs_summary.stdout_lines
+  when: smart_analyzer_show_logs | default(false)

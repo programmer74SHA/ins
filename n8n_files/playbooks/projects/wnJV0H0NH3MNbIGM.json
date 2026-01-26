@@ -1,0 +1,29 @@
+{
+  "id": "wnJV0H0NH3MNbIGM",
+  "name": "Infrastructure",
+  "icon": {
+    "type": "icon",
+    "value": "layers"
+  },
+  "description": "",
+  "type": "team",
+  "owner": {
+    "type": "team",
+    "teamId": "wnJV0H0NH3MNbIGM",
+    "teamName": "Infrastructure"
+  },
+  "variableStubs": [
+    {
+      "id": "PZYc4xXBdrqJT7DA",
+      "key": "APKSOAR_Base_URL",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "id": "ewqdceHXBXiqIjcI",
+      "key": "APKSOAR_API",
+      "type": "string",
+      "value": ""
+    }
+  ]
+}

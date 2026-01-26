@@ -1,0 +1,14 @@
+{
+  "id": "9r9Pq8CW9lIy0G6j",
+  "name": "AbuseIPDB account",
+  "type": "abuseIPDB",
+  "data": {
+    "apiKey": ""
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "isGlobal": false
+}

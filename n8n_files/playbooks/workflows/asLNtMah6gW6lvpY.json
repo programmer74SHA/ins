@@ -1,0 +1,344 @@
+{
+  "id": "asLNtMah6gW6lvpY",
+  "name": "ES-AI-Ticketing & AI Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -640,
+        -144
+      ],
+      "id": "3ae7e85c-b6e8-49f1-933d-186eaaf76409",
+      "name": "Called by ES-AI-5A-Create Time line & Check"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ticket_alert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Called by ES-AI-5A-Create Time line & Check').item.json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"alert\":{\n        \"_id\": \"{{ $('Called by ES-AI-5A-Create Time line & Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._id }}\",\n        \"@timestamp\": \"{{ $('Called by ES-AI-5A-Create Time line & Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._source['@timestamp'] }}\",\n        \"kibana.alert.rule.description\": \"{{ $('Called by ES-AI-5A-Create Time line & Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._source['kibana.alert.rule.parameters'].description }}\",\n        \"sensor.ip\":\"{{ $('Called by ES-AI-5A-Create Time line & Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._source.sensor.ip }}\",\n        \"sensor.name\": \"{{ $('Called by ES-AI-5A-Create Time line & Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._source.host.hostname }}\",\n        \"source.ip\": \"{{ $('Called by ES-AI-5A-Create Time line & Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._source.source.ip }}\",\n        \"kibana.alert.severity\": \"{{ $('Called by ES-AI-5A-Create Time line & Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._source['kibana.alert.rule.parameters'].severity }}\",\n        \"category\": \"{{ $('Called by ES-AI-5A-Create Time line & Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._source['event.category'][0] }}\",\n        \"alert_count\": \"{{ $('Called by ES-AI-5A-Create Time line & Check').item.json['Original Rule'][0].json.doc_count }}\",\n        \"kibana.alert.rule.name\":\"{{ $('Called by ES-AI-5A-Create Time line & Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._source['kibana.alert.rule.name'] }}\"\n    },\n  \"project_info\": {\n        \"project\": \"{{ $json.Project_Key }}\",\n        \"siem_type\": \"APKSIEM\",\n        \"zone\": \"{{ $json.Lable }}\"\n     }\n\n}",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        -144
+      ],
+      "id": "1909b42b-ae20-4563-b898-55eda6bff691",
+      "name": "request for check Similar Tickets ",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ai/alert_ticket",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer  {{ $('Called by ES-AI-5A-Create Time line & Check').first().json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"alert\": {{ $('Called by ES-AI-5A-Create Time line & Check').item.json['Original Rule'][0].json.latest_doc.hits.hits.toJsonString() }},\n    \"ticket_info\": {{ $json.data.toJsonString() }}\n\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        32,
+        -144
+      ],
+      "id": "10cf1254-98b2-40ef-9e7d-b9461f90c6af",
+      "name": "AI analysis(Ticket Info)",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0e8e9309-fa16-409a-b02d-a623dc5d2c12",
+              "name": "4th AI Result",
+              "value": "={{ $json.data }}",
+              "type": "array"
+            },
+            {
+              "id": "4c979e51-8e69-43b3-99ff-409b563474fb",
+              "name": "Alert Timestamp",
+              "value": "={{ $('Called by ES-AI-5A-Create Time line & Check').item.json['Original Rule'][0].json.latest_doc.hits.hits[0]._source['@timestamp'] }}",
+              "type": "string"
+            },
+            {
+              "id": "de0fd8f1-d587-40d8-aef4-93b5a84de66c",
+              "name": "Create TimeLine",
+              "value": "={{ $('Called by ES-AI-5A-Create Time line & Check').item.json['Create TimeLine'] }}",
+              "type": "string"
+            },
+            {
+              "id": "e9424dbc-ece0-4511-a7b0-0ce0f4d1f017",
+              "name": "data[0].reference",
+              "value": "={{ $json.data[0].reference }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        -144
+      ],
+      "id": "0a50c9de-14e0-4b05-81f9-99b941555f42",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "## AI-Based Alert Similarity Check and Enrichment\nThis workflow is triggered by ES-AI-5A-Create Time line & Check workflow and receives alert data along with an access token. It sends the alert information to an API to check for similar existing tickets, then passes both the alert and related ticket data to an AI service for further analysis. The results, including AI insights and metadata, are stored in variables for use in later steps.\n",
+        "height": 356,
+        "width": 1508,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -704,
+        -288
+      ],
+      "typeVersion": 1,
+      "id": "e110b46a-d345-4cf1-947a-2313f8fbf159",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Elastic AI — ES-AI-5A-Create Time line & Check",
+        "height": 220,
+        "width": 300,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -768,
+        -528
+      ],
+      "typeVersion": 1,
+      "id": "605564ea-72cd-4a4b-97be-d0614381319b",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "b0xdqEfVPSE268q4",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/b0xdqEfVPSE268q4",
+          "cachedResultName": "ES — ES-Error Monitoring"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        848,
+        192
+      ],
+      "id": "e8001389-df2a-44c8-87b3-f3bfc5acb43c",
+      "name": "Execute Error WorkFlow"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "= {\n    \"WirkFlowID\": \"{{ $workflow.id }}\",\n    \"ExecutionID\": \"{{ $execution.id || '' }}\",\n    \"mode\": \"{{ $execution.mode }}\",\n    \"workflowName\": \"{{ $workflow.name }}\",\n    \"nodeName\": {{ JSON.stringify($prevNode || {}) }},\n    \"NodeError\": {{ JSON.stringify($json) }},\n    \"nodeErrorStatusCode\": {{ JSON.stringify($json) }},\n    \"@timestamp\": \"{{ new Date().toISOString() }}\",\n    \"apksoar.nodetimestamp\": \"{{ new Date().toISOString() }}\",\n    \"apksoar.ErrorType\": \"Node\"\n  }\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        192
+      ],
+      "id": "49d001ae-ba02-4644-ae54-5c651505ed7a",
+      "name": "Required Fields "
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: ES-AI-Ticketing & AI Analysis\n### Workflow-Version: 1.2.1\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Add Multi Project & Result\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -768,
+        -848
+      ],
+      "typeVersion": 1,
+      "id": "baca2228-16cc-440f-8f13-b6d1fefcc3e6",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === READ VARIABLES ===\nconst esMultiJira = String($vars.ES_MultiJiraProject).toLowerCase() === \"true\";\nconst esMultiZone = String($vars.ES_MultiZone).toLowerCase() === \"true\";\nconst jiraProjectKey = $vars.JIRA_Project_Key_Field;\n\n// === TRY TO READ NAMESPACE SAFELY ===\nlet namespace;\n\ntry {\n  // Use .first().json (confirmed from your working version)\n  const sourceNode = $('Called by ES-AI-5A-Create Time line & Check').first().json;\n\n  namespace =\n    sourceNode?.['Original Rule']?.[0]?.json?.latest_doc?.hits?.hits?.[0]?._source?.data_stream?.namespace ||\n    null;\n} catch (err) {\n  namespace = null;\n}\n\n// Default fallback\nif (!namespace) namespace = 'Unknown_Namespace';\n\n// === APPLY LOGIC ===\nlet Project_Key;\nlet Lable;\n\nif (esMultiJira === true) {\n  // Condition 1: MultiJiraProject = true\n  Project_Key = namespace;\n  Lable = namespace;\n} else if (esMultiZone === true) {\n  // Condition 2: MultiJiraProject = false, MultiZone = true\n  Project_Key = jiraProjectKey;\n  Lable = namespace;\n} else {\n  // Condition 3: both false\n  Project_Key = jiraProjectKey;\n  Lable = jiraProjectKey;\n}\n\n// === REPLACE \"default\" VALUES WITH JIRA PROJECT KEY ===\nif (String(Project_Key).toLowerCase() === \"default\") {\n  Project_Key = jiraProjectKey;\n}\n\nif (String(Lable).toLowerCase() === \"default\") {\n  Lable = jiraProjectKey;\n}\n\n// === DEBUG LOGS (visible in n8n execution logs) ===\nconsole.log('ES_MultiJiraProject:', esMultiJira);\nconsole.log('ES_MultiZone:', esMultiZone);\nconsole.log('Namespace:', namespace);\nconsole.log('Project_Key:', Project_Key);\nconsole.log('Lable:', Lable);\n\n// === RETURN OUTPUT ===\nreturn [\n  {\n    json: {\n      Project_Key,\n      Lable,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        -144
+      ],
+      "id": "02e9ed75-a331-45e6-aa58-abc8938ef3e2",
+      "name": "Check for Multi Jira Project"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "rFDystiVMo93hN9J",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/rFDystiVMo93hN9J",
+          "cachedResultName": "ES — ES-AI-Insert Timeline"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        -144
+      ],
+      "id": "9913809f-60ca-459a-b1df-1d2e8710083d",
+      "name": "Call 'ES-AI-Insert Timeline'"
+    }
+  ],
+  "connections": {
+    "Called by ES-AI-5A-Create Time line & Check": {
+      "main": [
+        [
+          {
+            "node": "Check for Multi Jira Project",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "request for check Similar Tickets ": {
+      "main": [
+        [
+          {
+            "node": "AI analysis(Ticket Info)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Required Fields ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI analysis(Ticket Info)": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Required Fields ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Call 'ES-AI-Insert Timeline'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Required Fields ": {
+      "main": [
+        [
+          {
+            "node": "Execute Error WorkFlow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Multi Jira Project": {
+      "main": [
+        [
+          {
+            "node": "request for check Similar Tickets ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "1a5bbacb-cef6-4f00-a194-a55b5ba3690e",
+  "owner": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

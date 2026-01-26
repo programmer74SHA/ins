@@ -1,0 +1,231 @@
+services:
+  ai-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: registry.apk-group.net/automation/modules/smart-analyzer-ai:1.0.46
+    ports:
+      - "2181:2181"
+    stop_grace_period: 30s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+    env_file:
+      - .env
+    environment:
+      - VAULT_ADDR=${VLT_ADDR}
+      - UNSEAL_KEYS=${VLT_UNSEAL_KEYS}
+      - PYTHONUNBUFFERED=1
+      - APPLICATION_ROOT=${APPLICATION_ROOT}
+      - SECRET_KEY=${SECRET_KEY}
+      - JWT_EXPIRES_DAYS=${JWT_EXPIRES_DAYS}
+      - AI_CENTER_HOST=${AI_CENTER_HOST}
+      - AI_CENTER_PORT=${AI_CENTER_PORT}
+      - AI_CHAT_URL=${AI_CHAT_URL}
+      - AI_GENERATIVE_MODEL=${AI_GENERATIVE_MODEL}
+      - SPLUNK_TIME_FIELD=${SPLUNK_TIME_FIELD}
+      - SPLUNK_ALERT_ID_FIELD=${SPLUNK_ALERT_ID_FIELD}
+      - ELASTIC_TIME_FIELD=${ELASTIC_TIME_FIELD}
+      - ELASTIC_ALERT_ID_FIELD=${ELASTIC_ALERT_ID_FIELD}
+      - DEFAULT_AI_DEVICE=${DEFAULT_AI_DEVICE}
+      - AI_MODEL_CONTEXT_LENGTH=${AI_MODEL_CONTEXT_LENGTH}
+      - AI_REQ_RETRY=${AI_REQ_RETRY}
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_PORT=${ELASTICSEARCH_PORT}
+      - ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME}
+      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
+      - JIRA_HOST=${JIRA_HOST}
+      - JIRA_USERNAME=${JIRA_USERNAME}
+      - JIRA_PASSWORD=${JIRA_PASSWORD}
+      - JIRA_PROJECT_NAME=${JIRA_PROJECT_NAME}
+      - JIRA_FIELD_OVERAL_DESCRIPTION=${JIRA_FIELD_OVERAL_DESCRIPTION}
+      - JIRA_FIELD_TI_ANALYSIS=${JIRA_FIELD_TI_ANALYSIS}
+      - JIRA_FIELD_KNOWLEDGE_DB_ANALYSIS=${JIRA_FIELD_KNOWLEDGE_DB_ANALYSIS}
+      - JIRA_FIELD_FINAL_ANALYSIS=${JIRA_FIELD_FINAL_ANALYSIS}
+      - JIRA_FIELD_RECOMMENDED_ACTIONS=${JIRA_FIELD_RECOMMENDED_ACTIONS}
+      - JIRA_FIELD_RESPONSE_ACTIONS=${JIRA_FIELD_RESPONSE_ACTIONS}
+      - JIRA_FIELD_RESPONSE_SIDE_EFFECTS=${JIRA_FIELD_RESPONSE_SIDE_EFFECTS}
+      - JIRA_FIELD_ASSET_VALUE=${JIRA_FIELD_ASSET_VALUE}
+      - JIRA_FIELD_PLAYBOOK=${JIRA_FIELD_PLAYBOOK}
+      - JIRA_FIELD_ATTACKER_IP=${JIRA_FIELD_ATTACKER_IP}
+      - JIRA_FIELD_TARGET_IP=${JIRA_FIELD_TARGET_IP}
+      - JIRA_FIELD_SEVERITY=${JIRA_FIELD_SEVERITY}
+      - JIRA_FIELD_MITRE_TACTIC=${JIRA_FIELD_MITRE_TACTIC}
+      - JIRA_FIELD_MITRE_TECHNIQUE=${JIRA_FIELD_MITRE_TECHNIQUE}
+      - JIRA_FIELD_MITIGATION_ACTIONS=${JIRA_FIELD_MITIGATION_ACTIONS}
+      - JIRA_FIELD_RESOLVED_TIME=${JIRA_FIELD_RESOLVED_TIME}
+      - JIRA_FIELD_OUTCOME_RESULT=${JIRA_FIELD_OUTCOME_RESULT}
+      - JIRA_FIELD_SOURCE_TYPE=${JIRA_FIELD_SOURCE_TYPE}
+      - JIRA_FIELD_SOURCE_NAME=${JIRA_FIELD_SOURCE_NAME}
+      - JIRA_FIELD_REASON=${JIRA_FIELD_REASON}
+      - JIRA_FIELD_ORIGINAL_VALUE=${JIRA_FIELD_ORIGINAL_VALUE}
+      - JIRA_FIELD_QUERY=${JIRA_FIELD_QUERY}
+      - JIRA_FIELD_URL=${JIRA_FIELD_URL}
+      - JIRA_FIELD_USER_NAME=${JIRA_FIELD_USER_NAME}
+      - JIRA_FIELD_PROCESS_NAME=${JIRA_FIELD_PROCESS_NAME}
+      - JIRA_FIELD_PROCESS_PARENT_NAME=${JIRA_FIELD_PROCESS_PARENT_NAME}
+      - JIRA_FIELD_HOST_IP=${JIRA_FIELD_HOST_IP}
+      - VECTOR_DB_HOST=${VECTOR_DB_HOST}
+      - VECTOR_DB_PORT=${VECTOR_DB_PORT}
+      - VECTOR_DB_ISSUE_COLLECTION=${VECTOR_DB_ISSUE_COLLECTION}
+      - EMBEDDING_LLM_HOST=${EMBEDDING_LLM_HOST}
+      - EMBEDDING_LLM_PORT=${EMBEDDING_LLM_PORT}
+      - EMBEDDING_LLM_ROUTE=${EMBEDDING_LLM_ROUTE}
+      - EMBEDDING_LLM_MODEL=${EMBEDDING_LLM_MODEL}
+      - EMBEDDING_LLM_DIMENSION=${EMBEDDING_LLM_DIMENSION}
+
+    container_name: smart-analyzer
+    networks:
+      - ai-infrastructure-network
+    depends_on:
+      - qdrant
+      - ai-launcher-1
+      - text-embeddings-inference
+    logging:
+      driver: ${LOG_DRIVER:-json-file}
+      options:
+        max-size: ${LOG_MAX_SIZE:-10m}
+        max-file: ${LOG_MAX_FILE:-5}
+    volumes:
+      - /usr/share/mssp/prompts:/usr/share/mssp/prompts
+      #- /data/smart-analyzer/src:/app/src
+  qdrant:
+    image: registry.apk-group.net/automation/modules/qdrant:1.14.1
+    container_name: qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - /data/db/issue_database:/qdrant/storage
+    restart: always
+    networks:
+      - ai-infrastructure-network
+    logging:
+      driver: ${LOG_DRIVER:-json-file}
+      options:
+        max-size: ${LOG_MAX_SIZE:-10m}
+        max-file: ${LOG_MAX_FILE:-5}
+
+  haproxy:
+    image: registry.apk-group.net/automation/haproxy:alpine
+    container_name: haproxy
+    restart: always
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./infra_config/haproxy:/usr/local/etc/haproxy:ro
+    networks:
+      - ai-infrastructure-network
+    logging:
+      driver: ${LOG_DRIVER:-json-file}
+      options:
+        max-size: ${LOG_MAX_SIZE:-10m}
+        max-file: ${LOG_MAX_FILE:-5}
+
+  ai-launcher-1:
+    image: registry.apk-group.net/automation/vllm/vllm-openai:latest
+    #image: lmcache-vllm:latest
+    container_name: ai-launcher-1
+    restart: always
+    ports:
+      - "5005:5004"
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONUNBUFFERED=1
+      # - OMP_NUM_THREADS=16
+      # - VLLM_LOGGING_LEVEL=DEBUG
+    volumes:
+      - ./models:/models
+    working_dir: /models
+    command: >
+      --model /models/Qwen3-30B-A3B-Instruct-2507-FP8
+      --tensor-parallel-size 1
+      --gpu-memory-utilization 0.8
+      --max-model-len 32768
+      --max-num-seqs 8
+      --max-num-batched-tokens 4096
+      --host 0.0.0.0
+      --port 5004
+      --enable-auto-tool-choice
+      --tool-call-parser hermes
+      #--trust-remote-code
+    ipc: host
+    runtime: nvidia
+    deploy: {}
+    networks:
+      - ai-infrastructure-network
+    logging:
+      driver: ${LOG_DRIVER:-json-file}
+      options:
+        max-size: ${LOG_MAX_SIZE:-10m}
+        max-file: ${LOG_MAX_FILE:-5}
+
+  ai-launcher-2:
+    image: registry.apk-group.net/automation/vllm/vllm-openai:latest
+    #image: lmcache-vllm:latest
+    container_name: ai-launcher-2
+    restart: always
+    ports:
+      - "5003:5004"
+    environment:
+      - CUDA_VISIBLE_DEVICES=1
+      - PYTHONUNBUFFERED=1
+      # - OMP_NUM_THREADS=16
+      # - VLLM_LOGGING_LEVEL=DEBUG
+    volumes:
+      - ./models:/models
+    working_dir: /models
+    command: >
+      --model /models/Qwen3-30B-A3B-Instruct-2507-FP8
+      --tensor-parallel-size 1
+      --gpu-memory-utilization 0.8
+      --max-model-len 32768
+      --max-num-seqs 8
+      --max-num-batched-tokens 4096
+      --host 0.0.0.0
+      --port 5004
+      --enable-auto-tool-choice
+      --tool-call-parser hermes
+      #--trust-remote-code
+    ipc: host
+    runtime: nvidia
+    deploy: {}
+    networks:
+      - ai-infrastructure-network
+    logging:
+      driver: ${LOG_DRIVER:-json-file}
+      options:
+        max-size: ${LOG_MAX_SIZE:-10m}
+        max-file: ${LOG_MAX_FILE:-5}
+
+
+  text-embeddings-inference:
+    image: registry.apk-group.net/automation/text-embeddings-inference:1.8
+    container_name: text-embeddings-inference
+    ports:
+      - "3030:80"
+    volumes:
+      - ./models:/models
+    working_dir: /models
+    command: ["--model-id", "bge-base-en-v1.5", "--dtype", "float32"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+    networks:
+      - ai-infrastructure-network
+    logging:
+      driver: ${LOG_DRIVER:-json-file}
+      options:
+        max-size: ${LOG_MAX_SIZE:-10m}
+        max-file: ${LOG_MAX_FILE:-5}
+
+networks:
+  ai-infrastructure-network:
+    external: true

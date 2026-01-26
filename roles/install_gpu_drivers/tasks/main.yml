@@ -1,0 +1,170 @@
+---
+# =============================================================================
+# INSTALL GPU DRIVERS ROLE - Main Tasks
+# =============================================================================
+# This role installs NVIDIA GPU drivers based on detected hardware
+# Supports: NVIDIA L40s, RTX 5090, RTX 4090, and other datacenter GPUs
+# =============================================================================
+
+- name: Check if GPU facts file exists
+  ansible.builtin.stat:
+    path: "{{ gpu_facts_file }}"
+  register: gpu_facts_stat
+  when: gpu_facts_file is defined
+  failed_when: false
+
+- name: Include GPU detection facts if available
+  ansible.builtin.include_vars:
+    file: "{{ gpu_facts_file }}"
+    name: gpu_facts
+  when:
+    - gpu_facts_file is defined
+    - gpu_facts_stat.stat.exists | default(false)
+  failed_when: false
+
+
+- name: Verify GPU was detected
+  ansible.builtin.fail:
+    msg: "No GPU detected. Run detect_gpu_hardware role first."
+  when:
+    - gpu_inventory is not defined or not gpu_inventory.detected
+    - require_gpu_detection | default(true)
+
+- name: Display installation plan
+  ansible.builtin.debug:
+    msg:
+      - "=================================="
+      - "GPU Driver Installation Plan"
+      - "=================================="
+      - "GPU Model: {{ gpu_inventory.model | default(detected_gpu_model) }}"
+      - "Current Driver: {{ gpu_inventory.current_driver | default('Not Installed') }}"
+      - "Target Driver: {{ gpu_inventory.recommended_driver | default(target_driver_version) }}"
+      - "Installation Method: {{ driver_installation_method }}"
+      - "=================================="
+
+- name: Check if installation is needed
+  ansible.builtin.set_fact:
+    skip_installation: >-
+      {{ (gpu_inventory.current_driver | default('') != 'Not Installed') and
+         (not force_driver_reinstall | default(false)) and
+         (gpu_inventory.current_driver.split('.')[0] | int >= gpu_inventory.recommended_driver | int) }}
+
+- name: Skip message
+  ansible.builtin.debug:
+    msg: "Driver {{ gpu_inventory.current_driver }} already installed and meets requirements. Use force_driver_reinstall=true to reinstall."
+  when: skip_installation
+
+- name: Include pre-installation tasks
+  ansible.builtin.include_tasks: pre_install.yml
+  when: not skip_installation
+  tags: ['pre_install']
+
+- name: Install driver based on method
+  ansible.builtin.include_tasks: "install_{{ driver_installation_method }}.yml"
+  when: not skip_installation
+  tags: ['install']
+
+- name: Include post-installation tasks
+  ansible.builtin.include_tasks: post_install.yml
+  when: not skip_installation
+  tags: ['post_install']
+
+- name: Verify NVIDIA driver installation
+  ansible.builtin.command: nvidia-smi
+  register: nvidia_smi_verify
+  changed_when: false
+  when: not skip_installation
+
+- name: Display nvidia-smi output
+  ansible.builtin.debug:
+    var: nvidia_smi_verify.stdout_lines
+  when:
+    - not skip_installation
+    - nvidia_smi_verify is defined
+
+- name: Install nvidia-container-toolkit
+  ansible.builtin.include_tasks: install_container_toolkit.yml
+  when:
+    - install_nvidia_container_toolkit | default(true)
+    - not skip_installation
+  tags: ['container_toolkit']
+
+- name: Configure Docker for NVIDIA runtime
+  ansible.builtin.include_tasks: configure_docker_nvidia.yml
+  when:
+    - configure_docker_for_nvidia | default(true)
+    - not skip_installation
+  tags: ['docker_config']
+
+- name: Test GPU with Docker
+  ansible.builtin.include_tasks: test_gpu_docker.yml
+  when:
+    - test_gpu_after_install | default(true)
+    - not skip_installation
+  tags: ['test']
+
+- name: Create GPU driver info file
+  ansible.builtin.template:
+    src: driver_info.txt.j2
+    dest: "{{ gpu_driver_info_file }}"
+    mode: '0644'
+
+- name: Display installation summary
+  ansible.builtin.debug:
+    msg:
+      - "=================================="
+      - "GPU Driver Installation Complete"
+      - "=================================="
+      - "GPU Model: {{ gpu_inventory.model | default(detected_gpu_model) }}"
+      - "Installed Driver: {{ nvidia_smi_verify.stdout_lines[2] | default('Check nvidia-smi') }}"
+      - "CUDA Version: {{ nvidia_smi_verify.stdout_lines[2] | regex_search('CUDA Version: ([0-9.]+)', '\\1') | first | default('Unknown') }}"
+      - "Container Toolkit: {{ 'Installed' if install_nvidia_container_toolkit else 'Skipped' }}"
+      - "Docker Configured: {{ 'Yes' if configure_docker_for_nvidia else 'No' }}"
+      - "=================================="
+  when: not skip_installation
+
+- name: Display reboot requirement
+  ansible.builtin.debug:
+    msg:
+      - "⚠ REBOOT REQUIRED ⚠"
+      - "A system reboot is required to complete driver installation."
+      - "Reboot now or run: ansible-playbook -i inventory.yml gpu_setup.yml --tags reboot"
+  when:
+    - not skip_installation
+    - reboot_after_install | default(false) == false
+
+- name: Reboot system if configured
+  ansible.builtin.reboot:
+    msg: "Rebooting to complete NVIDIA driver installation"
+    reboot_timeout: 600
+  when:
+    - not skip_installation
+    - reboot_after_install | default(false)
+  tags: ['reboot']
+
+- name: Wait for system to come back
+  ansible.builtin.wait_for_connection:
+    delay: 30
+    timeout: 600
+  when:
+    - not skip_installation
+    - reboot_after_install | default(false)
+  tags: ['reboot']
+
+- name: Verify driver after reboot
+  ansible.builtin.command: nvidia-smi
+  register: post_reboot_verify
+  changed_when: false
+  when:
+    - not skip_installation
+    - reboot_after_install | default(false)
+  tags: ['reboot']
+
+- name: Display post-reboot verification
+  ansible.builtin.debug:
+    var: post_reboot_verify.stdout_lines
+  when:
+    - not skip_installation
+    - reboot_after_install | default(false)
+    - post_reboot_verify is defined
+  tags: ['reboot']

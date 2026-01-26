@@ -1,0 +1,547 @@
+{
+  "id": "xuXefaNpDyOLL86M",
+  "name": "SP-AI-5A-Check",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -368,
+        -144
+      ],
+      "id": "d9e32988-e9ef-437e-9b71-b59ac41b0c7f",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseRawToJson(raw) {\n  if (!raw || typeof raw !== 'string') {\n    throw new Error('Invalid input: _raw is undefined or not a string');\n  }\n\n  const result = {};\n  const regex = /,(?=(?:(?:[^\"]*\"){2})*[^\"]*$)/;\n  const pairs = raw.trim().split(regex).map(item => item.trim());\n\n  for (const pair of pairs) {\n    const firstEqualsIndex = pair.indexOf('=');\n    if (firstEqualsIndex === -1) continue;\n\n    const key = pair.substring(0, firstEqualsIndex).trim();\n    let value = pair.substring(firstEqualsIndex + 1).trim();\n\n    if (value.startsWith('\"') && value.endsWith('\"')) {\n      value = value.substring(1, value.length - 1);\n    }\n\n    result[key] = value === 'null' ? null : value;\n  }\n\n  return result;\n}\n\ntry {\n  const rawInput =$input.first().json['Original Rule']._raw;\n  const parsedJson = parseRawToJson(rawInput);\n  return [{ json: { \"Row Log\": parsedJson } }]; // Wrap output in \"Row Log\"\n} catch (error) {\n  return [{ json: { error: error.message } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        -144
+      ],
+      "id": "8b038ede-175e-447e-b31e-4edf627a8906",
+      "name": "Parse row Field "
+    },
+    {
+      "parameters": {
+        "content": "## Final Aggregation\n\"SP-AL-Aggregation 5A  & Final AI Analysis With Nessus\" compiles all analysis results for final decision making.",
+        "height": 320,
+        "width": 400,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        640,
+        528
+      ],
+      "typeVersion": 1,
+      "id": "4e52fe1a-8b5f-484c-abe6-af0a0f0926ad",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Rule Logic: \"SP-AI-RL & AI Analysis\" for rule-based evaluation",
+        "height": 280,
+        "width": 400,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        640,
+        224
+      ],
+      "typeVersion": 1,
+      "id": "1aecd24c-b8d6-4ee0-bdd7-dc56c77af8b7",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Parallel Analysis Modules:\nRelated Alerts Check: Calls \"SP_AI_Alert_Related_Alerts\" to find correlated alerts",
+        "height": 280,
+        "width": 400,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        640,
+        -880
+      ],
+      "typeVersion": 1,
+      "id": "cce60602-2964-4740-ad65-13dc6aa6350a",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## External Intelligence: \"SP-AI-EI & AI Analysis\" for external threat intel",
+        "height": 240,
+        "width": 400,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        640,
+        -576
+      ],
+      "typeVersion": 1,
+      "id": "a614b4d6-2755-4bdd-9712-2363e2302186",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## Threat Intelligence: \"SP-AI-TI & AI Analysis\" for threat analysis",
+        "height": 240,
+        "width": 400,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        640,
+        -320
+      ],
+      "typeVersion": 1,
+      "id": "d5603c84-f0b8-4f2d-ba0b-e35658b3e352",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## Ticketing System: \"SP-AI-Ticketing & AI Analysis\" for case \nmanagement",
+        "height": 260,
+        "width": 400,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        640,
+        -64
+      ],
+      "typeVersion": 1,
+      "id": "afca7aa0-46d3-4579-985a-92cd83b49d72",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "12db0923-1d73-4db4-9ffd-64b11a4e11ea",
+              "name": "Row Log",
+              "value": "={{ $('Parse row Field ').item.json['Row Log'] }}",
+              "type": "object"
+            },
+            {
+              "id": "93754fe9-2abc-4acf-ae0c-601a44e898e5",
+              "name": "Original Rule",
+              "value": "={{ $('When Executed by Another Workflow').item.json['Original Rule'] }}",
+              "type": "object"
+            },
+            {
+              "id": "65816ea2-81b1-45dc-9876-07d674c5e6ba",
+              "name": "Access Token",
+              "value": "={{ $json.access_token }}",
+              "type": "string"
+            },
+            {
+              "id": "9e579f66-0773-43ec-98fc-782f963a8710",
+              "name": "TimeLine ID",
+              "value": "={{ $('Create TimeLine').item.json._id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        -144
+      ],
+      "id": "721b6fb9-c580-45a3-a853-9b522174d8f6",
+      "name": "Required fields for Split"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "jRwxmQyW5r1bZf37",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/jRwxmQyW5r1bZf37",
+          "cachedResultName": "SP — SP-AI Authentication"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        -144
+      ],
+      "id": "c04dbf92-611b-47d2-b346-89dcb3f1b03c",
+      "name": "Token Received",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Local}}:9200/timeline/_doc?pipeline=apk-ai",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"RA\": \"\",\n  \"RL\": \"\",\n  \"TI\": \"\",\n  \"EI\": \"\",\n  \"Ticket\": \"\",\n  \"Device\":\"Splunk\",\n  \"AlertID\":\"{{ $('When Executed by Another Workflow').item.json['Original Rule'].source_event_id }}\",\n\"OrgNickname\":\"{{$vars.SP_Org_Nickname}}\"\n}",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        64,
+        -144
+      ],
+      "id": "11bd4bb5-0b89-4eb9-a0cd-61d6217dd6ad",
+      "name": "Create TimeLine",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "oiLHSFGTirTjtIzJ",
+          "name": "Elastic Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Splunk AI — SP-AI-Alert-Schaeduler 2h",
+        "height": 220,
+        "width": 280,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -560,
+        -528
+      ],
+      "typeVersion": 1,
+      "id": "773e3532-e733-488d-bc14-03a575c957ea",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Initial Rule Parsing and Timeline Creation\nThis section of the workflow is triggered by another workflow and is responsible for parsing the raw `_raw` field from a Splunk notable event into structured JSON format. The parsed data, along with other key metadata (`Original Rule`, `Access Token`, `Timeline ID`), is prepared for further processing by downstream AI-based analysis or rule-splitting components.",
+        "height": 320,
+        "width": 1040
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -416,
+        -288
+      ],
+      "typeVersion": 1,
+      "id": "6e1c7188-a52f-4dfc-957e-fee171acc006",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "bIhytqjNLIixIC4e",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/bIhytqjNLIixIC4e",
+          "cachedResultName": "SP — SP_AI_Alert_Related_Alerts"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        784,
+        -784
+      ],
+      "id": "0eaa514f-a224-47d3-8074-36875703d51e",
+      "name": "call SP_AI_Alert_Related_Alerts",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "IhxRd7FGfCX956Hu",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/IhxRd7FGfCX956Hu",
+          "cachedResultName": "SP — SP-AI-EI & AI Analysis"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        800,
+        -496
+      ],
+      "id": "c2d6e430-11bb-4bad-b11c-d6b3dc65f3a5",
+      "name": "Call SP-AI-EI & AI Analysis",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "yxrkWyyfOMbf4Hjg",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/yxrkWyyfOMbf4Hjg",
+          "cachedResultName": "SP — SP-AI-TI & AI Analysis"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        800,
+        -240
+      ],
+      "id": "1b45a5fb-0dde-4bab-92a4-5634470e30ec",
+      "name": "Call SP-AI-TI & AI Analysis",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ZxfCxkyJxbjxQkHL",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/ZxfCxkyJxbjxQkHL",
+          "cachedResultName": "SP — SP-AI-Ticketing & AI Analysis"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        784,
+        32
+      ],
+      "id": "4330bbea-7b62-4a22-bb3e-57c6b632bc5d",
+      "name": "Call SP-AI-Ticketing & AI Analysis",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "XEYG1gfS7MKkJOIC",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/XEYG1gfS7MKkJOIC",
+          "cachedResultName": "SP — SP-AI-RL & AI Analysis"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        800,
+        320
+      ],
+      "id": "d0373bd5-59c6-470f-b373-63a9c75d2379",
+      "name": "Call SP-AI-RL & AI Analysis",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ix0azy75XuoWRmpn",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/ix0azy75XuoWRmpn",
+          "cachedResultName": "SP — SP-AL-Aggregation 5A  & Final AI Analysis With Nessus"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        832,
+        672
+      ],
+      "id": "8c84a00a-601a-4309-9845-7acb3c46eab6",
+      "name": "Call SP-AL-Aggregation 5A  & Final AI Analysis With Nessus",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: SP-AI-5A-Check\n### Workflow-Version: 1.0.1\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Create for first time\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -560,
+        -848
+      ],
+      "typeVersion": 1,
+      "id": "01101a0a-2294-4a81-b845-14bf65ce33f6",
+      "name": "Sticky Note2"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Parse row Field ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse row Field ": {
+      "main": [
+        [
+          {
+            "node": "Create TimeLine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Required fields for Split": {
+      "main": [
+        [
+          {
+            "node": "call SP_AI_Alert_Related_Alerts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call SP-AI-EI & AI Analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call SP-AI-TI & AI Analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call SP-AI-Ticketing & AI Analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call SP-AI-RL & AI Analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call SP-AL-Aggregation 5A  & Final AI Analysis With Nessus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token Received": {
+      "main": [
+        [
+          {
+            "node": "Required fields for Split",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create TimeLine": {
+      "main": [
+        [
+          {
+            "node": "Token Received",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "07084c80-ab71-453e-be08-2da1e380993f",
+  "owner": {
+    "type": "team",
+    "teamId": "VkJ1fWswpm3ZmsSH",
+    "teamName": "SP"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

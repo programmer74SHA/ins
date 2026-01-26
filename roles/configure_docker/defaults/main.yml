@@ -1,0 +1,54 @@
+---
+# =============================================================================
+# CONFIGURE DOCKER - Default Variables
+# =============================================================================
+
+# Network Configuration
+ai_infrastructure_network_name: "ai-infrastructure-network"
+ai_infrastructure_network_subnet: "172.28.0.0/16"
+ai_infrastructure_network_gateway: "172.28.0.1"
+
+elasticsearch_network_name: "esnet"
+elasticsearch_network_subnet: "172.29.0.0/16"
+elasticsearch_network_gateway: "172.29.0.1"
+create_elasticsearch_network: true
+
+# Docker Daemon Configuration
+configure_docker_daemon: true
+docker_storage_driver: "overlay2"
+docker_data_root: "/var/lib/docker"
+docker_log_driver: "json-file"
+docker_log_max_size: "10m"
+docker_log_max_file: "5"
+
+# Docker Registry Configuration
+# Override these in inventory or group_vars
+# docker_registry_url: "registry.apk-group.net"
+# docker_registry_username: ""
+# docker_registry_password: ""
+
+# NVIDIA Runtime Configuration
+verify_nvidia_runtime: false
+docker_nvidia_runtime_enabled: true
+
+# Maintenance Options
+docker_cleanup_on_configure: false
+configure_docker_logrotate: true
+
+# Resource Limits
+docker_default_ulimits:
+  - nofile:
+      soft: 65536
+      hard: 65536
+
+# Insecure Registries (if needed)
+docker_insecure_registries: []
+# Example:
+# docker_insecure_registries:
+#   - "registry.apk-group.net"
+
+# Registry Mirrors (optional)
+docker_registry_mirrors: []
+# Example:
+# docker_registry_mirrors:
+#   - "https://mirror.gcr.io"

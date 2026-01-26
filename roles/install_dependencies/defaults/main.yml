@@ -6,11 +6,11 @@ essential_packages:
   - apt-transport-https
   - ca-certificates
   - software-properties-common
-  - build-essential
+  # - build-essential
   - curl
   - wget
   - git
-  # - vim
+  - vim
   - nano
   - tar
   - gzip

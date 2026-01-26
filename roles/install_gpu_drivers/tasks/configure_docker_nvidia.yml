@@ -1,0 +1,108 @@
+---
+# Configure Docker for NVIDIA GPU support
+
+- name: Ensure Docker daemon.json exists
+  ansible.builtin.file:
+    path: /etc/docker/daemon.json
+    state: touch
+    mode: '0644'
+  changed_when: false
+
+- name: Read current Docker daemon configuration
+  ansible.builtin.slurp:
+    src: /etc/docker/daemon.json
+  register: daemon_json_encoded
+
+- name: Parse Docker daemon configuration
+  ansible.builtin.set_fact:
+    daemon_config: "{{ daemon_json_encoded.content | b64decode | from_json if daemon_json_encoded.content | b64decode | length > 0 else {} }}"
+
+- name: Merge NVIDIA runtime configuration
+  ansible.builtin.set_fact:
+    updated_daemon_config: >-
+      {{
+        daemon_config | combine({
+          'runtimes': daemon_config.runtimes | default({}) | combine({
+            'nvidia': {
+              'path': 'nvidia-container-runtime',
+              'runtimeArgs': []
+            }
+          }),
+          'default-runtime': 'nvidia'
+        }, recursive=True)
+      }}
+
+- name: Write updated Docker daemon configuration
+  ansible.builtin.copy:
+    content: "{{ updated_daemon_config | to_nice_json }}"
+    dest: /etc/docker/daemon.json
+    mode: '0644'
+    backup: true
+  notify: Restart Docker
+
+- name: Flush handlers to restart Docker
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for Docker to be ready
+  ansible.builtin.wait_for:
+    timeout: 10
+  delegate_to: localhost
+
+- name: Verify Docker can access GPUs
+  ansible.builtin.command: docker run --rm --gpus all nvidia/cuda:12.3.0-base-ubuntu22.04 nvidia-smi
+  register: docker_gpu_test
+  changed_when: false
+  failed_when: false
+
+- name: Display Docker GPU test result
+  ansible.builtin.debug:
+    msg: "{{ 'Docker GPU access: SUCCESS' if docker_gpu_test.rc == 0 else 'Docker GPU access: FAILED' }}"
+
+- name: Show Docker GPU test output
+  ansible.builtin.debug:
+    var: docker_gpu_test.stdout_lines
+  when: docker_gpu_test.rc == 0
+
+- name: Create docker-compose GPU test file
+  ansible.builtin.copy:
+    content: |
+      services:
+        gpu-test:
+          image: nvidia/cuda:12.3.0-base-ubuntu22.04
+          command: nvidia-smi
+          deploy:
+            resources:
+              reservations:
+                devices:
+                  - driver: nvidia
+                    count: all
+                    capabilities: [gpu]
+    dest: /tmp/docker-compose-gpu-test.yml
+    mode: '0644'
+  when: test_docker_compose | default(true)
+
+- name: Test GPU access via docker-compose
+  ansible.builtin.command:
+    cmd: docker compose -f /tmp/docker-compose-gpu-test.yml run --rm gpu-test
+  register: compose_gpu_test
+  changed_when: false
+  failed_when: false
+  when: test_docker_compose | default(true)
+
+- name: Display docker-compose GPU test result
+  ansible.builtin.debug:
+    msg: "{{ 'Docker Compose GPU access: SUCCESS' if compose_gpu_test.rc == 0 else 'Docker Compose GPU access: FAILED' }}"
+  when: test_docker_compose | default(true)
+
+- name: Clean up test files
+  ansible.builtin.file:
+    path: /tmp/docker-compose-gpu-test.yml
+    state: absent
+  when: test_docker_compose | default(true)
+
+- name: Display Docker configuration summary
+  ansible.builtin.debug:
+    msg:
+      - "Docker NVIDIA configuration complete"
+      - "Default runtime: nvidia"
+      - "GPU test: {{ 'Passed' if docker_gpu_test.rc == 0 else 'Failed' }}"

@@ -1,0 +1,1438 @@
+{
+  "id": "IhxRd7FGfCX956Hu",
+  "name": "SP-AI-EI & AI Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Retrieve the data array from the previous node\nconst data = $input.all();\n\n// Initialize empty arrays to store values\nlet sourceip = [];\nlet destinationIP = [];\nlet username = [];\nlet processname = [];\nlet filepath = [];\nlet hostname = [];\nlet rulename = [];\n\n// Helper function to clean values\nfunction clean(value) {\n  if (value === null || value === undefined || value === \"null\") {\n    return \"\";\n  }\n  return value;\n}\n\n// Helper function to extract hostname without domain\nfunction cleanHostname(host) {\n  if (!host) return \"\";\n  // Split by dots and take the first part\n  return host.split('.')[0];\n}\n\n// Loop through each item in the data array\nfor (const item of data) {\n  const originalRule = item.json['Original Rule'] || {};\n\n  sourceip.push(clean(originalRule.src_ip));\n  rulename.push(clean(originalRule.search_name));\n  hostname.push(cleanHostname(originalRule.dest)); // Using cleanHostname here\n  destinationIP.push(clean(originalRule.dest_ip));\n  processname.push(clean(originalRule.process_exec));\n  filepath.push(clean(originalRule.file_path));\n  username.push(clean(originalRule._risk_user));\n}\n\n// Join all values into a single string, separated by comma\nconst SourceIP = sourceip.join(\", \");\nconst HostName = hostname.join(\", \");\nconst DestinationIP = destinationIP.join(\", \");\nconst UserName = username.join(\", \");\nconst ProcessName = processname.join(\", \");\nconst FilePath = filepath.join(\", \");\nconst RuleName = rulename.join(\", \");\n\n// Return all the collected data in a single JSON object\nreturn [\n  {\n    json: {\n      SourceIP,\n      HostName,\n      ProcessName,\n      FilePath,\n      UserName,\n      DestinationIP,\n      RuleName,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        -48
+      ],
+      "id": "f5194c77-45d6-4963-8d99-405e27c65577",
+      "name": "Extract Fields in Alert"
+    },
+    {
+      "parameters": {
+        "content": "## Alert Data Extraction and Context Enrichment\nThis part of the workflow is triggered by another workflow and is responsible for extracting key fields from the original alert (such as IP addresses, host, user, process, file path, and rule name). The data is then enriched using external services. If a process name exists, an additional enrichment call is made for the process. All enriched and structured data is merged for further analysis or action.\n",
+        "height": 720,
+        "width": 1460,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1440,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "3d95ff02-04d5-41ef-9718-fc3079f0f541",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fc8020e9-b63a-4dad-946b-8bedf499b13b",
+              "leftValue": "={{ $json.ProcessName }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -576,
+        224
+      ],
+      "id": "9c30fac8-3096-4bcc-909a-3d875697d003",
+      "name": "For Process Existance"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6d3f1885-bce4-434c-9d65-2a54cf34ed0d",
+              "name": "ProcessName",
+              "value": "={{ $json.ProcessName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -384,
+        208
+      ],
+      "id": "ba4eb7c3-5cd3-4a65-ac81-01d162f39576",
+      "name": "set process field"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/enrich_process",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer {{ $('Called By SP-AI-5A-Check').item.json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"process\":{\"name\":\"{{ $json.ProcessName }}\"}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -192,
+        208
+      ],
+      "id": "871cef20-9ae8-4278-94b4-3dc007611226",
+      "name": "Enrich Process"
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Splunk AI — SP-AI-5A-Check",
+        "height": 220,
+        "width": 300,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1520,
+        -400
+      ],
+      "typeVersion": 1,
+      "id": "43aef3dc-ae2c-4f17-a9c6-1b6446470aa5",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1360,
+        112
+      ],
+      "id": "929b9b26-e1af-46a3-b6c9-77094c6f9919",
+      "name": "Called By SP-AI-5A-Check"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: SP-AI-EI & AI Analysis\n### Workflow-Version: 1.0.0\n### Last Updated: 1404-06-11\n### Author: A&A\n### Change: Create for first time\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1520,
+        -720
+      ],
+      "typeVersion": 1,
+      "id": "47ede882-59a8-4bc0-b450-872cd1781722",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SP_Confluence_Base_URL}}/rest/api/content/search?cql=title=\"{{$vars.SP_Confluence_Assets_Page}}\" AND space={{$vars.SP_Confluence_Default_Space}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -576,
+        -960
+      ],
+      "id": "9a611693-7ad6-496f-b6a9-199849cae73b",
+      "name": "Get Page AI EI (Assets)",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "TBvaC0lfPhn2y3tL",
+          "name": "Confluence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SP_Confluence_Base_URL}}/rest/api/content/search?cql=title=\"{{$vars.SP_Confluence_Network_Zone_Page}}\" AND space={{$vars.SP_Confluence_Default_Space}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -576,
+        -768
+      ],
+      "id": "a3aad64c-9091-456a-a20a-3d5e796c68a6",
+      "name": "Get Page AI EI (Network Zone)",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "TBvaC0lfPhn2y3tL",
+          "name": "Confluence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SP_Confluence_Base_URL}}/rest/api/content/search?cql=title=\"{{$vars.SP_Confluence_Organization_Working_Time_Page}}\" AND space={{$vars.SP_Confluence_Default_Space}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -576,
+        -576
+      ],
+      "id": "ee9c43f8-cb2c-41bc-bc04-e70b2b049907",
+      "name": "Get Page AI EI (Organization Working Time)",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "TBvaC0lfPhn2y3tL",
+          "name": "Confluence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SP_Confluence_Base_URL}}/rest/api/content/search?cql=title=\"{{$vars.SP_Confluence_Server_Access_Control_Page}}\" AND space={{$vars.SP_Confluence_Default_Space}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -576,
+        -384
+      ],
+      "id": "dc14f4db-6b3c-46ed-ae9b-08944bf70cc1",
+      "name": "Get Page AI EI (Server Access Control)",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "TBvaC0lfPhn2y3tL",
+          "name": "Confluence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SP_Confluence_Base_URL}}/rest/api/content/search?cql=title=\"{{$vars.SP_Confluence_TOIC_Page}}\" AND space={{$vars.SP_Confluence_Default_Space}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -576,
+        -192
+      ],
+      "id": "cebe30af-ad0d-41ca-9cd4-6a63d306caab",
+      "name": "Get Page AI EI (Trusted Outbound Internet Connections)",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "TBvaC0lfPhn2y3tL",
+          "name": "Confluence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SP_Confluence_Base_URL}}/rest/api/content/search?cql=title=\"{{$vars.SP_Confluence_Users_Access_Control_Page}}\" AND space={{$vars.SP_Confluence_Default_Space}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -576,
+        0
+      ],
+      "id": "b48d3ff7-8cb5-44a1-a80f-8d8cd8953138",
+      "name": "Get Page AI EI (User's Access Control)",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "TBvaC0lfPhn2y3tL",
+          "name": "Confluence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SP_Confluence_Base_URL}}/rest/api/content/{{ $json.results[0].id }}?expand=body.storage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -352,
+        -960
+      ],
+      "id": "af24c62c-6d0a-48f7-9c44-b7d15020aa55",
+      "name": "Get content AI EI (Assets) by page ID",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "TBvaC0lfPhn2y3tL",
+          "name": "Confluence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SP_Confluence_Base_URL}}/rest/api/content/{{ $json.results[0].id }}?expand=body.storage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -352,
+        -576
+      ],
+      "id": "610f0b9b-0e60-4274-9c91-b5d3df110ee5",
+      "name": "Get content  AI EI (Organization Working Time) by page ID",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "TBvaC0lfPhn2y3tL",
+          "name": "Confluence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SP_Confluence_Base_URL}}/rest/api/content/{{ $json.results[0].id }}?expand=body.storage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -352,
+        -768
+      ],
+      "id": "f322c964-7f37-4085-b42c-cb508dbd6964",
+      "name": "Get content AI EI (Network Zone) by page ID",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "TBvaC0lfPhn2y3tL",
+          "name": "Confluence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SP_Confluence_Base_URL}}/rest/api/content/{{ $json.results[0].id }}?expand=body.storage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -352,
+        -384
+      ],
+      "id": "6aca25d9-6473-40c2-bce7-bb5794f42a1e",
+      "name": "Get content AI EI (Server Access Control) by page ID",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "TBvaC0lfPhn2y3tL",
+          "name": "Confluence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SP_Confluence_Base_URL}}/rest/api/content/{{ $json.results[0].id }}?expand=body.storage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -352,
+        -192
+      ],
+      "id": "15667aa6-9c10-49b9-a4ee-aa8c35a3fb3d",
+      "name": "Get content AI EI (Trusted Outbound Internet Connections) by page ID",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "TBvaC0lfPhn2y3tL",
+          "name": "Confluence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SP_Confluence_Base_URL}}/rest/api/content/{{ $json.results[0].id }}?expand=body.storage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -352,
+        0
+      ],
+      "id": "436ee8e6-ee88-4c12-947f-f9617b35c90b",
+      "name": "Get content AI EI (User's Access Control) by page ID",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "TBvaC0lfPhn2y3tL",
+          "name": "Confluence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $input.first().json.body.storage.value;\n\n// --- 1. Extract table ---\nconst rowMatches = html.match(/<tr>([\\s\\S]*?)<\\/tr>/gi);\nlet tableData = [];\n\nif (rowMatches && rowMatches.length > 0) {\n    // Extract headers from the first row\n    const headerRow = rowMatches[0];\n    const headers = Array.from(headerRow.matchAll(/<t[h|d][^>]*>([\\s\\S]*?)<\\/t[h|d]>/gi))\n        .map(m => m[1].replace(/<[^>]+>/g, '').trim());\n\n    // Extract remaining rows\n    tableData = rowMatches.slice(1).map(row => {\n        const cells = Array.from(row.matchAll(/<td[^>]*>([\\s\\S]*?)<\\/td>/gi))\n            .map(m => m[1].replace(/<[^>]+>/g, '').trim());\n        if (cells.length === 0) return null;\n        const obj = {};\n        headers.forEach((h, i) => obj[h] = cells[i] || '');\n        return obj;\n    }).filter(r => r !== null);\n}\n\n// --- 2. Extract field descriptions & examples ---\nconst htmlWithoutTable = html.replace(/<table[\\s\\S]*?<\\/table>/gi, '');\n\n// Match all <strong>field name</strong> followed by one or more <p>\nconst fieldMatches = Array.from(htmlWithoutTable.matchAll(/<strong>(.*?)<\\/strong>([\\s\\S]*?)(?=(<strong>|$))/gi));\n\nlet fields = {};\n\nfieldMatches.forEach(match => {\n    const fieldName = match[1].replace(/<[^>]+>/g, '').trim();\n    if (!fieldName || /row id/i.test(fieldName)) return;\n\n    // Get all <p> within this block\n    const pMatches = Array.from(match[2].matchAll(/<p[^>]*>([\\s\\S]*?)<\\/p>/gi))\n        .map(m => m[1].replace(/<[^>]+>/g, '').trim())\n        .filter(t => t);\n\n    let description = '';\n    let example = '';\n\n    if (pMatches.length > 0) {\n        description = pMatches[0].replace(/^(Description:)/i, '').trim();\n        if (pMatches.length > 1 && /example/i.test(pMatches[1])) {\n            example = pMatches[1].replace(/^(Example:)/i, '').trim();\n        }\n    }\n\n    fields[fieldName] = { description, example };\n});\n\n// --- 3. Return single item ---\nreturn [\n    {\n        json: {\n            table: tableData,\n            fields: fields\n        }\n    }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        -960
+      ],
+      "id": "11c60db0-1ffc-44e8-a1bc-30998d8a27d5",
+      "name": "Get Content of AI EI (Assets)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $input.first().json.body.storage.value;\n\n// --- 1. Extract table ---\nconst rowMatches = html.match(/<tr>([\\s\\S]*?)<\\/tr>/gi);\nlet tableData = [];\n\nif (rowMatches && rowMatches.length > 0) {\n    // Extract headers from the first row\n    const headerRow = rowMatches[0];\n    const headers = Array.from(headerRow.matchAll(/<t[h|d][^>]*>([\\s\\S]*?)<\\/t[h|d]>/gi))\n        .map(m => m[1].replace(/<[^>]+>/g, '').trim());\n\n    // Extract remaining rows\n    tableData = rowMatches.slice(1).map(row => {\n        const cells = Array.from(row.matchAll(/<td[^>]*>([\\s\\S]*?)<\\/td>/gi))\n            .map(m => m[1].replace(/<[^>]+>/g, '').trim());\n        if (cells.length === 0) return null;\n        const obj = {};\n        headers.forEach((h, i) => obj[h] = cells[i] || '');\n        return obj;\n    }).filter(r => r !== null);\n}\n\n// --- 2. Extract field descriptions & examples ---\nconst htmlWithoutTable = html.replace(/<table[\\s\\S]*?<\\/table>/gi, '');\n\n// Match all <strong>field name</strong> followed by one or more <p>\nconst fieldMatches = Array.from(htmlWithoutTable.matchAll(/<strong>(.*?)<\\/strong>([\\s\\S]*?)(?=(<strong>|$))/gi));\n\nlet fields = {};\n\nfieldMatches.forEach(match => {\n    const fieldName = match[1].replace(/<[^>]+>/g, '').trim();\n    if (!fieldName || /row id/i.test(fieldName)) return;\n\n    // Get all <p> within this block\n    const pMatches = Array.from(match[2].matchAll(/<p[^>]*>([\\s\\S]*?)<\\/p>/gi))\n        .map(m => m[1].replace(/<[^>]+>/g, '').trim())\n        .filter(t => t);\n\n    let description = '';\n    let example = '';\n\n    if (pMatches.length > 0) {\n        description = pMatches[0].replace(/^(Description:)/i, '').trim();\n        if (pMatches.length > 1 && /example/i.test(pMatches[1])) {\n            example = pMatches[1].replace(/^(Example:)/i, '').trim();\n        }\n    }\n\n    fields[fieldName] = { description, example };\n});\n\n// --- 3. Return single item ---\nreturn [\n    {\n        json: {\n            table: tableData,\n            fields: fields\n        }\n    }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        -768
+      ],
+      "id": "701bed26-aea4-4bb1-b183-768938b24030",
+      "name": "Get Content of AI EI (Network Zone)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $input.first().json.body.storage.value;\n\n// --- 1. Extract table ---\nconst rowMatches = html.match(/<tr>([\\s\\S]*?)<\\/tr>/gi);\nlet tableData = [];\n\nif (rowMatches && rowMatches.length > 0) {\n    // Extract headers from the first row\n    const headerRow = rowMatches[0];\n    const headers = Array.from(headerRow.matchAll(/<t[h|d][^>]*>([\\s\\S]*?)<\\/t[h|d]>/gi))\n        .map(m => m[1].replace(/<[^>]+>/g, '').trim());\n\n    // Extract remaining rows\n    tableData = rowMatches.slice(1).map(row => {\n        const cells = Array.from(row.matchAll(/<td[^>]*>([\\s\\S]*?)<\\/td>/gi))\n            .map(m => m[1].replace(/<[^>]+>/g, '').trim());\n        if (cells.length === 0) return null;\n        const obj = {};\n        headers.forEach((h, i) => obj[h] = cells[i] || '');\n        return obj;\n    }).filter(r => r !== null);\n}\n\n// --- 2. Extract field descriptions & examples ---\nconst htmlWithoutTable = html.replace(/<table[\\s\\S]*?<\\/table>/gi, '');\n\n// Match all <strong>field name</strong> followed by one or more <p>\nconst fieldMatches = Array.from(htmlWithoutTable.matchAll(/<strong>(.*?)<\\/strong>([\\s\\S]*?)(?=(<strong>|$))/gi));\n\nlet fields = {};\n\nfieldMatches.forEach(match => {\n    const fieldName = match[1].replace(/<[^>]+>/g, '').trim();\n    if (!fieldName || /row id/i.test(fieldName)) return;\n\n    // Get all <p> within this block\n    const pMatches = Array.from(match[2].matchAll(/<p[^>]*>([\\s\\S]*?)<\\/p>/gi))\n        .map(m => m[1].replace(/<[^>]+>/g, '').trim())\n        .filter(t => t);\n\n    let description = '';\n    let example = '';\n\n    if (pMatches.length > 0) {\n        description = pMatches[0].replace(/^(Description:)/i, '').trim();\n        if (pMatches.length > 1 && /example/i.test(pMatches[1])) {\n            example = pMatches[1].replace(/^(Example:)/i, '').trim();\n        }\n    }\n\n    fields[fieldName] = { description, example };\n});\n\n// --- 3. Return single item ---\nreturn [\n    {\n        json: {\n            table: tableData,\n            fields: fields\n        }\n    }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        -576
+      ],
+      "id": "211f99bb-8658-40bd-9200-5486f0c26aae",
+      "name": "Get Content of  AI EI (Organization Working Time)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $input.first().json.body.storage.value;\n\n// --- 1. Extract table ---\nconst rowMatches = html.match(/<tr>([\\s\\S]*?)<\\/tr>/gi);\nlet tableData = [];\n\nif (rowMatches && rowMatches.length > 0) {\n    // Extract headers from the first row\n    const headerRow = rowMatches[0];\n    const headers = Array.from(headerRow.matchAll(/<t[h|d][^>]*>([\\s\\S]*?)<\\/t[h|d]>/gi))\n        .map(m => m[1].replace(/<[^>]+>/g, '').trim());\n\n    // Extract remaining rows\n    tableData = rowMatches.slice(1).map(row => {\n        const cells = Array.from(row.matchAll(/<td[^>]*>([\\s\\S]*?)<\\/td>/gi))\n            .map(m => m[1].replace(/<[^>]+>/g, '').trim());\n        if (cells.length === 0) return null;\n        const obj = {};\n        headers.forEach((h, i) => obj[h] = cells[i] || '');\n        return obj;\n    }).filter(r => r !== null);\n}\n\n// --- 2. Extract field descriptions & examples ---\nconst htmlWithoutTable = html.replace(/<table[\\s\\S]*?<\\/table>/gi, '');\n\n// Match all <strong>field name</strong> followed by one or more <p>\nconst fieldMatches = Array.from(htmlWithoutTable.matchAll(/<strong>(.*?)<\\/strong>([\\s\\S]*?)(?=(<strong>|$))/gi));\n\nlet fields = {};\n\nfieldMatches.forEach(match => {\n    const fieldName = match[1].replace(/<[^>]+>/g, '').trim();\n    if (!fieldName || /row id/i.test(fieldName)) return;\n\n    // Get all <p> within this block\n    const pMatches = Array.from(match[2].matchAll(/<p[^>]*>([\\s\\S]*?)<\\/p>/gi))\n        .map(m => m[1].replace(/<[^>]+>/g, '').trim())\n        .filter(t => t);\n\n    let description = '';\n    let example = '';\n\n    if (pMatches.length > 0) {\n        description = pMatches[0].replace(/^(Description:)/i, '').trim();\n        if (pMatches.length > 1 && /example/i.test(pMatches[1])) {\n            example = pMatches[1].replace(/^(Example:)/i, '').trim();\n        }\n    }\n\n    fields[fieldName] = { description, example };\n});\n\n// --- 3. Return single item ---\nreturn [\n    {\n        json: {\n            table: tableData,\n            fields: fields\n        }\n    }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        -384
+      ],
+      "id": "26d898c1-0e8c-4c04-9e33-d25b3fa47bd8",
+      "name": "Get Content ofAI EI (User's Access Control)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $input.first().json.body.storage.value;\n\n// --- 1. Extract table ---\nconst rowMatches = html.match(/<tr>([\\s\\S]*?)<\\/tr>/gi);\nlet tableData = [];\n\nif (rowMatches && rowMatches.length > 0) {\n    // Extract headers from the first row\n    const headerRow = rowMatches[0];\n    const headers = Array.from(headerRow.matchAll(/<t[h|d][^>]*>([\\s\\S]*?)<\\/t[h|d]>/gi))\n        .map(m => m[1].replace(/<[^>]+>/g, '').trim());\n\n    // Extract remaining rows\n    tableData = rowMatches.slice(1).map(row => {\n        const cells = Array.from(row.matchAll(/<td[^>]*>([\\s\\S]*?)<\\/td>/gi))\n            .map(m => m[1].replace(/<[^>]+>/g, '').trim());\n        if (cells.length === 0) return null;\n        const obj = {};\n        headers.forEach((h, i) => obj[h] = cells[i] || '');\n        return obj;\n    }).filter(r => r !== null);\n}\n\n// --- 2. Extract field descriptions & examples ---\nconst htmlWithoutTable = html.replace(/<table[\\s\\S]*?<\\/table>/gi, '');\n\n// Match all <strong>field name</strong> followed by one or more <p>\nconst fieldMatches = Array.from(htmlWithoutTable.matchAll(/<strong>(.*?)<\\/strong>([\\s\\S]*?)(?=(<strong>|$))/gi));\n\nlet fields = {};\n\nfieldMatches.forEach(match => {\n    const fieldName = match[1].replace(/<[^>]+>/g, '').trim();\n    if (!fieldName || /row id/i.test(fieldName)) return;\n\n    // Get all <p> within this block\n    const pMatches = Array.from(match[2].matchAll(/<p[^>]*>([\\s\\S]*?)<\\/p>/gi))\n        .map(m => m[1].replace(/<[^>]+>/g, '').trim())\n        .filter(t => t);\n\n    let description = '';\n    let example = '';\n\n    if (pMatches.length > 0) {\n        description = pMatches[0].replace(/^(Description:)/i, '').trim();\n        if (pMatches.length > 1 && /example/i.test(pMatches[1])) {\n            example = pMatches[1].replace(/^(Example:)/i, '').trim();\n        }\n    }\n\n    fields[fieldName] = { description, example };\n});\n\n// --- 3. Return single item ---\nreturn [\n    {\n        json: {\n            table: tableData,\n            fields: fields\n        }\n    }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        -192
+      ],
+      "id": "6dd98411-4842-4324-97b2-37d874a13699",
+      "name": "Get Content of AI EI (Trusted Outbound Internet Connections)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $input.first().json.body.storage.value;\n\n// --- 1. Extract table ---\nconst rowMatches = html.match(/<tr>([\\s\\S]*?)<\\/tr>/gi);\nlet tableData = [];\n\nif (rowMatches && rowMatches.length > 0) {\n    // Extract headers from the first row\n    const headerRow = rowMatches[0];\n    const headers = Array.from(headerRow.matchAll(/<t[h|d][^>]*>([\\s\\S]*?)<\\/t[h|d]>/gi))\n        .map(m => m[1].replace(/<[^>]+>/g, '').trim());\n\n    // Extract remaining rows\n    tableData = rowMatches.slice(1).map(row => {\n        const cells = Array.from(row.matchAll(/<td[^>]*>([\\s\\S]*?)<\\/td>/gi))\n            .map(m => m[1].replace(/<[^>]+>/g, '').trim());\n        if (cells.length === 0) return null;\n        const obj = {};\n        headers.forEach((h, i) => obj[h] = cells[i] || '');\n        return obj;\n    }).filter(r => r !== null);\n}\n\n// --- 2. Extract field descriptions & examples ---\nconst htmlWithoutTable = html.replace(/<table[\\s\\S]*?<\\/table>/gi, '');\n\n// Match all <strong>field name</strong> followed by one or more <p>\nconst fieldMatches = Array.from(htmlWithoutTable.matchAll(/<strong>(.*?)<\\/strong>([\\s\\S]*?)(?=(<strong>|$))/gi));\n\nlet fields = {};\n\nfieldMatches.forEach(match => {\n    const fieldName = match[1].replace(/<[^>]+>/g, '').trim();\n    if (!fieldName || /row id/i.test(fieldName)) return;\n\n    // Get all <p> within this block\n    const pMatches = Array.from(match[2].matchAll(/<p[^>]*>([\\s\\S]*?)<\\/p>/gi))\n        .map(m => m[1].replace(/<[^>]+>/g, '').trim())\n        .filter(t => t);\n\n    let description = '';\n    let example = '';\n\n    if (pMatches.length > 0) {\n        description = pMatches[0].replace(/^(Description:)/i, '').trim();\n        if (pMatches.length > 1 && /example/i.test(pMatches[1])) {\n            example = pMatches[1].replace(/^(Example:)/i, '').trim();\n        }\n    }\n\n    fields[fieldName] = { description, example };\n});\n\n// --- 3. Return single item ---\nreturn [\n    {\n        json: {\n            table: tableData,\n            fields: fields\n        }\n    }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        0
+      ],
+      "id": "7aec41f4-2086-402f-8339-7ee98f5be0e9",
+      "name": "Get Content of  AI EI (User's Access Control)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// --------------------------------------------\n// Helper: Convert IP to Integer\n// --------------------------------------------\nfunction ipToInt(ip) {\n    const parts = ip.split('.');\n    if (parts.length !== 4) return null;\n    return parts.reduce((acc, part) => (acc << 8) + parseInt(part, 10), 0) >>> 0;\n}\n\n// --------------------------------------------\n// Helper: Check if IP is inside CIDR\n// --------------------------------------------\nfunction ipInCidr(ip, cidr) {\n    if (!cidr.includes(\"/\")) return false;\n    const [cidrIp, mask] = cidr.split(\"/\");\n    const maskBits = parseInt(mask, 10);\n\n    const ipInt = ipToInt(ip);\n    const cidrInt = ipToInt(cidrIp);\n    if (ipInt === null || cidrInt === null) return false;\n\n    const maskInt = maskBits === 0 ? 0 : (~0 << (32 - maskBits)) >>> 0;\n    return (ipInt & maskInt) === (cidrInt & maskInt);\n}\n\n// --------------------------------------------\n// Helper: extract IPs or CIDRs from a string\n// --------------------------------------------\nfunction extractIpOrCidr(str) {\n    if (typeof str !== \"string\") return [];\n    const regex = /\\b\\d{1,3}(?:\\.\\d{1,3}){3}(?:\\/\\d{1,2})?\\b/g;\n    return str.match(regex) || [];\n}\n\n// --------------------------------------------\n// Helper: detect service:port (flexible)\n// Matches ssh:22, ssh :22, ssh: 22, ssh : 22, https:443, etc.\n// --------------------------------------------\nfunction isServicePortFormat(str) {\n    return /^[A-Za-z0-9_\\-\\.]+\\s*:\\s*\\d{1,5}$/.test(str.trim());\n}\n\n// --------------------------------------------\n// GET ALERT FIELDS\n// --------------------------------------------\nlet alertFieldsArray = $('Extract Fields in Alert').item.json;\nif (!Array.isArray(alertFieldsArray)) alertFieldsArray = [alertFieldsArray];\n\nconst alertValues = [];\nconst alertIPs = [];\n\nalertFieldsArray.forEach(alert => {\n    for (const key in alert) {\n        const raw = alert[key];\n        if (!raw) continue;\n\n        const val = raw.toString().trim();\n        if (val === \"\") continue;\n\n        alertValues.push(val);\n\n        // Detect simple IPv4 addresses\n        if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(val)) {\n            alertIPs.push(val);\n        }\n    }\n});\n\n// --------------------------------------------\n// GET TABLE\n// --------------------------------------------\nconst tableData = $input.first().json.table;\n\nif (!tableData || !Array.isArray(tableData)) {\n    return [{ json: { message: \"No table found in input\", count: 0 } }];\n}\n\n// --------------------------------------------\n// MATCHING: detect matched values\n// --------------------------------------------\nfunction findMatchedValues(row, alertValues, alertIPs) {\n    const matched = [];\n    const rowValues = Object.values(row).filter(v => v);\n\n    rowValues.forEach(cell => {\n        const cellStr = cell.toString();\n\n        // Split by commas or semicolons to handle multiple values in one cell\n        const parts = cellStr.split(/[,;]+/).map(p => p.trim());\n\n        parts.forEach(part => {\n\n            // ❌ Skip service:port formatted parts\n            if (isServicePortFormat(part)) return;\n\n            // TEXT matching (alert value inside part)\n            alertValues.forEach(val => {\n                if (part.includes(val) && !matched.includes(val)) {\n                    matched.push(val);\n                }\n            });\n\n            // IP / CIDR detection\n            const foundPatterns = extractIpOrCidr(part);\n\n            foundPatterns.forEach(pattern => {\n                if (pattern.includes(\"/\")) {\n                    alertIPs.forEach(ip => {\n                        if (ipInCidr(ip, pattern) && !matched.includes(ip)) {\n                            matched.push(ip);\n                        }\n                    });\n                } else if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(pattern)) {\n                    if (alertIPs.includes(pattern) && !matched.includes(pattern)) {\n                        matched.push(pattern);\n                    }\n                }\n            });\n\n        });\n    });\n\n    return matched;\n}\n\n// --------------------------------------------\n// FIND MATCHES\n// --------------------------------------------\nlet globalMatchedValues = [];\nconst matchedRows = [];\n\ntableData.forEach(row => {\n    const rowMatchedValues = findMatchedValues(row, alertValues, alertIPs);\n\n    if (rowMatchedValues.length > 0) {\n        matchedRows.push(row);\n        rowMatchedValues.forEach(v => {\n            if (!globalMatchedValues.includes(v)) {\n                globalMatchedValues.push(v);\n            }\n        });\n    }\n});\n\n// --------------------------------------------\n// RETURN RESULT\n// --------------------------------------------\nif (matchedRows.length === 0) {\n    return [{\n        json: {\n            message: \"No matching rows found\",\n            count: 0\n        }\n    }];\n}\n\nreturn [{\n    json: {\n        message: \"Matching rows found\",\n        count: matchedRows.length,\n        matchedValues: globalMatchedValues,\n        rows: matchedRows\n    }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -960
+      ],
+      "id": "5d0728ea-bb2e-45b2-8792-898cfa549074",
+      "name": "Get Match AI EI (Assets)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// --------------------------------------------\n// Helper: Convert IP to Integer\n// --------------------------------------------\nfunction ipToInt(ip) {\n    const parts = ip.split('.');\n    if (parts.length !== 4) return null;\n    return parts.reduce((acc, part) => (acc << 8) + parseInt(part, 10), 0) >>> 0;\n}\n\n// --------------------------------------------\n// Helper: Check if IP is inside CIDR\n// --------------------------------------------\nfunction ipInCidr(ip, cidr) {\n    if (!cidr.includes(\"/\")) return false;\n    const [cidrIp, mask] = cidr.split(\"/\");\n    const maskBits = parseInt(mask, 10);\n\n    const ipInt = ipToInt(ip);\n    const cidrInt = ipToInt(cidrIp);\n    if (ipInt === null || cidrInt === null) return false;\n\n    const maskInt = maskBits === 0 ? 0 : (~0 << (32 - maskBits)) >>> 0;\n    return (ipInt & maskInt) === (cidrInt & maskInt);\n}\n\n// --------------------------------------------\n// Helper: extract IPs or CIDRs from a string\n// --------------------------------------------\nfunction extractIpOrCidr(str) {\n    if (typeof str !== \"string\") return [];\n    const regex = /\\b\\d{1,3}(?:\\.\\d{1,3}){3}(?:\\/\\d{1,2})?\\b/g;\n    return str.match(regex) || [];\n}\n\n// --------------------------------------------\n// Helper: detect service:port (flexible)\n// Matches ssh:22, ssh :22, ssh: 22, ssh : 22, https:443, etc.\n// --------------------------------------------\nfunction isServicePortFormat(str) {\n    return /^[A-Za-z0-9_\\-\\.]+\\s*:\\s*\\d{1,5}$/.test(str.trim());\n}\n\n// --------------------------------------------\n// GET ALERT FIELDS\n// --------------------------------------------\nlet alertFieldsArray = $('Extract Fields in Alert').item.json;\nif (!Array.isArray(alertFieldsArray)) alertFieldsArray = [alertFieldsArray];\n\nconst alertValues = [];\nconst alertIPs = [];\n\nalertFieldsArray.forEach(alert => {\n    for (const key in alert) {\n        const raw = alert[key];\n        if (!raw) continue;\n\n        const val = raw.toString().trim();\n        if (val === \"\") continue;\n\n        alertValues.push(val);\n\n        // Detect simple IPv4 addresses\n        if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(val)) {\n            alertIPs.push(val);\n        }\n    }\n});\n\n// --------------------------------------------\n// GET TABLE\n// --------------------------------------------\nconst tableData = $input.first().json.table;\n\nif (!tableData || !Array.isArray(tableData)) {\n    return [{ json: { message: \"No table found in input\", count: 0 } }];\n}\n\n// --------------------------------------------\n// MATCHING: detect matched values\n// --------------------------------------------\nfunction findMatchedValues(row, alertValues, alertIPs) {\n    const matched = [];\n    const rowValues = Object.values(row).filter(v => v);\n\n    rowValues.forEach(cell => {\n        const cellStr = cell.toString();\n\n        // Split by commas or semicolons to handle multiple values in one cell\n        const parts = cellStr.split(/[,;]+/).map(p => p.trim());\n\n        parts.forEach(part => {\n\n            // ❌ Skip service:port formatted parts\n            if (isServicePortFormat(part)) return;\n\n            // TEXT matching (alert value inside part)\n            alertValues.forEach(val => {\n                if (part.includes(val) && !matched.includes(val)) {\n                    matched.push(val);\n                }\n            });\n\n            // IP / CIDR detection\n            const foundPatterns = extractIpOrCidr(part);\n\n            foundPatterns.forEach(pattern => {\n                if (pattern.includes(\"/\")) {\n                    alertIPs.forEach(ip => {\n                        if (ipInCidr(ip, pattern) && !matched.includes(ip)) {\n                            matched.push(ip);\n                        }\n                    });\n                } else if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(pattern)) {\n                    if (alertIPs.includes(pattern) && !matched.includes(pattern)) {\n                        matched.push(pattern);\n                    }\n                }\n            });\n\n        });\n    });\n\n    return matched;\n}\n\n// --------------------------------------------\n// FIND MATCHES\n// --------------------------------------------\nlet globalMatchedValues = [];\nconst matchedRows = [];\n\ntableData.forEach(row => {\n    const rowMatchedValues = findMatchedValues(row, alertValues, alertIPs);\n\n    if (rowMatchedValues.length > 0) {\n        matchedRows.push(row);\n        rowMatchedValues.forEach(v => {\n            if (!globalMatchedValues.includes(v)) {\n                globalMatchedValues.push(v);\n            }\n        });\n    }\n});\n\n// --------------------------------------------\n// RETURN RESULT\n// --------------------------------------------\nif (matchedRows.length === 0) {\n    return [{\n        json: {\n            message: \"No matching rows found\",\n            count: 0\n        }\n    }];\n}\n\nreturn [{\n    json: {\n        message: \"Matching rows found\",\n        count: matchedRows.length,\n        matchedValues: globalMatchedValues,\n        rows: matchedRows\n    }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -768
+      ],
+      "id": "a328947b-15ef-4c6e-97d6-2beaaac85b01",
+      "name": "Gat Match AI EI (Network Zone)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// --------------------------------------------\n// Helper: Convert IP to Integer\n// --------------------------------------------\nfunction ipToInt(ip) {\n    const parts = ip.split('.');\n    if (parts.length !== 4) return null;\n    return parts.reduce((acc, part) => (acc << 8) + parseInt(part, 10), 0) >>> 0;\n}\n\n// --------------------------------------------\n// Helper: Check if IP is inside CIDR\n// --------------------------------------------\nfunction ipInCidr(ip, cidr) {\n    if (!cidr.includes(\"/\")) return false;\n    const [cidrIp, mask] = cidr.split(\"/\");\n    const maskBits = parseInt(mask, 10);\n\n    const ipInt = ipToInt(ip);\n    const cidrInt = ipToInt(cidrIp);\n    if (ipInt === null || cidrInt === null) return false;\n\n    const maskInt = maskBits === 0 ? 0 : (~0 << (32 - maskBits)) >>> 0;\n    return (ipInt & maskInt) === (cidrInt & maskInt);\n}\n\n// --------------------------------------------\n// Helper: extract IPs or CIDRs from a string\n// --------------------------------------------\nfunction extractIpOrCidr(str) {\n    if (typeof str !== \"string\") return [];\n    const regex = /\\b\\d{1,3}(?:\\.\\d{1,3}){3}(?:\\/\\d{1,2})?\\b/g;\n    return str.match(regex) || [];\n}\n\n// --------------------------------------------\n// Helper: detect service:port (flexible)\n// Matches ssh:22, ssh :22, ssh: 22, ssh : 22, https:443, etc.\n// --------------------------------------------\nfunction isServicePortFormat(str) {\n    return /^[A-Za-z0-9_\\-\\.]+\\s*:\\s*\\d{1,5}$/.test(str.trim());\n}\n\n// --------------------------------------------\n// GET ALERT FIELDS\n// --------------------------------------------\nlet alertFieldsArray = $('Extract Fields in Alert').item.json;\nif (!Array.isArray(alertFieldsArray)) alertFieldsArray = [alertFieldsArray];\n\nconst alertValues = [];\nconst alertIPs = [];\n\nalertFieldsArray.forEach(alert => {\n    for (const key in alert) {\n        const raw = alert[key];\n        if (!raw) continue;\n\n        const val = raw.toString().trim();\n        if (val === \"\") continue;\n\n        alertValues.push(val);\n\n        // Detect simple IPv4 addresses\n        if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(val)) {\n            alertIPs.push(val);\n        }\n    }\n});\n\n// --------------------------------------------\n// GET TABLE\n// --------------------------------------------\nconst tableData = $input.first().json.table;\n\nif (!tableData || !Array.isArray(tableData)) {\n    return [{ json: { message: \"No table found in input\", count: 0 } }];\n}\n\n// --------------------------------------------\n// MATCHING: detect matched values\n// --------------------------------------------\nfunction findMatchedValues(row, alertValues, alertIPs) {\n    const matched = [];\n    const rowValues = Object.values(row).filter(v => v);\n\n    rowValues.forEach(cell => {\n        const cellStr = cell.toString();\n\n        // Split by commas or semicolons to handle multiple values in one cell\n        const parts = cellStr.split(/[,;]+/).map(p => p.trim());\n\n        parts.forEach(part => {\n\n            // ❌ Skip service:port formatted parts\n            if (isServicePortFormat(part)) return;\n\n            // TEXT matching (alert value inside part)\n            alertValues.forEach(val => {\n                if (part.includes(val) && !matched.includes(val)) {\n                    matched.push(val);\n                }\n            });\n\n            // IP / CIDR detection\n            const foundPatterns = extractIpOrCidr(part);\n\n            foundPatterns.forEach(pattern => {\n                if (pattern.includes(\"/\")) {\n                    alertIPs.forEach(ip => {\n                        if (ipInCidr(ip, pattern) && !matched.includes(ip)) {\n                            matched.push(ip);\n                        }\n                    });\n                } else if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(pattern)) {\n                    if (alertIPs.includes(pattern) && !matched.includes(pattern)) {\n                        matched.push(pattern);\n                    }\n                }\n            });\n\n        });\n    });\n\n    return matched;\n}\n\n// --------------------------------------------\n// FIND MATCHES\n// --------------------------------------------\nlet globalMatchedValues = [];\nconst matchedRows = [];\n\ntableData.forEach(row => {\n    const rowMatchedValues = findMatchedValues(row, alertValues, alertIPs);\n\n    if (rowMatchedValues.length > 0) {\n        matchedRows.push(row);\n        rowMatchedValues.forEach(v => {\n            if (!globalMatchedValues.includes(v)) {\n                globalMatchedValues.push(v);\n            }\n        });\n    }\n});\n\n// --------------------------------------------\n// RETURN RESULT\n// --------------------------------------------\nif (matchedRows.length === 0) {\n    return [{\n        json: {\n            message: \"No matching rows found\",\n            count: 0\n        }\n    }];\n}\n\nreturn [{\n    json: {\n        message: \"Matching rows found\",\n        count: matchedRows.length,\n        matchedValues: globalMatchedValues,\n        rows: matchedRows\n    }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -576
+      ],
+      "id": "8abab7c5-2c04-4ea9-8d7f-4525704a4cf5",
+      "name": "Get Match  AI EI (Organization Working Time)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// --------------------------------------------\n// Helper: Convert IP to Integer\n// --------------------------------------------\nfunction ipToInt(ip) {\n    const parts = ip.split('.');\n    if (parts.length !== 4) return null;\n    return parts.reduce((acc, part) => (acc << 8) + parseInt(part, 10), 0) >>> 0;\n}\n\n// --------------------------------------------\n// Helper: Check if IP is inside CIDR\n// --------------------------------------------\nfunction ipInCidr(ip, cidr) {\n    if (!cidr.includes(\"/\")) return false;\n    const [cidrIp, mask] = cidr.split(\"/\");\n    const maskBits = parseInt(mask, 10);\n\n    const ipInt = ipToInt(ip);\n    const cidrInt = ipToInt(cidrIp);\n    if (ipInt === null || cidrInt === null) return false;\n\n    const maskInt = maskBits === 0 ? 0 : (~0 << (32 - maskBits)) >>> 0;\n    return (ipInt & maskInt) === (cidrInt & maskInt);\n}\n\n// --------------------------------------------\n// Helper: extract IPs or CIDRs from a string\n// --------------------------------------------\nfunction extractIpOrCidr(str) {\n    if (typeof str !== \"string\") return [];\n    const regex = /\\b\\d{1,3}(?:\\.\\d{1,3}){3}(?:\\/\\d{1,2})?\\b/g;\n    return str.match(regex) || [];\n}\n\n// --------------------------------------------\n// Helper: detect service:port (flexible)\n// Matches ssh:22, ssh :22, ssh: 22, ssh : 22, https:443, etc.\n// --------------------------------------------\nfunction isServicePortFormat(str) {\n    return /^[A-Za-z0-9_\\-\\.]+\\s*:\\s*\\d{1,5}$/.test(str.trim());\n}\n\n// --------------------------------------------\n// GET ALERT FIELDS\n// --------------------------------------------\nlet alertFieldsArray = $('Extract Fields in Alert').item.json;\nif (!Array.isArray(alertFieldsArray)) alertFieldsArray = [alertFieldsArray];\n\nconst alertValues = [];\nconst alertIPs = [];\n\nalertFieldsArray.forEach(alert => {\n    for (const key in alert) {\n        const raw = alert[key];\n        if (!raw) continue;\n\n        const val = raw.toString().trim();\n        if (val === \"\") continue;\n\n        alertValues.push(val);\n\n        // Detect simple IPv4 addresses\n        if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(val)) {\n            alertIPs.push(val);\n        }\n    }\n});\n\n// --------------------------------------------\n// GET TABLE\n// --------------------------------------------\nconst tableData = $input.first().json.table;\n\nif (!tableData || !Array.isArray(tableData)) {\n    return [{ json: { message: \"No table found in input\", count: 0 } }];\n}\n\n// --------------------------------------------\n// MATCHING: detect matched values\n// --------------------------------------------\nfunction findMatchedValues(row, alertValues, alertIPs) {\n    const matched = [];\n    const rowValues = Object.values(row).filter(v => v);\n\n    rowValues.forEach(cell => {\n        const cellStr = cell.toString();\n\n        // Split by commas or semicolons to handle multiple values in one cell\n        const parts = cellStr.split(/[,;]+/).map(p => p.trim());\n\n        parts.forEach(part => {\n\n            // ❌ Skip service:port formatted parts\n            if (isServicePortFormat(part)) return;\n\n            // TEXT matching (alert value inside part)\n            alertValues.forEach(val => {\n                if (part.includes(val) && !matched.includes(val)) {\n                    matched.push(val);\n                }\n            });\n\n            // IP / CIDR detection\n            const foundPatterns = extractIpOrCidr(part);\n\n            foundPatterns.forEach(pattern => {\n                if (pattern.includes(\"/\")) {\n                    alertIPs.forEach(ip => {\n                        if (ipInCidr(ip, pattern) && !matched.includes(ip)) {\n                            matched.push(ip);\n                        }\n                    });\n                } else if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(pattern)) {\n                    if (alertIPs.includes(pattern) && !matched.includes(pattern)) {\n                        matched.push(pattern);\n                    }\n                }\n            });\n\n        });\n    });\n\n    return matched;\n}\n\n// --------------------------------------------\n// FIND MATCHES\n// --------------------------------------------\nlet globalMatchedValues = [];\nconst matchedRows = [];\n\ntableData.forEach(row => {\n    const rowMatchedValues = findMatchedValues(row, alertValues, alertIPs);\n\n    if (rowMatchedValues.length > 0) {\n        matchedRows.push(row);\n        rowMatchedValues.forEach(v => {\n            if (!globalMatchedValues.includes(v)) {\n                globalMatchedValues.push(v);\n            }\n        });\n    }\n});\n\n// --------------------------------------------\n// RETURN RESULT\n// --------------------------------------------\nif (matchedRows.length === 0) {\n    return [{\n        json: {\n            message: \"No matching rows found\",\n            count: 0\n        }\n    }];\n}\n\nreturn [{\n    json: {\n        message: \"Matching rows found\",\n        count: matchedRows.length,\n        matchedValues: globalMatchedValues,\n        rows: matchedRows\n    }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -384
+      ],
+      "id": "87b703b0-ae3d-4852-8587-d590ae118eaa",
+      "name": "Get Match AI EI (Server Access Control)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// --------------------------------------------\n// Helper: Convert IP to Integer\n// --------------------------------------------\nfunction ipToInt(ip) {\n    const parts = ip.split('.');\n    if (parts.length !== 4) return null;\n    return parts.reduce((acc, part) => (acc << 8) + parseInt(part, 10), 0) >>> 0;\n}\n\n// --------------------------------------------\n// Helper: Check if IP is inside CIDR\n// --------------------------------------------\nfunction ipInCidr(ip, cidr) {\n    if (!cidr.includes(\"/\")) return false;\n    const [cidrIp, mask] = cidr.split(\"/\");\n    const maskBits = parseInt(mask, 10);\n\n    const ipInt = ipToInt(ip);\n    const cidrInt = ipToInt(cidrIp);\n    if (ipInt === null || cidrInt === null) return false;\n\n    const maskInt = maskBits === 0 ? 0 : (~0 << (32 - maskBits)) >>> 0;\n    return (ipInt & maskInt) === (cidrInt & maskInt);\n}\n\n// --------------------------------------------\n// Helper: extract IPs or CIDRs from a string\n// --------------------------------------------\nfunction extractIpOrCidr(str) {\n    if (typeof str !== \"string\") return [];\n    const regex = /\\b\\d{1,3}(?:\\.\\d{1,3}){3}(?:\\/\\d{1,2})?\\b/g;\n    return str.match(regex) || [];\n}\n\n// --------------------------------------------\n// Helper: detect service:port (flexible)\n// Matches ssh:22, ssh :22, ssh: 22, ssh : 22, https:443, etc.\n// --------------------------------------------\nfunction isServicePortFormat(str) {\n    return /^[A-Za-z0-9_\\-\\.]+\\s*:\\s*\\d{1,5}$/.test(str.trim());\n}\n\n// --------------------------------------------\n// GET ALERT FIELDS\n// --------------------------------------------\nlet alertFieldsArray = $('Extract Fields in Alert').item.json;\nif (!Array.isArray(alertFieldsArray)) alertFieldsArray = [alertFieldsArray];\n\nconst alertValues = [];\nconst alertIPs = [];\n\nalertFieldsArray.forEach(alert => {\n    for (const key in alert) {\n        const raw = alert[key];\n        if (!raw) continue;\n\n        const val = raw.toString().trim();\n        if (val === \"\") continue;\n\n        alertValues.push(val);\n\n        // Detect simple IPv4 addresses\n        if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(val)) {\n            alertIPs.push(val);\n        }\n    }\n});\n\n// --------------------------------------------\n// GET TABLE\n// --------------------------------------------\nconst tableData = $input.first().json.table;\n\nif (!tableData || !Array.isArray(tableData)) {\n    return [{ json: { message: \"No table found in input\", count: 0 } }];\n}\n\n// --------------------------------------------\n// MATCHING: detect matched values\n// --------------------------------------------\nfunction findMatchedValues(row, alertValues, alertIPs) {\n    const matched = [];\n    const rowValues = Object.values(row).filter(v => v);\n\n    rowValues.forEach(cell => {\n        const cellStr = cell.toString();\n\n        // Split by commas or semicolons to handle multiple values in one cell\n        const parts = cellStr.split(/[,;]+/).map(p => p.trim());\n\n        parts.forEach(part => {\n\n            // ❌ Skip service:port formatted parts\n            if (isServicePortFormat(part)) return;\n\n            // TEXT matching (alert value inside part)\n            alertValues.forEach(val => {\n                if (part.includes(val) && !matched.includes(val)) {\n                    matched.push(val);\n                }\n            });\n\n            // IP / CIDR detection\n            const foundPatterns = extractIpOrCidr(part);\n\n            foundPatterns.forEach(pattern => {\n                if (pattern.includes(\"/\")) {\n                    alertIPs.forEach(ip => {\n                        if (ipInCidr(ip, pattern) && !matched.includes(ip)) {\n                            matched.push(ip);\n                        }\n                    });\n                } else if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(pattern)) {\n                    if (alertIPs.includes(pattern) && !matched.includes(pattern)) {\n                        matched.push(pattern);\n                    }\n                }\n            });\n\n        });\n    });\n\n    return matched;\n}\n\n// --------------------------------------------\n// FIND MATCHES\n// --------------------------------------------\nlet globalMatchedValues = [];\nconst matchedRows = [];\n\ntableData.forEach(row => {\n    const rowMatchedValues = findMatchedValues(row, alertValues, alertIPs);\n\n    if (rowMatchedValues.length > 0) {\n        matchedRows.push(row);\n        rowMatchedValues.forEach(v => {\n            if (!globalMatchedValues.includes(v)) {\n                globalMatchedValues.push(v);\n            }\n        });\n    }\n});\n\n// --------------------------------------------\n// RETURN RESULT\n// --------------------------------------------\nif (matchedRows.length === 0) {\n    return [{\n        json: {\n            message: \"No matching rows found\",\n            count: 0\n        }\n    }];\n}\n\nreturn [{\n    json: {\n        message: \"Matching rows found\",\n        count: matchedRows.length,\n        matchedValues: globalMatchedValues,\n        rows: matchedRows\n    }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -192
+      ],
+      "id": "e5c11097-3d52-4cd7-b914-e293eab93cd7",
+      "name": "Get Match AI EI (Trusted Outbound Internet Connections)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// --------------------------------------------\n// Helper: Convert IP to Integer\n// --------------------------------------------\nfunction ipToInt(ip) {\n    const parts = ip.split('.');\n    if (parts.length !== 4) return null;\n    return parts.reduce((acc, part) => (acc << 8) + parseInt(part, 10), 0) >>> 0;\n}\n\n// --------------------------------------------\n// Helper: Check if IP is inside CIDR\n// --------------------------------------------\nfunction ipInCidr(ip, cidr) {\n    if (!cidr.includes(\"/\")) return false;\n    const [cidrIp, mask] = cidr.split(\"/\");\n    const maskBits = parseInt(mask, 10);\n\n    const ipInt = ipToInt(ip);\n    const cidrInt = ipToInt(cidrIp);\n    if (ipInt === null || cidrInt === null) return false;\n\n    const maskInt = maskBits === 0 ? 0 : (~0 << (32 - maskBits)) >>> 0;\n    return (ipInt & maskInt) === (cidrInt & maskInt);\n}\n\n// --------------------------------------------\n// Helper: extract IPs or CIDRs from a string\n// --------------------------------------------\nfunction extractIpOrCidr(str) {\n    if (typeof str !== \"string\") return [];\n    const regex = /\\b\\d{1,3}(?:\\.\\d{1,3}){3}(?:\\/\\d{1,2})?\\b/g;\n    return str.match(regex) || [];\n}\n\n// --------------------------------------------\n// Helper: detect service:port (flexible)\n// Matches ssh:22, ssh :22, ssh: 22, ssh : 22, https:443, etc.\n// --------------------------------------------\nfunction isServicePortFormat(str) {\n    return /^[A-Za-z0-9_\\-\\.]+\\s*:\\s*\\d{1,5}$/.test(str.trim());\n}\n\n// --------------------------------------------\n// GET ALERT FIELDS\n// --------------------------------------------\nlet alertFieldsArray = $('Extract Fields in Alert').item.json;\nif (!Array.isArray(alertFieldsArray)) alertFieldsArray = [alertFieldsArray];\n\nconst alertValues = [];\nconst alertIPs = [];\n\nalertFieldsArray.forEach(alert => {\n    for (const key in alert) {\n        const raw = alert[key];\n        if (!raw) continue;\n\n        const val = raw.toString().trim();\n        if (val === \"\") continue;\n\n        alertValues.push(val);\n\n        // Detect simple IPv4 addresses\n        if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(val)) {\n            alertIPs.push(val);\n        }\n    }\n});\n\n// --------------------------------------------\n// GET TABLE\n// --------------------------------------------\nconst tableData = $input.first().json.table;\n\nif (!tableData || !Array.isArray(tableData)) {\n    return [{ json: { message: \"No table found in input\", count: 0 } }];\n}\n\n// --------------------------------------------\n// MATCHING: detect matched values\n// --------------------------------------------\nfunction findMatchedValues(row, alertValues, alertIPs) {\n    const matched = [];\n    const rowValues = Object.values(row).filter(v => v);\n\n    rowValues.forEach(cell => {\n        const cellStr = cell.toString();\n\n        // Split by commas or semicolons to handle multiple values in one cell\n        const parts = cellStr.split(/[,;]+/).map(p => p.trim());\n\n        parts.forEach(part => {\n\n            // ❌ Skip service:port formatted parts\n            if (isServicePortFormat(part)) return;\n\n            // TEXT matching (alert value inside part)\n            alertValues.forEach(val => {\n                if (part.includes(val) && !matched.includes(val)) {\n                    matched.push(val);\n                }\n            });\n\n            // IP / CIDR detection\n            const foundPatterns = extractIpOrCidr(part);\n\n            foundPatterns.forEach(pattern => {\n                if (pattern.includes(\"/\")) {\n                    alertIPs.forEach(ip => {\n                        if (ipInCidr(ip, pattern) && !matched.includes(ip)) {\n                            matched.push(ip);\n                        }\n                    });\n                } else if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(pattern)) {\n                    if (alertIPs.includes(pattern) && !matched.includes(pattern)) {\n                        matched.push(pattern);\n                    }\n                }\n            });\n\n        });\n    });\n\n    return matched;\n}\n\n// --------------------------------------------\n// FIND MATCHES\n// --------------------------------------------\nlet globalMatchedValues = [];\nconst matchedRows = [];\n\ntableData.forEach(row => {\n    const rowMatchedValues = findMatchedValues(row, alertValues, alertIPs);\n\n    if (rowMatchedValues.length > 0) {\n        matchedRows.push(row);\n        rowMatchedValues.forEach(v => {\n            if (!globalMatchedValues.includes(v)) {\n                globalMatchedValues.push(v);\n            }\n        });\n    }\n});\n\n// --------------------------------------------\n// RETURN RESULT\n// --------------------------------------------\nif (matchedRows.length === 0) {\n    return [{\n        json: {\n            message: \"No matching rows found\",\n            count: 0\n        }\n    }];\n}\n\nreturn [{\n    json: {\n        message: \"Matching rows found\",\n        count: matchedRows.length,\n        matchedValues: globalMatchedValues,\n        rows: matchedRows\n    }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        0
+      ],
+      "id": "87cac9c1-d268-4f5c-b314-e5817ec8efbb",
+      "name": "Get Match AI EI (User's Access Control)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e0748d29-c457-477d-b522-9e8f01c89c81",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "Matching rows found",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        -960
+      ],
+      "id": "c333fc57-98aa-4bfa-9891-988babf1c3f7",
+      "name": "If Find on AI EI (Assets)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e0748d29-c457-477d-b522-9e8f01c89c81",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "Matching rows found",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        -768
+      ],
+      "id": "deb90108-6a8b-45cb-b3a7-acbe5019a75f",
+      "name": "If Find on AI EI (Network Zone)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e0748d29-c457-477d-b522-9e8f01c89c81",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "Matching rows found",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        -576
+      ],
+      "id": "8686d2b1-87c0-4f0c-8437-23b4bc746684",
+      "name": "If Find on  AI EI (Organization Working Time)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e0748d29-c457-477d-b522-9e8f01c89c81",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "Matching rows found",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        -384
+      ],
+      "id": "d96c1e02-67a9-4e73-bd0a-60bfe063752e",
+      "name": "If Find on AI EI (Server Access Control)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e0748d29-c457-477d-b522-9e8f01c89c81",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "Matching rows found",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        -192
+      ],
+      "id": "6439c925-56cc-46bd-ab86-25b545ccbbce",
+      "name": "If Find on AI EI (Trusted Outbound Internet Connections)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e0748d29-c457-477d-b522-9e8f01c89c81",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "Matching rows found",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        0
+      ],
+      "id": "35c9025d-5ea2-4b85-8ae8-4f3468b7abf5",
+      "name": "If Find on AI EI (User's Access Control)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all incoming items\nconst items = $input.all();\n\n// Prepare containers\nlet data = null;\nlet cleanOriginalRule = null;\nlet matchingResults = [];\n\n// Loop through all items and classify them\nfor (const item of items) {\n\tconst d = item.json;\n\n\tif (d.data) {\n\t\t// Type 1: data\n\t\tdata = d.data;\n\n\t} else if (d.CCleanOriginalRule || d.CleanOriginalRule) {\n\t\t// Type 2: CleanOriginalRule\n\t\tcleanOriginalRule = d.CleanOriginalRule || d.CCleanOriginalRule;\n\n\t} else if (d.message && d.rows) {\n\t\t// Type 3: matching results\n\t\tmatchingResults.push({\n\t\t\tmessage: d.message,\n\t\t\tcount: d.count,\n\t\t\tmatchedValues: d.matchedValues,\n\t\t\trows: d.rows\n\t\t});\n\t}\n}\n\n// Build object (VALID n8n format)\nconst merged = {\n\tdata: data || \"\",\n\tCleanOriginalRule: cleanOriginalRule || \"\",\n\tMatchingResults: matchingResults\n};\n\n// Must return an OBJECT under json:\nreturn [\n\t{\n\t\tjson: merged\n\t}\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        -208
+      ],
+      "id": "0a4414db-9c82-4359-bebb-30b5ad917bb4",
+      "name": "Merge All Data"
+    },
+    {
+      "parameters": {
+        "numberInputs": 8
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        912,
+        -304
+      ],
+      "id": "7d2d9ab0-0818-416d-b336-2bce801afa31",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "14424510-0af7-4fe0-9073-d601cc56348c",
+              "name": "Second AI Result",
+              "value": "={{ $json.data }}",
+              "type": "array"
+            },
+            {
+              "id": "20ca62dc-b427-40d0-9f4b-b54710e3e8f7",
+              "name": "Alert Timestamp",
+              "value": "={{ $('Called By SP-AI-5A-Check').first().json['Original Rule']._time }}",
+              "type": "string"
+            },
+            {
+              "id": "13be5ace-a0f1-4261-a77a-a587710c062e",
+              "name": "TimeLine ID",
+              "value": "={{ $('Called By SP-AI-5A-Check').first().json['TimeLine ID'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1712,
+        -240
+      ],
+      "id": "81da26f6-3674-41a7-866f-abd9b19bda42",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "## Extract and Clean Alert Data\nThis code nodes extracts the required fields (source, sensor, destination, username) from the input and creates a structured output. It also cleans the alert reason for further processing.",
+        "height": 360,
+        "width": 380,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1648,
+        -1424
+      ],
+      "typeVersion": 1,
+      "id": "8632ad71-c5de-4411-88dc-80b335f7d14a",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## AI-Powered Alert Organization and Timeline Preparation\nThis part of the workflow sends alert and organization information to an AI analysis API. The response is used to extract relevant data fields such as the AI results, alert timestamp, and timeline creation object. These fields are then set for use in the next step, which triggers a sub-workflow to insert the final analysis note into the system.",
+        "height": 360,
+        "width": 740,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1424,
+        -368
+      ],
+      "typeVersion": 1,
+      "id": "9c293c45-c688-4cd2-85a0-53b8705e1910",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ai/alert_org",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "= Bearer  {{ $('Called By SP-AI-5A-Check').first().json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n\"alert\": [{{ $json.CleanOriginalRule.toJsonString() }}],\n\"org_info\": {\n\"data\": {{ $json.data.toJsonString() }},\n\"matching_results\": {{ $json.MatchingResults.toJsonString() }}\n},\n\"device\":\"Splunk\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1488,
+        -240
+      ],
+      "id": "fdebcbf4-ac9e-4381-aebd-d6c401678e2d",
+      "name": "AI analysis(ORG Info)1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "iAdtPYDYJ3ndUvvM",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/iAdtPYDYJ3ndUvvM",
+          "cachedResultName": "SP — SP-AI-Insert Timeline"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1936,
+        -240
+      ],
+      "id": "9250c0f4-37b6-4c2d-96cd-cb0f328e5e53",
+      "name": "Call SP-AI-Insert Timeline"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Function Node\n\n// Get Original Rule from specific input branch\nconst originalRule = $('Called By SP-AI-5A-Check').first().json['Original Rule'];\n\n// Stop if empty\nif (!originalRule || typeof originalRule !== 'object') {\n  return [{ json: { CleanOriginalRule: {} }}];\n}\n\n// ------- Flatten Function -------\nfunction flattenObject(ob) {\n  const toReturn = {};\n\n  for (let i in ob) {\n    if (!ob.hasOwnProperty(i)) continue;\n\n    if (typeof ob[i] === 'object' && ob[i] !== null && !Array.isArray(ob[i])) {\n      const flatObject = flattenObject(ob[i]);\n      for (let x in flatObject) {\n        const newKey =\n          i.replace(/\\./g, '_') + '_' +\n          x.replace(/\\./g, '_');\n        toReturn[newKey] = flatObject[x];\n      }\n    } else {\n      const newKey = i.replace(/\\./g, '_');\n      toReturn[newKey] = ob[i];\n    }\n  }\n  return toReturn;\n}\n\n// ------- Escape JSON strings -------\nfunction escapeString(value) {\n  if (typeof value === 'string') {\n    return value\n      .replace(/\\\\/g, '\\\\\\\\')\n      .replace(/\\n/g, '\\\\n')\n      .replace(/\\r/g, '\\\\r')\n      .replace(/\\t/g, '\\\\t')\n      .replace(/\\\"/g, '\\\\\"');\n  }\n  return value;\n}\n\n// -------- Flatten and escape the rule --------\nconst flattened = flattenObject(originalRule);\n\nconst escaped = {};\nfor (const key in flattened) {\n  escaped[key] = escapeString(flattened[key]);\n}\n\nreturn [\n  {\n    json: {\n      CleanOriginalRule: escaped\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        528
+      ],
+      "id": "faec3580-322c-43c7-9ba0-3b090b2c5fb2",
+      "name": "Clean Original Rule "
+    }
+  ],
+  "connections": {
+    "Extract Fields in Alert": {
+      "main": [
+        [
+          {
+            "node": "For Process Existance",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Page AI EI (Assets)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Page AI EI (Network Zone)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Page AI EI (Organization Working Time)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Page AI EI (Server Access Control)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Page AI EI (User's Access Control)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Page AI EI (Trusted Outbound Internet Connections)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "For Process Existance": {
+      "main": [
+        [
+          {
+            "node": "set process field",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set process field": {
+      "main": [
+        [
+          {
+            "node": "Enrich Process",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich Process": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "Called By SP-AI-5A-Check": {
+      "main": [
+        [
+          {
+            "node": "Extract Fields in Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Clean Original Rule ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Page AI EI (Assets)": {
+      "main": [
+        [
+          {
+            "node": "Get content AI EI (Assets) by page ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Page AI EI (Network Zone)": {
+      "main": [
+        [
+          {
+            "node": "Get content AI EI (Network Zone) by page ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Page AI EI (Organization Working Time)": {
+      "main": [
+        [
+          {
+            "node": "Get content  AI EI (Organization Working Time) by page ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Page AI EI (Server Access Control)": {
+      "main": [
+        [
+          {
+            "node": "Get content AI EI (Server Access Control) by page ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Page AI EI (Trusted Outbound Internet Connections)": {
+      "main": [
+        [
+          {
+            "node": "Get content AI EI (Trusted Outbound Internet Connections) by page ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Page AI EI (User's Access Control)": {
+      "main": [
+        [
+          {
+            "node": "Get content AI EI (User's Access Control) by page ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get content AI EI (Assets) by page ID": {
+      "main": [
+        [
+          {
+            "node": "Get Content of AI EI (Assets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get content  AI EI (Organization Working Time) by page ID": {
+      "main": [
+        [
+          {
+            "node": "Get Content of  AI EI (Organization Working Time)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get content AI EI (Network Zone) by page ID": {
+      "main": [
+        [
+          {
+            "node": "Get Content of AI EI (Network Zone)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get content AI EI (Server Access Control) by page ID": {
+      "main": [
+        [
+          {
+            "node": "Get Content ofAI EI (User's Access Control)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get content AI EI (Trusted Outbound Internet Connections) by page ID": {
+      "main": [
+        [
+          {
+            "node": "Get Content of AI EI (Trusted Outbound Internet Connections)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get content AI EI (User's Access Control) by page ID": {
+      "main": [
+        [
+          {
+            "node": "Get Content of  AI EI (User's Access Control)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Content of AI EI (Assets)": {
+      "main": [
+        [
+          {
+            "node": "Get Match AI EI (Assets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Content of AI EI (Network Zone)": {
+      "main": [
+        [
+          {
+            "node": "Gat Match AI EI (Network Zone)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Content of  AI EI (Organization Working Time)": {
+      "main": [
+        [
+          {
+            "node": "Get Match  AI EI (Organization Working Time)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Content ofAI EI (User's Access Control)": {
+      "main": [
+        [
+          {
+            "node": "Get Match AI EI (Server Access Control)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Content of AI EI (Trusted Outbound Internet Connections)": {
+      "main": [
+        [
+          {
+            "node": "Get Match AI EI (Trusted Outbound Internet Connections)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Content of  AI EI (User's Access Control)": {
+      "main": [
+        [
+          {
+            "node": "Get Match AI EI (User's Access Control)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Match AI EI (Assets)": {
+      "main": [
+        [
+          {
+            "node": "If Find on AI EI (Assets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gat Match AI EI (Network Zone)": {
+      "main": [
+        [
+          {
+            "node": "If Find on AI EI (Network Zone)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Match  AI EI (Organization Working Time)": {
+      "main": [
+        [
+          {
+            "node": "If Find on  AI EI (Organization Working Time)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Match AI EI (Server Access Control)": {
+      "main": [
+        [
+          {
+            "node": "If Find on AI EI (Server Access Control)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Match AI EI (Trusted Outbound Internet Connections)": {
+      "main": [
+        [
+          {
+            "node": "If Find on AI EI (Trusted Outbound Internet Connections)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Match AI EI (User's Access Control)": {
+      "main": [
+        [
+          {
+            "node": "If Find on AI EI (User's Access Control)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Find on AI EI (Assets)": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Find on AI EI (Network Zone)": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "If Find on  AI EI (Organization Working Time)": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "If Find on AI EI (Server Access Control)": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "If Find on AI EI (Trusted Outbound Internet Connections)": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "If Find on AI EI (User's Access Control)": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Merge All Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Call SP-AI-Insert Timeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI analysis(ORG Info)1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Original Rule ": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "Merge All Data": {
+      "main": [
+        [
+          {
+            "node": "AI analysis(ORG Info)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "bb9fbad0-b5cb-4335-aac8-05a98fe991ef",
+  "owner": {
+    "type": "team",
+    "teamId": "VkJ1fWswpm3ZmsSH",
+    "teamName": "SP"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

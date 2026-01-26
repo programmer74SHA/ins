@@ -1,0 +1,23 @@
+{
+  "id": "DnyRJEaUvoGmmq7e",
+  "name": "SP-Functions",
+  "icon": {
+    "type": "icon",
+    "value": "layers"
+  },
+  "description": "",
+  "type": "team",
+  "owner": {
+    "type": "team",
+    "teamId": "DnyRJEaUvoGmmq7e",
+    "teamName": "SP-Functions"
+  },
+  "variableStubs": [
+    {
+      "id": "6k2PsdVgiocVQArN",
+      "key": "SP_Base_URL",
+      "type": "string",
+      "value": ""
+    }
+  ]
+}

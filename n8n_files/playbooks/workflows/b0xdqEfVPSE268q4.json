@@ -1,0 +1,197 @@
+{
+  "id": "b0xdqEfVPSE268q4",
+  "name": "ES-Error Monitoring",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        416
+      ],
+      "id": "2302188d-f5a6-4b56-8781-698ad4601573",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "content": "## Automated Error Handling and Notification Workflow\nThis workflow triggers automatically on any error occurrence within executions. Upon an error, it simultaneously sends a detailed email notification including workflow name, execution ID, error message, stack trace, last executed node, and execution mode. In parallel, it logs the same error details into an Elasticsearch index for persistent storage and future analysis. This setup ensures real-time alerting and centralized error tracking for improved monitoring and troubleshooting.",
+        "height": 540,
+        "width": 620
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "f14a210e-6e51-49b2-9aae-0ea930279906",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Local}}:9200/logs-apksoar.error-default/_doc",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"apksoar.workflow_name\": \"{{ $('Error Trigger').item.json.workflow.name }}\",\n  \"apksoar.nodeinfo.name\":\"{{ $('Error Trigger').item.json.execution.error.node.name }}\",\n  \"apksoar.workflow_id\": \"{{ $('Error Trigger').item.json.workflow.id }}\",\n  \"apksoar.execution_id\": \"{{ $('Error Trigger').item.json.execution.id }}\",\n  \"apksoar.execution_url\": \"{{ $('Error Trigger').item.json.execution.url.replace(/\\//g, '//') }}\",\n  \"apksoar.last_node\": \"{{ $('Error Trigger').item.json.execution.lastNodeExecuted }}\",\n  \"apksoar.error_message\": \"{{ $('Error Trigger').item.json.execution.error.message }}\",\n  \"apksoar.mode\": \"{{ $('Error Trigger').item.json.execution.mode }}\",\n  \"@timestamp\": \"{{$now}}\",\n  \"apksoar.nodetimestamp\": \"{{ $('Error Trigger').item.json.execution.error.timestamp.toDateTime('ms') }}\",\n  \"apksoar.nodeinfo\": {{ $json['apksoar.nodeifo'] }},\n  \"apksoar.ErrorType\":\"WorkFlow\"\n}\n",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        352,
+        416
+      ],
+      "id": "f85e566d-e246-43ee-bfb8-10d2b632c5b4",
+      "name": "HTTP Request2",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Zm2ZQ42acv9nDnwz",
+          "name": "Elastic Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      \"apksoar.workflow_name\": $json.workflow.name || \"\",\n      \"apksoar.workflow_id\": $json.workflow.id || \"\",\n      \"apksoar.execution_id\": $json.execution.id || \"\",\n      \"apksoar.execution_url\": ($json.execution.url || \"\").replace(/\\//g, \"//\"),\n      \"apksoar.last_node\": $json.execution.lastNodeExecuted || \"\",\n      \"apksoar.error_message\": ($json.execution.error.message || \"\").replace(/\"/g, '\\\\\"'),\n      \"apksoar.mode\": $json.execution.mode || \"\",\n      \"@timestamp\": new Date().toISOString(),\n      \"apksoar.nodeifo\": JSON.stringify({\n        message: ($json.execution.error.message || \"\").replace(/\"/g, '\\\\\"'),\n        stack: ($json.execution.error.stack || \"\").replace(/\"/g, '\\\\\"'),\n        node: $json.execution.lastNodeExecuted || \"\"\n      })\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        416
+      ],
+      "id": "406e86bb-809b-425c-a013-44c1a71b347c",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        32,
+        576
+      ],
+      "id": "b7166bbb-f839-4add-ace2-c8dc485fa5db",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.ES_Base_URL_Elastic}}/logs-apksoar.error-default/_doc",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json }}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        288,
+        576
+      ],
+      "id": "76d458ab-5ed1-441f-b27e-b33c74359de7",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Xa87cVsD8tKhDabu",
+          "name": "Elastic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: Error Monitoring\n### Workflow-Version: 1.0.2\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Create for first time\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        -144
+      ],
+      "typeVersion": 1,
+      "id": "bef79d3f-667a-48e8-91d2-f81833c22591",
+      "name": "Sticky Note10"
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "7caf9889-619f-489c-a0ab-b69712f15d70",
+  "owner": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

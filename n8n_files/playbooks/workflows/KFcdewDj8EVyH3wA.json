@@ -1,0 +1,639 @@
+{
+  "id": "KFcdewDj8EVyH3wA",
+  "name": "SP-AI-Alert-Schaeduler 2h with unchecked info",
+  "nodes": [
+    {
+      "parameters": {
+        "search": "=|search index=notable\n| fillnull value=\"null\" {{ $vars.SP_fillnull }}\n| eval dedupe_key = md5({{ $vars.SP_MD5 }})\n| dedup dedupe_key\n| where _time > relative_time(now(), \"-{{$vars.SP_Schedule_Trigger_Hours_Time}}m\")\n| fields - dedupe_key\n| sort -_time",
+        "additionalFields": {
+          "adhoc_search_level": "verbose"
+        }
+      },
+      "type": "n8n-nodes-base.splunk",
+      "typeVersion": 2,
+      "position": [
+        224,
+        288
+      ],
+      "id": "628b1fcb-97b4-4712-a566-8b63d50871bd",
+      "name": "Create Jobs For Get 2hour For Alerts",
+      "credentials": {
+        "splunkApi": {
+          "id": "GrGXYAkohwkWH3cg",
+          "name": "Splunk account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": true
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        288
+      ],
+      "id": "5aee6ffd-5d8b-4054-a3ee-d2e7b70fc782",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "090aa836-5d8e-4f23-a82f-1002319774e9",
+              "leftValue": "={{ $json.isDone }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        224
+      ],
+      "id": "73f41f68-4608-4c1f-8a8f-a47f6eb307f2",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "searchJobId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.splunk",
+      "typeVersion": 2,
+      "position": [
+        672,
+        224
+      ],
+      "id": "fad756da-31a3-4fa6-89ef-a351b9368f67",
+      "name": "Check For Job Finished",
+      "credentials": {
+        "splunkApi": {
+          "id": "GrGXYAkohwkWH3cg",
+          "name": "Splunk account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        384
+      ],
+      "id": "6e4ce28c-7272-4a7f-b89c-a23e1164c03a",
+      "name": "wait For Finished Job",
+      "webhookId": "72ecb7d8-8523-43d5-9655-1549dc3269c7"
+    },
+    {
+      "parameters": {
+        "operation": "getResult",
+        "searchJobId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "limit": "={{$vars.SP_Alert_Limit_size}}",
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splunk",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        176
+      ],
+      "id": "49bf8bfa-3edb-4f7d-8dc5-4228bf873901",
+      "name": "Get Splunk Job Result",
+      "credentials": {
+        "splunkApi": {
+          "id": "GrGXYAkohwkWH3cg",
+          "name": "Splunk account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eeb9703c-369c-454a-a42f-3804c533d4e3",
+              "name": "results",
+              "value": "={{ $json.results }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        80
+      ],
+      "id": "165e6813-763d-4022-a5f7-14bf71fc7282",
+      "name": "Retuen Only Results"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        80
+      ],
+      "id": "9cb70786-9c8d-4853-9ec7-d1a0d5ebc740",
+      "name": "Start of loop"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1792,
+        80
+      ],
+      "id": "8702d226-af99-45a8-abc4-e2d2db06782d",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "xuXefaNpDyOLL86M",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/xuXefaNpDyOLL86M",
+          "cachedResultName": "SP — SP-AI-5A-Check"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2240,
+        80
+      ],
+      "id": "f112ec70-0245-49ff-9c00-31c3a5d5cbe5",
+      "name": "Call SP-AI-5A-Check"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7edab3d7-f98e-4bc5-b530-6c57d7ea0802",
+              "name": "Original Rule",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2016,
+        0
+      ],
+      "id": "80270abd-e810-4cb6-b1b3-7adc0f49ba30",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger and Create Splunk Search Job for Recent Alerts\nThis part of the workflow initiates when the \"Test workflow\" button is clicked. It triggers a Splunk search job to fetch all notable alerts from the past two hours. The query uses deduplication logic to avoid duplicates and ensures only recent data is retrieved for further processing.",
+        "height": 380,
+        "width": 460,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -64,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "10cada6b-c245-45d6-976f-e0b940122d25",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Loop and Wait for Splunk Search Job Completion\nThis section loops through each Splunk search job and checks if the job is complete (`isDone` flag). If not yet finished, it enters a wait state and periodically rechecks the job status. This ensures the workflow proceeds only after each job has successfully completed, maintaining reliability and data consistency.\n",
+        "height": 500,
+        "width": 840,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        416,
+        48
+      ],
+      "typeVersion": 1,
+      "id": "5011429f-2740-4aa9-b49c-4ee5045225d2",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Fetch and Prepare Splunk Search Results\nThis section retrieves the results of a completed Splunk search job using the job ID (`Get Splunk Job Result`), extracts only the relevant `results` array (`Retuen Only Results`), and then splits the array into individual items (`Start of loop`) to be processed one by one in the following steps.",
+        "height": 420,
+        "width": 580,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1104,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "518ae6ad-d3a4-44f4-8c1c-8078ad1525d4",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Loop Through Results and Execute AI Check workflow\nThis part processes each Splunk result in batches. Each item is preprocessed and labeled as the \"Original Rule\" before being passed to a workflow (`Call SP-AI-5A-Check`) for further AI-based analysis. The workflow runs synchronously and ensures each result is individually analyzed.",
+        "height": 420,
+        "width": 760
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1696,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "6a39128e-6ed6-4283-8510-0361bc6607b2",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": "={{ $vars.SP_Schedule_Trigger_Hours_Time }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        288
+      ],
+      "id": "6ee76c47-e4d4-4b3e-84de-c0081ac9ccb0",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getResult",
+        "searchJobId": {
+          "__rl": true,
+          "value": "={{ $('If').item.json.id }}",
+          "mode": "id"
+        },
+        "limit": 1000,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splunk",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        320
+      ],
+      "id": "0485a865-3228-494c-912b-9158cd1654a3",
+      "name": "Get Splunk Job All Result",
+      "credentials": {
+        "splunkApi": {
+          "id": "GrGXYAkohwkWH3cg",
+          "name": "Splunk account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get results from both inputs\nconst splunkResults =$input.first().json.results || [] ;\nconst alerts =$('Get Splunk Job Result').first().json.results || [] ;\n\n// Extract source_event_id from second input (alerts)\nconst alertIds = new Set(alerts.map(a => a.source_event_id));\n\n// Filter first input, keeping only those not in alerts\nconst remaining = splunkResults\n  .filter(item => !alertIds.has(item.source_event_id))\n  .map(item => ({\n    source_event_id: item.source_event_id,\n    orig_rule_title: item.orig_rule_title,\n    _time: item._time,\n    search_name: item.search_name,\n    severity: item.severity,\n    risk_score: item.risk_score\n  }));\n\nlet output = {};\n\nif (remaining.length === 0) {\n  // All alerts are checked\n  output = { Allchecked: true };\n} else {\n  // Some still remain\n  output = {\n    Allchecked: false,\n    remaining: remaining\n  };\n}\n\nreturn [{ json: output }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        320
+      ],
+      "id": "2df81c97-db9a-4fb2-893d-12ff67b7c86e",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "141ebac6-3d55-4e4d-8de5-ad003a84f2df",
+              "leftValue": "={{ $json.Allchecked }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1792,
+        320
+      ],
+      "id": "f912156b-aa90-4eea-91c1-385001a61d9d",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: SP-AI-Alert-Schaeduler 2h with unchecked info\n### Workflow-Version: 1.0.1\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Create for first time\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -64,
+        -528
+      ],
+      "typeVersion": 1,
+      "id": "3e8815f8-43f4-4a8d-a210-e84c4c4f0c85",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "xEyijIueukpcAeQQ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/xEyijIueukpcAeQQ",
+          "cachedResultName": "SP — SP-AI-Unchecked Alerts"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2016,
+        320
+      ],
+      "id": "90cbdc98-53ac-4ea2-b8fe-c997af464010",
+      "name": "Call 'SP-AI-Unchecked Alerts'"
+    }
+  ],
+  "connections": {
+    "Create Jobs For Get 2hour For Alerts": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Check For Job Finished",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check For Job Finished": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get Splunk Job Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "wait For Finished Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait For Finished Job": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Splunk Job Result": {
+      "main": [
+        [
+          {
+            "node": "Retuen Only Results",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Splunk Job All Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retuen Only Results": {
+      "main": [
+        [
+          {
+            "node": "Start of loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start of loop": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call SP-AI-5A-Check": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Call SP-AI-5A-Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Create Jobs For Get 2hour For Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Splunk Job All Result": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Call 'SP-AI-Unchecked Alerts'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 1,
+  "versionId": "e5eaa132-aa17-4d99-99fd-642962e4afba",
+  "owner": {
+    "type": "team",
+    "teamId": "VkJ1fWswpm3ZmsSH",
+    "teamName": "SP"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

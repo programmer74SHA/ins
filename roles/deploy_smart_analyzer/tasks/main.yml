@@ -1,5 +1,14 @@
 ---
-# Smart Analyzer deployment tasks
+# =============================================================================
+# DEPLOY SMART ANALYZER ROLE - Main Tasks
+# =============================================================================
+# This role deploys the Smart Analyzer AI service with all dependencies
+# including GPU validation, model verification, and health checks
+# =============================================================================
+
+- name: Include pre-deployment validation tasks
+  ansible.builtin.include_tasks: validate.yml
+  tags: ['validate']
 
 - name: Ensure deployment directory exists
   ansible.builtin.file:
@@ -25,6 +34,14 @@
     state: directory
     mode: '0755'
 
+- name: Set proper permissions on models directory
+  ansible.builtin.file:
+    path: "{{ smart_analyzer_deploy_dir }}/models"
+    state: directory
+    mode: '0775'
+    recurse: true
+  when: smart_analyzer_fix_model_permissions | default(true)
+
 - name: Ensure haproxy config directory exists
   ansible.builtin.file:
     path: "{{ smart_analyzer_deploy_dir }}/infra_config/haproxy"
@@ -32,13 +49,12 @@
     mode: '0755'
 
 - name: Copy haproxy configuration files
-  ansible.builtin.copy:
-    src: "{{ smart_analyzer_haproxy_config_path }}/"
-    dest: "{{ smart_analyzer_deploy_dir }}/infra_config/haproxy/"
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: "{{ smart_analyzer_deploy_dir }}/infra_config/haproxy/haproxy.cfg"
     mode: '0644'
-  when: smart_analyzer_haproxy_config_path is defined
 
-- name: Create smart-analyzer network
+- name: Create AI infrastructure network
   community.docker.docker_network:
     name: "{{ smart_analyzer_network_name }}"
     state: present
@@ -50,240 +66,152 @@
     state: present
   when: smart_analyzer_esnet_external
 
+- name: Verify networks were created
+  ansible.builtin.command: docker network ls --format '{{ '{{' }}.Name{{ '}}' }}'
+  register: docker_networks_check
+  changed_when: false
+
+- name: Fail if required networks don't exist
+  ansible.builtin.fail:
+    msg: "Required Docker network '{{ item }}' does not exist"
+  when: item not in docker_networks_check.stdout_lines
+  loop:
+    - "{{ smart_analyzer_network_name }}"
+
+- name: Check if AI model exists
+  ansible.builtin.stat:
+    path: "{{ smart_analyzer_deploy_dir }}/models/{{ smart_analyzer_ai_model_path | basename }}"
+  register: ai_model_check
+  when: smart_analyzer_verify_model_exists | default(true)
+
+- name: Display model status
+  ansible.builtin.debug:
+    msg: "AI Model {{ 'found' if ai_model_check.stat.exists else 'NOT FOUND' }} at {{ smart_analyzer_deploy_dir }}/models/"
+  when: smart_analyzer_verify_model_exists | default(true)
+
+- name: Template docker-compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ smart_analyzer_deploy_dir }}/docker-compose.yml"
+    mode: '0644'
+
 - name: Template .env file
   ansible.builtin.template:
     src: .env.j2
     dest: "{{ smart_analyzer_deploy_dir }}/.env"
-    mode: '0644'
-  when: not smart_analyzer_use_project_env
+    mode: '0600'
 
-- name: Deploy Qdrant container
-  community.docker.docker_container:
-    name: qdrant
-    image: "{{ smart_analyzer_qdrant_image }}"
+# CRITICAL: This task was missing in the original role
+- name: Deploy Smart Analyzer with Docker Compose
+  ansible.builtin.include_tasks: smart-analyzer-docker-deploy.yml
+  tags: ['deploy']
+
+- name: Wait for AI service to be ready
+  ansible.builtin.wait_for:
+    host: localhost
+    port: "{{ smart_analyzer_ai_service_port }}"
+    delay: 10
+    timeout: 300
     state: started
-    restart_policy: always
-    ports:
-      - "{{ smart_analyzer_qdrant_port }}:6333"
-    volumes:
-      - "{{ smart_analyzer_qdrant_volume }}:/qdrant/storage"
-    networks:
-      - name: "{{ smart_analyzer_network_name }}"
-    log_driver: "{{ smart_analyzer_log_driver }}"
-    log_options:
-      max-size: "{{ smart_analyzer_log_max_size }}"
-      max-file: "{{ smart_analyzer_log_max_file }}"
 
-- name: Deploy HAProxy container
-  community.docker.docker_container:
-    name: haproxy
-    image: "{{ smart_analyzer_haproxy_image }}"
+- name: Wait for Qdrant to be ready
+  ansible.builtin.wait_for:
+    host: localhost
+    port: "{{ smart_analyzer_qdrant_port }}"
+    delay: 5
+    timeout: 120
     state: started
-    restart_policy: always
-    ports:
-      - "{{ smart_analyzer_haproxy_port }}:5002"
-    volumes:
-      - "{{ smart_analyzer_deploy_dir }}/infra_config/haproxy:/usr/local/etc/haproxy:ro"
-    networks:
-      - name: "{{ smart_analyzer_network_name }}"
-    log_driver: "{{ smart_analyzer_log_driver }}"
-    log_options:
-      max-size: "{{ smart_analyzer_log_max_size }}"
-      max-file: "{{ smart_analyzer_log_max_file }}"
 
-- name: Deploy AI Launcher 1 container
-  community.docker.docker_container:
-    name: ai-launcher-1
-    image: "{{ smart_analyzer_vllm_image }}"
+- name: Wait for HAProxy to be ready
+  ansible.builtin.wait_for:
+    host: localhost
+    port: "{{ smart_analyzer_haproxy_port }}"
+    delay: 5
+    timeout: 60
     state: started
-    restart_policy: always
-    ports:
-      - "{{ smart_analyzer_ai_launcher_1_port }}:5004"
-    env:
-      CUDA_VISIBLE_DEVICES: "0"
-      PYTHONUNBUFFERED: "1"
-    volumes:
-      - "{{ smart_analyzer_deploy_dir }}/models:/models"
-    working_dir: "/models"
-    command: >
-      --model {{ smart_analyzer_ai_model_path }}
-      --tensor-parallel-size {{ smart_analyzer_ai_tensor_parallel_size }}
-      --gpu-memory-utilization {{ smart_analyzer_ai_gpu_memory_utilization }}
-      --max-model-len {{ smart_analyzer_ai_max_model_len }}
-      --max-num-seqs {{ smart_analyzer_ai_max_num_seqs }}
-      --max-num-batched-tokens {{ smart_analyzer_ai_max_num_batched_tokens }}
-      --host 0.0.0.0
-      --port 5004
-      --enable-auto-tool-choice
-      --tool-call-parser {{ smart_analyzer_ai_tool_call_parser }}
-    ipc_mode: host
-    runtime: nvidia
-    networks:
-      - name: "{{ smart_analyzer_network_name }}"
-    log_driver: "{{ smart_analyzer_log_driver }}"
-    log_options:
-      max-size: "{{ smart_analyzer_log_max_size }}"
-      max-file: "{{ smart_analyzer_log_max_file }}"
 
-- name: Deploy AI Launcher 2 container
-  community.docker.docker_container:
-    name: ai-launcher-2
-    image: "{{ smart_analyzer_vllm_image }}"
-    state: started
-    restart_policy: always
-    ports:
-      - "{{ smart_analyzer_ai_launcher_2_port }}:5004"
-    env:
-      CUDA_VISIBLE_DEVICES: "1"
-      PYTHONUNBUFFERED: "1"
-    volumes:
-      - "{{ smart_analyzer_deploy_dir }}/models:/models"
-    working_dir: "/models"
-    command: >
-      --model {{ smart_analyzer_ai_model_path }}
-      --tensor-parallel-size {{ smart_analyzer_ai_tensor_parallel_size }}
-      --gpu-memory-utilization {{ smart_analyzer_ai_gpu_memory_utilization }}
-      --max-model-len {{ smart_analyzer_ai_max_model_len }}
-      --max-num-seqs {{ smart_analyzer_ai_max_num_seqs }}
-      --max-num-batched-tokens {{ smart_analyzer_ai_max_num_batched_tokens }}
-      --host 0.0.0.0
-      --port 5004
-      --enable-auto-tool-choice
-      --tool-call-parser {{ smart_analyzer_ai_tool_call_parser }}
-    ipc_mode: host
-    runtime: nvidia
-    networks:
-      - name: "{{ smart_analyzer_network_name }}"
-    log_driver: "{{ smart_analyzer_log_driver }}"
-    log_options:
-      max-size: "{{ smart_analyzer_log_max_size }}"
-      max-file: "{{ smart_analyzer_log_max_file }}"
+- name: Check AI service health
+  ansible.builtin.uri:
+    url: "http://localhost:{{ smart_analyzer_ai_service_port }}/health"
+    method: GET
+    status_code: [200, 404]
+  register: ai_health
+  until: ai_health.status in [200, 404]
+  retries: 10
+  delay: 5
+  failed_when: false
 
-- name: Deploy Text Embeddings Inference container
-  community.docker.docker_container:
-    name: text-embeddings-inference
-    image: "{{ smart_analyzer_embeddings_image }}"
-    state: started
-    restart_policy: always
-    ports:
-      - "{{ smart_analyzer_embeddings_port }}:80"
-    volumes:
-      - "{{ smart_analyzer_deploy_dir }}/models:/models"
-    working_dir: "/models"
-    command:
-      - "--model-id"
-      - "{{ smart_analyzer_embeddings_model_id }}"
-      - "--dtype"
-      - "{{ smart_analyzer_embeddings_dtype }}"
-    device_requests:
-      - driver: nvidia
-        count: all
-        capabilities:
-          - gpu
-    networks:
-      - name: "{{ smart_analyzer_network_name }}"
-    log_driver: "{{ smart_analyzer_log_driver }}"
-    log_options:
-      max-size: "{{ smart_analyzer_log_max_size }}"
-      max-file: "{{ smart_analyzer_log_max_file }}"
+- name: Check Qdrant health
+  ansible.builtin.uri:
+    url: "http://localhost:{{ smart_analyzer_qdrant_port }}/health"
+    method: GET
+    status_code: 200
+  register: qdrant_health
+  until: qdrant_health.status == 200
+  retries: 5
+  delay: 3
 
-- name: Build AI Service image (if enabled)
-  community.docker.docker_image:
-    name: "{{ smart_analyzer_ai_service_image }}"
-    build:
-      path: "{{ smart_analyzer_dockerfile_path }}"
-      dockerfile: Dockerfile
-    source: build
-    state: present
-  when: smart_analyzer_build_ai_service
+- name: Verify container status
+  ansible.builtin.shell: |
+    docker compose ps --format json
+  args:
+    chdir: "{{ smart_analyzer_deploy_dir }}"
+  register: container_status
+  changed_when: false
 
-- name: Deploy AI Service container
-  community.docker.docker_container:
-    name: smart-analyzer
-    image: "{{ smart_analyzer_ai_service_image }}"
-    state: started
-    restart_policy: unless-stopped
-    stop_timeout: 30
-    ports:
-      - "{{ smart_analyzer_ai_service_port }}:2181"
-    env_file: "{{ smart_analyzer_deploy_dir }}/.env"
-    env:
-      VAULT_ADDR: "{{ smart_analyzer_vault_addr }}"
-      UNSEAL_KEYS: "{{ smart_analyzer_vault_unseal_keys }}"
-      PYTHONUNBUFFERED: "1"
-      APPLICATION_ROOT: "{{ smart_analyzer_application_root }}"
-      SECRET_KEY: "{{ smart_analyzer_secret_key }}"
-      JWT_EXPIRES_DAYS: "{{ smart_analyzer_jwt_expires_days }}"
-      AI_CENTER_HOST: "{{ smart_analyzer_ai_center_host }}"
-      AI_CENTER_PORT: "{{ smart_analyzer_ai_center_port }}"
-      AI_CHAT_URL: "{{ smart_analyzer_ai_chat_url }}"
-      AI_GENERATIVE_MODEL: "{{ smart_analyzer_ai_generative_model }}"
-      SPLUNK_TIME_FIELD: "{{ smart_analyzer_splunk_time_field }}"
-      SPLUNK_ALERT_ID_FIELD: "{{ smart_analyzer_splunk_alert_id_field }}"
-      ELASTIC_TIME_FIELD: "{{ smart_analyzer_elastic_time_field }}"
-      ELASTIC_ALERT_ID_FIELD: "{{ smart_analyzer_elastic_alert_id_field }}"
-      DEFAULT_AI_DEVICE: "{{ smart_analyzer_default_ai_device }}"
-      AI_MODEL_CONTEXT_LENGTH: "{{ smart_analyzer_ai_model_context_length }}"
-      AI_REQ_RETRY: "{{ smart_analyzer_ai_req_retry }}"
-      ELASTICSEARCH_HOST: "{{ smart_analyzer_elasticsearch_host }}"
-      ELASTICSEARCH_PORT: "{{ smart_analyzer_elasticsearch_port }}"
-      ELASTICSEARCH_USERNAME: "{{ smart_analyzer_elasticsearch_username }}"
-      ELASTICSEARCH_PASSWORD: "{{ smart_analyzer_elasticsearch_password }}"
-      JIRA_HOST: "{{ smart_analyzer_jira_host }}"
-      JIRA_USERNAME: "{{ smart_analyzer_jira_username }}"
-      JIRA_PASSWORD: "{{ smart_analyzer_jira_password }}"
-      JIRA_PROJECT_NAME: "{{ smart_analyzer_jira_project_name }}"
-      JIRA_FIELD_OVERAL_DESCRIPTION: "{{ smart_analyzer_jira_field_overal_description }}"
-      JIRA_FIELD_TI_ANALYSIS: "{{ smart_analyzer_jira_field_ti_analysis }}"
-      JIRA_FIELD_KNOWLEDGE_DB_ANALYSIS: "{{ smart_analyzer_jira_field_knowledge_db_analysis }}"
-      JIRA_FIELD_FINAL_ANALYSIS: "{{ smart_analyzer_jira_field_final_analysis }}"
-      JIRA_FIELD_RECOMMENDED_ACTIONS: "{{ smart_analyzer_jira_field_recommended_actions }}"
-      JIRA_FIELD_RESPONSE_ACTIONS: "{{ smart_analyzer_jira_field_response_actions }}"
-      JIRA_FIELD_RESPONSE_SIDE_EFFECTS: "{{ smart_analyzer_jira_field_response_side_effects }}"
-      JIRA_FIELD_ASSET_VALUE: "{{ smart_analyzer_jira_field_asset_value }}"
-      JIRA_FIELD_PLAYBOOK: "{{ smart_analyzer_jira_field_playbook }}"
-      JIRA_FIELD_ATTACKER_IP: "{{ smart_analyzer_jira_field_attacker_ip }}"
-      JIRA_FIELD_TARGET_IP: "{{ smart_analyzer_jira_field_target_ip }}"
-      JIRA_FIELD_SEVERITY: "{{ smart_analyzer_jira_field_severity }}"
-      JIRA_FIELD_MITRE_TACTIC: "{{ smart_analyzer_jira_field_mitre_tactic }}"
-      JIRA_FIELD_MITRE_TECHNIQUE: "{{ smart_analyzer_jira_field_mitre_technique }}"
-      JIRA_FIELD_MITIGATION_ACTIONS: "{{ smart_analyzer_jira_field_mitigation_actions }}"
-      JIRA_FIELD_RESOLVED_TIME: "{{ smart_analyzer_jira_field_resolved_time }}"
-      JIRA_FIELD_OUTCOME_RESULT: "{{ smart_analyzer_jira_field_outcome_result }}"
-      JIRA_FIELD_SOURCE_TYPE: "{{ smart_analyzer_jira_field_source_type }}"
-      JIRA_FIELD_SOURCE_NAME: "{{ smart_analyzer_jira_field_source_name }}"
-      JIRA_FIELD_REASON: "{{ smart_analyzer_jira_field_reason }}"
-      JIRA_FIELD_ORIGINAL_VALUE: "{{ smart_analyzer_jira_field_original_value }}"
-      JIRA_FIELD_QUERY: "{{ smart_analyzer_jira_field_query }}"
-      JIRA_FIELD_URL: "{{ smart_analyzer_jira_field_url }}"
-      JIRA_FIELD_USER_NAME: "{{ smart_analyzer_jira_field_user_name }}"
-      JIRA_FIELD_PROCESS_NAME: "{{ smart_analyzer_jira_field_process_name }}"
-      JIRA_FIELD_PROCESS_PARENT_NAME: "{{ smart_analyzer_jira_field_process_parent_name }}"
-      JIRA_FIELD_HOST_IP: "{{ smart_analyzer_jira_field_host_ip }}"
-      VECTOR_DB_HOST: "{{ smart_analyzer_vector_db_host }}"
-      VECTOR_DB_PORT: "{{ smart_analyzer_vector_db_port }}"
-      VECTOR_DB_ISSUE_COLLECTION: "{{ smart_analyzer_vector_db_issue_collection }}"
-      EMBEDDING_LLM_HOST: "{{ smart_analyzer_embedding_llm_host }}"
-      EMBEDDING_LLM_PORT: "{{ smart_analyzer_embedding_llm_port }}"
-      EMBEDDING_LLM_ROUTE: "{{ smart_analyzer_embedding_llm_route }}"
-      EMBEDDING_LLM_MODEL: "{{ smart_analyzer_embedding_llm_model }}"
-      EMBEDDING_LLM_DIMENSION: "{{ smart_analyzer_embedding_llm_dimension }}"
-    volumes:
-      - "{{ smart_analyzer_prompts_volume }}:/usr/share/mssp/prompts"
-    networks:
-      - name: "{{ smart_analyzer_network_name }}"
-      - name: "{{ smart_analyzer_esnet_name }}"
-    log_driver: "{{ smart_analyzer_log_driver }}"
-    log_options:
-      max-size: "{{ smart_analyzer_log_max_size }}"
-      max-file: "{{ smart_analyzer_log_max_file }}"
-    cpus: "{{ smart_analyzer_ai_service_cpu_limit }}"
-    memory: "{{ smart_analyzer_ai_service_memory_limit }}"
+- name: Parse container status
+  ansible.builtin.set_fact:
+    containers_running: "{{ container_status.stdout | from_json | selectattr('State', 'equalto', 'running') | list }}"
+
+- name: Display container status
+  ansible.builtin.debug:
+    msg: "{{ containers_running | length }} containers are running"
+
+- name: Run initial prompt seeding (if configured)
+  ansible.builtin.include_tasks: seed_prompts.yml
+  when: smart_analyzer_seed_prompts | default(false)
+  tags: ['seed']
 
 - name: Display deployment information
   ansible.builtin.debug:
     msg:
-      - "Smart Analyzer has been deployed successfully!"
-      - "AI Service is accessible at: http://{{ ansible_default_ipv4.address }}:{{ smart_analyzer_ai_service_port }}"
-      - "Qdrant is accessible at: http://{{ ansible_default_ipv4.address }}:{{ smart_analyzer_qdrant_port }}"
-      - "HAProxy is accessible at: http://{{ ansible_default_ipv4.address }}:{{ smart_analyzer_haproxy_port }}"
+      - "============================================"
+      - "Smart Analyzer Deployment Complete!"
+      - "============================================"
+      - "AI Service: http://{{ ansible_default_ipv4.address }}:{{ smart_analyzer_ai_service_port }}"
+      - "Qdrant Vector DB: http://{{ ansible_default_ipv4.address }}:{{ smart_analyzer_qdrant_port }}"
+      - "HAProxy: http://{{ ansible_default_ipv4.address }}:{{ smart_analyzer_haproxy_port }}"
+      - "AI Launcher 1: http://{{ ansible_default_ipv4.address }}:{{ smart_analyzer_ai_launcher_1_port }}"
+      - "AI Launcher 2: http://{{ ansible_default_ipv4.address }}:{{ smart_analyzer_ai_launcher_2_port }}"
+      - "Embeddings: http://{{ ansible_default_ipv4.address }}:{{ smart_analyzer_embeddings_port }}"
+      - "Model: {{ smart_analyzer_ai_model_path }}"
+      - "Containers Running: {{ containers_running | length }}"
+      - "============================================"
+
+- name: Display GPU information (if available)
+  ansible.builtin.shell: nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader
+  register: gpu_info
+  changed_when: false
+  failed_when: false
+
+- name: Show GPU details
+  ansible.builtin.debug:
+    msg: "GPU Info: {{ gpu_info.stdout_lines }}"
+  when: gpu_info.rc == 0
+
+- name: Create monitoring script
+  ansible.builtin.template:
+    src: monitor.sh.j2
+    dest: "{{ smart_analyzer_deploy_dir }}/monitor.sh"
+    mode: '0755'
+  when: smart_analyzer_create_monitoring_script | default(true)
+
+- name: Display post-deployment instructions
+  ansible.builtin.debug:
+    msg:
+      - "Next Steps:"
+      - "1. Verify all services are running: cd {{ smart_analyzer_deploy_dir }} && docker compose ps"
+      - "2. Check logs: docker compose logs -f"
+      - "3. Monitor services: {{ smart_analyzer_deploy_dir }}/monitor.sh"
+      - "4. Access Qdrant UI: http://{{ ansible_default_ipv4.address }}:{{ smart_analyzer_qdrant_port }}/dashboard"
+      - "5. Test AI endpoint: curl http://localhost:{{ smart_analyzer_haproxy_port }}/v1/models"

@@ -1,0 +1,16 @@
+{
+  "id": "cmawG2Ad4UGRetlX",
+  "name": "MISP account",
+  "type": "mispApi",
+  "data": {
+    "apiKey": "",
+    "baseUrl": "",
+    "allowUnauthorizedCerts": true
+  },
+  "ownedBy": {
+    "type": "team",
+    "teamId": "nlm9sCOUDyOtNFO6",
+    "teamName": "APK-ES"
+  },
+  "isGlobal": false
+}

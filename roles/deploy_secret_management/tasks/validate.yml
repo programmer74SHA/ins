@@ -1,0 +1,39 @@
+---
+# Pre-deployment validation tasks
+
+- name: Check if Docker network exists
+  ansible.builtin.command: docker network ls --format '{{ '{{' }}.Name{{ '}}' }}'
+  register: docker_networks
+  changed_when: false
+
+- name: Fail if AI infrastructure network doesn't exist
+  ansible.builtin.fail:
+    msg: "Docker network '{{ secret_management_network_name }}' does not exist. Run configure_docker role first."
+  when: secret_management_network_name not in docker_networks.stdout_lines
+
+- name: Check available disk space
+  ansible.builtin.shell: df -BG {{ secret_management_deploy_dir | dirname }} | tail -1 | awk '{print $4}' | sed 's/G//'
+  register: available_space
+  changed_when: false
+
+- name: Warn about low disk space
+  ansible.builtin.debug:
+    msg: "WARNING: Low disk space available: {{ available_space.stdout }}GB"
+  when: available_space.stdout | int < 10
+
+- name: Check if required ports are available
+  ansible.builtin.wait_for:
+    port: "{{ item }}"
+    state: stopped
+    timeout: 1
+  loop:
+    - "{{ secret_management_vault_port }}"
+    - "{{ secret_management_postgres_port }}"
+  failed_when: false
+  register: port_check
+
+- name: Display port availability
+  ansible.builtin.debug:
+    msg: "Port {{ item.item }} is {{ 'available' if item.failed else 'in use' }}"
+  loop: "{{ port_check.results }}"
+  when: not item.failed

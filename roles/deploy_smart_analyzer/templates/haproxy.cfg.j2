@@ -1,0 +1,29 @@
+  GNU nano 7.2                                                                                                     haproxy.cfg
+global
+    daemon
+    maxconn 4096
+    log stdout format raw local0 info
+
+defaults
+    log global
+    mode http
+    option httplog
+    option dontlognull
+    option http-server-close
+    option forwardfor
+    timeout connect 5000ms
+    timeout client 300000ms
+    timeout server 300000ms
+    retries 3
+
+frontend http_front
+    bind *:5002
+    default_backend ai_servers
+
+backend ai_servers
+    balance roundrobin
+    option tcp-check
+
+    # Use container names with internal port 5004
+    server ai-launcher-1 ai-launcher-1:5004 check inter 10s fall 3 rise 2
+    server ai-launcher-2 ai-launcher-2:5004 check inter 10s fall 3 rise 2

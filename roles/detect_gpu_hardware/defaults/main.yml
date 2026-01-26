@@ -1,0 +1,50 @@
+---
+# =============================================================================
+# DETECT GPU HARDWARE - Default Variables
+# =============================================================================
+
+# GPU Detection Settings
+gpu_required: false  # Set to true to fail if no GPU detected
+gpu_save_facts: true  # Save detected GPU info to file
+gpu_create_report: true  # Create human-readable report
+
+# Output Files
+gpu_facts_file: "/tmp/gpu_facts.yml"
+gpu_report_file: "/tmp/gpu_detection_report.txt"
+
+# Supported GPU Models
+supported_gpu_models:
+  - "L40s"
+  - "RTX 5090"
+  - "RTX 4090"
+  - "A100"
+  - "H100"
+  - "A6000"
+
+# Driver Version Mappings
+# Maps GPU models to recommended driver versions
+gpu_driver_mappings:
+  L40s:
+    min_driver: "535"
+    recommended_driver: "545"
+    cuda_version: "12.3"
+  RTX 5090:
+    min_driver: "550"
+    recommended_driver: "560"
+    cuda_version: "12.4"
+  RTX 4090:
+    min_driver: "525"
+    recommended_driver: "545"
+    cuda_version: "12.3"
+  A100:
+    min_driver: "470"
+    recommended_driver: "535"
+    cuda_version: "12.2"
+  H100:
+    min_driver: "525"
+    recommended_driver: "545"
+    cuda_version: "12.3"
+  A6000:
+    min_driver: "470"
+    recommended_driver: "535"
+    cuda_version: "12.2"

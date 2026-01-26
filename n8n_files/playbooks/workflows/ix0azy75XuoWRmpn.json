@@ -1,0 +1,485 @@
+{
+  "id": "ix0azy75XuoWRmpn",
+  "name": "SP-AL-Aggregation 5A  & Final AI Analysis With Nessus",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Try to get the input data from the first item\nlet inputData;\ntry {\n\tinputData = $input.first().json._source;\n} catch (e) {\n\tthrow new Error(\"Can't get timeline notes from input[0]\");\n}\n\n// Try to get Kibana results from input[2]\nlet kibanaResults;\ntry {\n\tkibanaResults = $input.all()[2].json.results;\n} catch (e) {\n\tkibanaResults = [];\n}\n\n// Try to get rule query from input[1]\nlet ruleQuery;\ntry {\n\truleQuery = $input.all()[1].json.CleanOriginalRule?.[0]?.kibana_alert_rule_parameters_query;\n} catch (e) {\n\truleQuery = undefined;\n}\n\n// Function to escape special characters\nconst escapeSpecialCharacters = (text) => {\n\tif (text) {\n\t\treturn text\n\t\t\t.replace(/\\\\/g, '\\\\\\\\')\n\t\t\t.replace(/\\n/g, '\\\\n')\n\t\t\t.replace(/\\r/g, '\\\\r')\n\t\t\t.replace(/\\t/g, '\\\\t')\n\t\t\t.replace(/\\\"/g, '\\\\\"')\n\t\t\t.replace(/\\//g, '\\\\/');\n\t}\n\treturn text;\n};\n\n// Extract notes from the flat structure\nconst eiNotes = escapeSpecialCharacters(inputData.EI || '');\nconst ticketingNotes = escapeSpecialCharacters(inputData.Ticket || '');\nconst tiNotes = escapeSpecialCharacters(inputData.TI || '');\nconst relatedAlertNotes = escapeSpecialCharacters(inputData.RA || '');\nconst relatedLogsNotes = escapeSpecialCharacters(inputData.RL || '');\n\n// Build final result\nconst finalResult = {};\n\nif (eiNotes.trim()) finalResult.EI = eiNotes.trim();\nif (ticketingNotes.trim()) finalResult.ticketing = ticketingNotes.trim();\nif (tiNotes.trim()) finalResult.TI = tiNotes.trim();\nif (relatedAlertNotes.trim()) finalResult.related_alerts = relatedAlertNotes.trim();\nif (relatedLogsNotes.trim()) finalResult.related_logs = relatedLogsNotes.trim();\n\nif (ruleQuery && typeof ruleQuery === 'string') {\n\tfinalResult.rule_query = escapeSpecialCharacters(ruleQuery.trim())\n\t\t.replace(/\\/\\*/g, '\\\\/*')\n\t\t.replace(/\\*\\//g, '*\\\\/');\n}\n\n// Add Kibana vulnerability results\ntry {\n\tfinalResult.kibana_results = $('Search Kibana').first().json.aggregations.by_host.buckets;\n} catch (e) {\n\tfinalResult.kibana_results = [];\n}\n\nreturn [{ json: { Final: finalResult } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        -128
+      ],
+      "id": "72e54348-7362-4339-a3aa-437ca42c936a",
+      "name": "Receiving and Categorizing Notes"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/ai/alert_final",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer  {{ $('Called by SP-AI-5A-Check').first().json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"alert\": [{{ $('Called by SP-AI-5A-Check').first().json['Original Rule'].toJsonString() }}],\n    \"final\": {{ $('Receiving and Categorizing Notes').first().json.Final.toJsonString() }}, \n    \"vul_info\": {{ $json.Final.kibana_results.toJsonString() }},\n    \"device\":\"Splunk\"\n\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -176,
+        -128
+      ],
+      "id": "cf497c89-6fa8-4ec7-9fde-b23ffdfa1979",
+      "name": "AI analysis(Final)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b4cece7f-46e6-4a6a-bf45-8d0c6074e2d0",
+              "name": "Final AI Result",
+              "value": "={{ $json.data }}",
+              "type": "array"
+            },
+            {
+              "id": "77d5bd2b-ba39-4e0f-bc0c-d0bead9424a7",
+              "name": "TimeLine ID",
+              "value": "={{ $('Called by SP-AI-5A-Check').first().json['TimeLine ID'] }}",
+              "type": "string"
+            },
+            {
+              "id": "408a8be8-ddc3-414c-9b48-17f36bc9ca6c",
+              "name": "Alert Timestamp",
+              "value": "={{ $('Called by SP-AI-5A-Check').first().json['Original Rule']._time }}",
+              "type": "string"
+            },
+            {
+              "id": "6fe9c8b3-0584-4208-a4f8-f71a565ed561",
+              "name": "Original Rule",
+              "value": "={{ $('Called by SP-AI-5A-Check').first().json['Original Rule'] }}",
+              "type": "object"
+            },
+            {
+              "id": "30cf3e83-cbf1-401f-8cba-538d9777031f",
+              "name": "Final",
+              "value": "={{ $('Receiving and Categorizing Notes').item.json.Final }}",
+              "type": "object"
+            },
+            {
+              "id": "1a6401b2-923f-4059-bbba-2296e6cace72",
+              "name": "data[0].reference",
+              "value": "={{ $json.data[0].reference }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        -128
+      ],
+      "id": "817f7413-2c0c-4d45-a24e-a76ce6f1ec5e",
+      "name": "Collect Required Items"
+    },
+    {
+      "parameters": {
+        "content": "## Fetching Timeline Notes from Elastic Security\nThis step retrieves detailed notes from a saved Elastic Security timeline using its unique savedObjectId. It sends an authenticated HTTP request with required headers to the Kibana API, enabling further analysis or processing of the timeline data within the workflow.\n\n",
+        "height": 320,
+        "width": 540
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1520,
+        -304
+      ],
+      "typeVersion": 1,
+      "id": "1cb1c1f9-085d-48d4-bdfa-fd4e2edd845f",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Receiving, Categorizing Notes and AI Final Analysis\nThis part of the workflow processes input timeline notes by categorizing them into different types (e.g., EI, Ticketing, Threat Intelligence, Related Alerts, Related Logs) while escaping special characters for safe handling. It integrates additional context such as rule queries and Kibana vulnerability data. The aggregated data is then sent via an authenticated HTTP request for AI-based final analysis. \n\n",
+        "height": 360,
+        "width": 1100,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -704,
+        -240
+      ],
+      "typeVersion": 1,
+      "id": "73376515-f46e-48dd-9b0a-71e15c5c145b",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        -576,
+        -128
+      ],
+      "id": "41063256-fdce-4162-9279-80e333b7799c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ce6de04f-b886-4ecf-8f41-c0204ec38bd3",
+              "name": "Sensor.ip",
+              "value": "={{ $json.SensorIP }}",
+              "type": "string"
+            },
+            {
+              "id": "48d048fa-c921-47d6-9ca2-f38e2fcb9eaa",
+              "name": "Destination.ip",
+              "value": "={{ $json.DestinationIP }}",
+              "type": "string"
+            },
+            {
+              "id": "b20dc3e4-2bff-45bb-aa1d-bc0b8affb2f1",
+              "name": "Server.ip",
+              "value": "={{ $json.ServerIP }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1056,
+        288
+      ],
+      "id": "e68a55bf-45f1-4bfc-8477-f650c53faf56",
+      "name": "Define IPs"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.SP_Base_URL}}:8089/logs-nessus_scan-default/_search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"size\": 0,\n  \"query\": {\n    \"bool\": {\n      \"should\": [\n        { \"term\": { \"host.ip\": \"{{ $json.Sensor.ip || '0.0.0.0' }}\" }},\n        { \"term\": { \"host.ip\": \"{{ $json.Destination.ip || '0.0.0.0' }}\" }},\n        { \"term\": { \"host.ip\": \"{{ '0.0.0.0' }}\" }}\n      ],\n      \"minimum_should_match\": 1\n    }\n  },\n  \"aggs\": {\n    \"by_host\": {\n      \"terms\": {\n        \"field\": \"host.ip\",\n        \"size\": 1000\n      },\n      \"aggs\": {\n        \"top_risks\": {\n          \"top_hits\": {\n            \"size\": 10,\n            \"sort\": [\n              {\n                \"_script\": {\n                  \"type\": \"number\",\n                  \"script\": {\n                    \"lang\": \"painless\",\n                    \"source\": \"if (doc.containsKey('vulnerability.severity') && doc['vulnerability.severity'].size() > 0) { def severity = doc['vulnerability.severity'].value; if (severity == 'Critical') return 1; if (severity == 'High') return 2; if (severity == 'Medium') return 3; if (severity == 'Low') return 4; if (severity == 'None') return 5; } return 6;\"\n                  },\n                  \"order\": \"asc\"\n                }\n              }\n            ],\n            \"_source\": {\n              \"includes\": [\"host.ip\", \"vulnerability.severity\", \"vulnerability.id\", \"vulnerability.description\", \"nessus.plugin_output\"]\n            }\n          }\n        }\n      }\n    }\n  }\n}\n",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -896,
+        288
+      ],
+      "id": "838e915d-4792-4d73-9cd0-ef6e7c5b1922",
+      "name": "Search Kibana",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Q4ozRoPLzUU1kO6c",
+          "name": "Elastic"
+        }
+      },
+      "disabled": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// گرفتن داده از نود Search Kibana\nconst agg = $('Search Kibana').first().json.aggregations;\n\n// بررسی وجود aggregation\nif (!agg || !agg['by_host.ip'] || !agg['by_host.ip'].buckets) {\n  return [{ json: { results: [] } }];\n}\n\n// پردازش bucketها\nconst processedResults = agg['by_host.ip'].buckets.flatMap(bucket => {\n  const ip = bucket.key || 'N/A';\n  const hits = bucket['top_risks'].hits?.hits || [];\n\n  return hits.map(hit => {\n    const source = hit._source || {};\n    return {\n      host: ip,\n      vulnerability_id: source['vulnerability.id'] || 'N/A',\n      risk: source['vulnerability.severity'] || 'N/A',\n      description: source['vulnerability.description'] || 'N/A',\n      plugin_output: source['nessus.plugin_output'] || 'N/A'\n    };\n  });\n});\n\n// خروجی\nreturn [\n  {\n    json: {\n      results: processedResults\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        288
+      ],
+      "id": "601fed54-055d-4bfc-937f-8374b4a09fcc",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "content": "## Kibana Vulnerability Lookup Block  \nThis section extracts the relevant IP addresses from timeline data, then queries the index in Kibana to retrieve any existing vulnerability records related to those IPs. The search prioritizes by risk level using a custom script. Finally, the results are reformatted into a clean JSON array, including vulnerability ID, risk, host, and description, to enable easier downstream processing.",
+        "height": 300,
+        "width": 760,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1328,
+        144
+      ],
+      "typeVersion": 1,
+      "id": "cf8f2d0a-5438-4ac7-b911-ccc116edfce8",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve the data array from the previous node\nconst data = $input.all();\n\n// Initialize empty arrays to store IPs\nlet sensorip = [];\nlet destinationip = [];\nlet serverip = [];\n\n// Loop through each item in the data array\nfor (const item of data) {\n  // Check if the item has a 'sensor.ip' field\n  const sensorIp = item.json?.['Original Rule']?.[0]?.json?.latest_doc?.hits?.hits[0]?._source?.['sensor.ip'];\n  if (sensorIp) {\n    sensorip.push(sensorIp);\n  }\n\n  // Check if the item has a 'destination.ip' field\n  const destinationIP = item.json?.['Original Rule']?.[0]?.json?.latest_doc?.hits?.hits[0]?._source?.destination?.ip;\n  if (destinationIP) {\n    destinationip.push(destinationIP);\n  }\n\n  // Check if the item has a 'host.ip' field (for Server IP)\n  const serverIp = item.json?.['Original Rule']?.[0]?.json?.latest_doc?.hits?.hits[0]?._source?.host?.ip;\n  if (serverIp) {\n    serverip.push(serverIp);\n  }\n}\n\n// Join all IPs into a single string, separated by a delimiter (e.g., comma)\nconst SensorIP = sensorip.join(\", \");\nconst DestinationIP = destinationip.join(\", \");\nconst ServerIP = serverip.join(\", \");\n\n// Return all the collected data in a single JSON object\nreturn [{ json: { SensorIP, DestinationIP, ServerIP } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1216,
+        288
+      ],
+      "id": "d1502ca6-7125-4c65-be5b-b3ab0dce8137",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Splunk AI — SP-AI-5A-Check",
+        "height": 220,
+        "width": 300,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1600,
+        -544
+      ],
+      "typeVersion": 1,
+      "id": "a762d0aa-56f3-4f73-807d-e6bf130492c6",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.ES_Local}}:9200/timeline/_doc/{{ $json['TimeLine ID'] }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1184,
+        -144
+      ],
+      "id": "7eebe71c-b4de-49b4-a049-97bb6a0385ab",
+      "name": "Get",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "oiLHSFGTirTjtIzJ",
+          "name": "Elastic Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "iAdtPYDYJ3ndUvvM",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/iAdtPYDYJ3ndUvvM",
+          "cachedResultName": "SP — SP-AI-Insert Timeline"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        -128
+      ],
+      "id": "ab3bab08-679c-4dc6-9516-506d0c225cdb",
+      "name": "Called Splunk AI — SP-AI-Insert Timeline"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1440,
+        -144
+      ],
+      "id": "13f051a1-aa43-443d-b36d-0f37621597ca",
+      "name": "Called by SP-AI-5A-Check"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: SP-AL-Aggregation 5A  & Final AI Analysis With Nessus\n### Workflow-Version: 1.0.1\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Create for first time\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1600,
+        -864
+      ],
+      "typeVersion": 1,
+      "id": "f202e681-3965-4d2e-b34e-d7836f257ff5",
+      "name": "Sticky Note9"
+    }
+  ],
+  "connections": {
+    "Receiving and Categorizing Notes": {
+      "main": [
+        [
+          {
+            "node": "AI analysis(Final)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Required Items": {
+      "main": [
+        [
+          {
+            "node": "Called Splunk AI — SP-AI-Insert Timeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI analysis(Final)": {
+      "main": [
+        [
+          {
+            "node": "Collect Required Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Receiving and Categorizing Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Define IPs": {
+      "main": [
+        [
+          {
+            "node": "Search Kibana",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Kibana": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Define IPs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Called by SP-AI-5A-Check": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "9d20d1cd-c6af-4081-a9be-cbd0383d63bc",
+  "owner": {
+    "type": "team",
+    "teamId": "VkJ1fWswpm3ZmsSH",
+    "teamName": "SP"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

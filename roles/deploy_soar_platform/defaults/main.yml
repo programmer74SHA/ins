@@ -1,38 +1,77 @@
 ---
-# SOAR Platform Configuration
-# Default variables for deploy_soar_platform role
+# =============================================================================
+# DEPLOY SOAR PLATFORM - Default Variables
+# =============================================================================
 
-# Deployment directory
+# Deployment Configuration
 soar_deploy_dir: "/opt/soar"
+soar_force_redeploy: false
+soar_pull_images: false
+soar_create_backup_script: true
+soar_create_monitoring_script: true
+soar_generate_ssl_cert: true
+soar_validate_license: true
+soar_init_admin_user: false
 
-# Network configuration
+# Network Configuration
 soar_network_name: "esnet"
 soar_network_external: true
 
-# PostgreSQL configuration
+# PostgreSQL Configuration
 soar_postgres_user: "APKAIDBUSERSU"
 soar_postgres_password: "Ygr3iEl7nx81xqwMl3qCpIav"
 soar_postgres_db: "apksoar"
+soar_postgres_internal_only: true
 
-# SOAR admin configuration
+# SOAR Admin Configuration
 soar_admin_email: "apksoar@apk-group.net"
 soar_admin_first_name: "admin"
 soar_admin_last_name: "admin"
 soar_admin_password: "P@ssw0rd"
 
-# License configuration
+# License Configuration
 soar_license_key: "ct3+bAHhAynI7JDy/bqsPAMNeSt+4eICNJau92cBRv4ZuJL1YJjjWCoBw0Gt68NK8xkwyr3/8mJCPQtwU4n3RA=="
 
-# Timezone and host configuration
+# Timezone and Host Configuration
 soar_timezone: "Asia/Tehran"
 soar_host: "172.25.7.99"
 
-# ApkGatev5 node configuration
+# ApkGatev5 Node Configuration
 soar_enable_apkgatev5_node: "no"
 
-# Docker image configuration
-soar_n8n_image: "n8nio/n8n:local"
-soar_postgres_image: "registry.apk-group.net/library/postgres:16"
-soar_redis_image: "registry.apk-group.net/library/redis:6-alpine"
-soar_nginx_image: "registry.apk-group.net/automation/nginx:alpine"
-soar_web_driver_image: "registry.apk-group.net/automation/zenika/alpine-chrome:with-selenoid"
+# WebDriver Configuration
+soar_enable_web_driver: false
+
+# Docker Image Configuration
+soar_n8n_image: "registry.apk-group.net/automation/apksoar/apksoar"
+soar_n8n_version: "1.1.0"
+soar_postgres_image: "registry.apk-group.net/library/postgres"
+soar_postgres_version: "16"
+soar_redis_image: "registry.apk-group.net/library/redis"
+soar_redis_version: "6-alpine"
+soar_nginx_image: "registry.apk-group.net/mirror/library/nginx"
+soar_nginx_version: "alpine"
+soar_web_driver_image: "registry.apk-group.net/mirror/zenika/alpine-chrome"
+soar_web_driver_version: "with-selenoid"
+
+# Backup Configuration
+soar_backup_retention_days: 30
+soar_backup_dir: "{{ soar_deploy_dir }}/backups"
+
+# n8n Configuration
+soar_n8n_encryption_key: ""  # Will be auto-generated if empty
+soar_n8n_user_management_disabled: false
+soar_n8n_basic_auth_active: false
+soar_n8n_metrics_enabled: false
+
+# Execution Mode
+soar_execution_mode: "queue"  # queue or regular
+
+# Security Settings
+soar_n8n_secure_cookie: true
+soar_n8n_jwt_auth_active: true
+
+# Performance Settings
+soar_executions_process: "main"
+soar_executions_timeout: 3600
+soar_executions_timeout_max: 7200

@@ -1,0 +1,43 @@
+---
+# lshell (Limited Shell) Installation and Configuration
+
+- name: Install lshell package
+  ansible.builtin.package:
+    name: lshell
+    state: present
+
+- name: Ensure lshell log directory exists
+  ansible.builtin.file:
+    path: /var/log/ai/shell
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Backup original lshell.conf if it exists
+  ansible.builtin.copy:
+    src: /etc/lshell.conf
+    dest: /etc/lshell.conf.backup
+    remote_src: yes
+    force: no
+  ignore_errors: yes
+
+- name: Deploy lshell configuration
+  ansible.builtin.copy:
+    src: lshell.conf
+    dest: /etc/lshell.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart SSH
+
+- name: Verify lshell configuration
+  ansible.builtin.command: lshell --config /etc/lshell.conf --check-config
+  register: lshell_check
+  changed_when: false
+  failed_when: false
+
+- name: Display lshell configuration check results
+  ansible.builtin.debug:
+    var: lshell_check.stdout_lines
+  when: lshell_check.stdout_lines is defined

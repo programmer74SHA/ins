@@ -1,6 +1,6 @@
 services:
   elasticsearch:
-    image: {{ elk_elasticsearch_image }}:{{ elk_stack_version }}
+    image: registry.apk-group.net/automation/modules/elasticsearch:{{ elk_stack_version }}
     restart: unless-stopped
     container_name: elasticsearch
     environment:
@@ -16,14 +16,14 @@ services:
     networks:
       - {{ elk_network_name }}
     healthcheck:
-      test: ["CMD-SHELL", "curl -f -s -u elastic:{{ elk_elasticsearch_password }} http://localhost:9200/_cluster/health -o /dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -s -u elastic:{{ elk_elasticsearch_password }} http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
       interval: 10s
-      timeout: 10s
+      timeout: 5s
       retries: 60
-      start_period: 60s
+      start_period: 30s
 
   kibana:
-    image: {{ elk_kibana_image }}:{{ elk_stack_version }}
+    image: registry.apk-group.net/automation/modules/:{{ elk_stack_version }}
     restart: unless-stopped
     container_name: kibana
     environment:

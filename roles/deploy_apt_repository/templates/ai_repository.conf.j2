@@ -1,0 +1,10 @@
+server {
+    listen 80;
+    server_name {{ ansible_default_ipv4.address }}; 
+    root {{ local_repository_serve_directory_path }};
+
+    location / {
+        autoindex on;  # Enable directory listing
+        try_files $uri $uri/ =404;
+    }
+}

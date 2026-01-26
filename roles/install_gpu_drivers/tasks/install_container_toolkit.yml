@@ -1,0 +1,82 @@
+---
+# Install NVIDIA Container Toolkit for Docker GPU support
+
+- name: Add NVIDIA Container Toolkit GPG key
+  ansible.builtin.apt_key:
+    url: https://nvidia.github.io/libnvidia-container/gpgkey
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Get distribution
+  ansible.builtin.command: . /etc/os-release && echo $ID$VERSION_ID
+  args:
+    executable: /bin/bash
+  register: distro_id
+  changed_when: false
+
+- name: Add NVIDIA Container Toolkit repository
+  ansible.builtin.shell: |
+    curl -s -L https://nvidia.github.io/libnvidia-container/{{ distro_id.stdout }}/libnvidia-container.list | \
+    tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+  args:
+    creates: /etc/apt/sources.list.d/nvidia-container-toolkit.list
+  when: ansible_os_family == "Debian"
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: Install NVIDIA Container Toolkit
+  ansible.builtin.apt:
+    name:
+      - nvidia-container-toolkit
+      - nvidia-container-runtime
+    state: present
+  register: toolkit_install
+  retries: 3
+  delay: 5
+  until: toolkit_install is succeeded
+
+- name: Configure NVIDIA Container Runtime
+  ansible.builtin.command: nvidia-ctk runtime configure --runtime=docker
+  register: runtime_config
+  changed_when: runtime_config.rc == 0
+
+- name: Verify Docker daemon configuration
+  ansible.builtin.shell: cat /etc/docker/daemon.json | jq '.runtimes.nvidia'
+  register: docker_config_check
+  changed_when: false
+  failed_when: false
+
+- name: Display Docker NVIDIA runtime configuration
+  ansible.builtin.debug:
+    msg: "{{ docker_config_check.stdout }}"
+  when: docker_config_check.rc == 0
+
+- name: Restart Docker service
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+  when: runtime_config is changed
+
+- name: Wait for Docker to be ready
+  ansible.builtin.wait_for:
+    port: 2375
+    delay: 5
+    timeout: 60
+    state: started
+  failed_when: false
+
+- name: Verify NVIDIA Container Toolkit installation
+  ansible.builtin.command: nvidia-ctk --version
+  register: toolkit_version
+  changed_when: false
+
+- name: Display Container Toolkit version
+  ansible.builtin.debug:
+    msg: "NVIDIA Container Toolkit version: {{ toolkit_version.stdout }}"
+
+- name: Display installation success
+  ansible.builtin.debug:
+    msg: "NVIDIA Container Toolkit installed and configured successfully"

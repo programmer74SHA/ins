@@ -1,0 +1,195 @@
+---
+# =============================================================================
+# DEPLOY SECRET MANAGEMENT ROLE - Main Tasks
+# =============================================================================
+# This role deploys HashiCorp Vault and PostgreSQL for secret management
+# with proper initialization, unsealing, and health checks
+# =============================================================================
+
+- name: Include pre-deployment validation tasks
+  ansible.builtin.include_tasks: validate.yml
+  tags: ['validate']
+
+- name: Ensure deployment directory exists
+  ansible.builtin.file:
+    path: "{{ secret_management_deploy_dir }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Ensure vault directories exist
+  ansible.builtin.file:
+    path: "{{ secret_management_deploy_dir }}/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - vault/config
+    - vault/storage
+    - vault/logs
+    - vault/policies
+
+- name: Set proper permissions on vault storage
+  ansible.builtin.file:
+    path: "{{ secret_management_deploy_dir }}/vault/storage"
+    state: directory
+    mode: '0700'
+
+- name: Template vault configuration file
+  ansible.builtin.template:
+    src: config.json.j2
+    dest: "{{ secret_management_deploy_dir }}/vault/config/config.json"
+    mode: '0644'
+
+- name: Template docker-compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ secret_management_deploy_dir }}/docker-compose.yml"
+    mode: '0644'
+
+- name: Template .env file
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ secret_management_deploy_dir }}/.env"
+    mode: '0600'
+  no_log: true
+
+- name: Check if Vault is already initialized
+  ansible.builtin.stat:
+    path: "{{ secret_management_deploy_dir }}/vault/storage/vault.db"
+  register: vault_db
+
+- name: Stop existing containers if redeploying
+  ansible.builtin.shell:
+    cmd: docker compose down
+    chdir: "{{ secret_management_deploy_dir }}"
+  when: secret_management_force_redeploy | default(false)
+  failed_when: false
+
+- name: Deploy Secret Management with Docker Compose
+  ansible.builtin.shell:
+    cmd: docker compose up -d --force-recreate --remove-orphans
+    chdir: "{{ secret_management_deploy_dir }}"
+  register: deploy_result
+  retries: 3
+  delay: 10
+  until: deploy_result.rc == 0
+
+- name: Wait for PostgreSQL to be ready
+  ansible.builtin.wait_for:
+    host: localhost
+    port: "{{ secret_management_postgres_port }}"
+    delay: 5
+    timeout: 60
+    state: started
+
+- name: Verify PostgreSQL health
+  ansible.builtin.command:
+    cmd: >
+      docker exec postgres
+      pg_isready -U {{ secret_management_postgres_user }}
+  register: pg_health
+  retries: 5
+  delay: 3
+  until: pg_health.rc == 0
+  changed_when: false
+
+- name: Wait for Vault to be ready
+  ansible.builtin.wait_for:
+    host: localhost
+    port: "{{ secret_management_vault_port }}"
+    delay: 5
+    timeout: 60
+    state: started
+
+- name: Check Vault initialization status
+  ansible.builtin.uri:
+    url: "http://localhost:{{ secret_management_vault_port }}/v1/sys/init"
+    method: GET
+    return_content: true
+  register: vault_init_status
+  until: vault_init_status.status == 200
+  retries: 10
+  delay: 3
+
+- name: Initialize Vault (if not already initialized)
+  ansible.builtin.uri:
+    url: "http://localhost:{{ secret_management_vault_port }}/v1/sys/init"
+    method: POST
+    body_format: json
+    body:
+      secret_shares: 5
+      secret_threshold: 3
+    return_content: true
+  register: vault_init
+  when: not vault_init_status.json.initialized
+  no_log: true
+
+- name: Save Vault initialization data
+  ansible.builtin.copy:
+    content: "{{ vault_init.json | to_nice_json }}"
+    dest: "{{ secret_management_deploy_dir }}/vault/vault-init.json"
+    mode: '0600'
+  when:
+    - vault_init is defined
+    - vault_init.json is defined
+  no_log: true
+
+- name: Display Vault initialization warning
+  ansible.builtin.debug:
+    msg:
+      - "!!! IMPORTANT: Vault has been initialized !!!"
+      - "Root token and unseal keys saved to: {{ secret_management_deploy_dir }}/vault/vault-init.json"
+      - "Please backup this file securely and remove it from the server!"
+  when:
+    - vault_init is defined
+    - vault_init.json is defined
+
+- name: Check Vault seal status
+  ansible.builtin.uri:
+    url: "http://localhost:{{ secret_management_vault_port }}/v1/sys/seal-status"
+    method: GET
+    return_content: true
+  register: vault_seal_status
+
+- name: Unseal Vault
+  ansible.builtin.include_tasks: unseal_vault.yml
+  when: vault_seal_status.json.sealed
+
+- name: Verify Vault health
+  ansible.builtin.uri:
+    url: "http://localhost:{{ secret_management_vault_port }}/v1/sys/health"
+    method: GET
+    status_code: 200
+    return_content: true
+  register: vault_health
+  retries: 5
+  delay: 3
+  until: vault_health.status == 200
+
+- name: Display deployment summary
+  ansible.builtin.debug:
+    msg:
+      - "Secret Management Deployment Complete"
+      - "======================================"
+      - "Vault UI: http://{{ ansible_default_ipv4.address }}:{{ secret_management_vault_port }}"
+      - "PostgreSQL: {{ ansible_default_ipv4.address }}:{{ secret_management_postgres_port }}"
+      - "Vault Status: {{ 'Unsealed and Ready' if not vault_seal_status.json.sealed else 'Sealed' }}"
+      - "Database: {{ secret_management_postgres_db }}"
+
+- name: Create backup script
+  ansible.builtin.template:
+    src: backup.sh.j2
+    dest: "{{ secret_management_deploy_dir }}/backup.sh"
+    mode: '0755'
+  when: secret_management_create_backup_script | default(true)
+
+- name: Display post-deployment instructions
+  ansible.builtin.debug:
+    msg:
+      - "Next Steps:"
+      - "1. Backup the vault-init.json file from {{ secret_management_deploy_dir }}/vault/"
+      - "2. Delete vault-init.json from the server after secure backup"
+      - "3. Access Vault UI at http://{{ ansible_default_ipv4.address }}:{{ secret_management_vault_port }}"
+      - "4. Configure Vault policies and secrets as needed"
+      - "5. Run regular backups using {{ secret_management_deploy_dir }}/backup.sh"

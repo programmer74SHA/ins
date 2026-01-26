@@ -1,0 +1,157 @@
+---
+# Post-installation tasks for NVIDIA drivers
+
+- name: Load NVIDIA kernel modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - nvidia
+    - nvidia_uvm
+    - nvidia_drm
+    - nvidia_modeset
+  failed_when: false
+
+- name: Verify NVIDIA modules are loaded
+  ansible.builtin.shell: lsmod | grep nvidia
+  register: nvidia_modules
+  changed_when: false
+
+- name: Display loaded NVIDIA modules
+  ansible.builtin.debug:
+    msg: "{{ nvidia_modules.stdout_lines }}"
+
+- name: Create persistence daemon service
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=NVIDIA Persistence Daemon
+      Wants=syslog.target
+
+      [Service]
+      Type=forking
+      ExecStart=/usr/bin/nvidia-persistenced --user nvidia-persistenced --persistence-mode --verbose
+      ExecStopPost=/bin/rm -rf /var/run/nvidia-persistenced
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: /etc/systemd/system/nvidia-persistenced.service
+    mode: '0644'
+  when: enable_persistence_mode | default(true)
+
+- name: Enable and start NVIDIA persistence daemon
+  ansible.builtin.systemd:
+    name: nvidia-persistenced
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: enable_persistence_mode | default(true)
+  failed_when: false
+
+- name: Set GPU performance mode
+  ansible.builtin.command: nvidia-smi -pm 1
+  register: persistence_mode
+  changed_when: persistence_mode.rc == 0
+  failed_when: false
+
+- name: Set GPU power limit (if configured)
+  ansible.builtin.command: nvidia-smi -pl {{ gpu_power_limit }}
+  when:
+    - gpu_power_limit is defined
+    - gpu_power_limit | int > 0
+  register: power_limit_set
+  changed_when: power_limit_set.rc == 0
+  failed_when: false
+
+- name: Configure GPU clocks (if specified)
+  ansible.builtin.command: nvidia-smi -ac {{ gpu_memory_clock }},{{ gpu_graphics_clock }}
+  when:
+    - gpu_memory_clock is defined
+    - gpu_graphics_clock is defined
+  register: clocks_set
+  changed_when: clocks_set.rc == 0
+  failed_when: false
+
+- name: Get final GPU status
+  ansible.builtin.command: >
+    nvidia-smi
+    --query-gpu=index,name,driver_version,temperature.gpu,power.draw,
+    clocks.gr,clocks.mem,utilization.gpu,utilization.memory
+    --format=csv
+  register: final_gpu_status
+  changed_when: false
+  failed_when:
+    - final_gpu_status.rc != 0
+    - "'Driver/library version mismatch' not in final_gpu_status.stdout"
+
+- name: Display final GPU status
+  ansible.builtin.debug:
+    msg: "{{ final_gpu_status.stdout_lines }}"
+
+- name: Create nvidia-smi systemd service for monitoring
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=NVIDIA GPU Monitoring
+      After=network.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/bin/nvidia-smi
+      StandardOutput=journal
+      StandardError=journal
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: /etc/systemd/system/nvidia-monitoring.service
+    mode: '0644'
+  when: create_monitoring_service | default(false)
+
+- name: Create nvidia-smi timer for periodic monitoring
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=NVIDIA GPU Monitoring Timer
+
+      [Timer]
+      OnBootSec=5min
+      OnUnitActiveSec=1h
+      Unit=nvidia-monitoring.service
+
+      [Install]
+      WantedBy=timers.target
+    dest: /etc/systemd/system/nvidia-monitoring.timer
+    mode: '0644'
+  when: create_monitoring_service | default(false)
+
+- name: Enable monitoring timer
+  ansible.builtin.systemd:
+    name: nvidia-monitoring.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: create_monitoring_service | default(false)
+
+- name: Configure automatic NVIDIA module loading on boot
+  ansible.builtin.copy:
+    content: |
+      # Load NVIDIA modules at boot
+      nvidia
+      nvidia_uvm
+      nvidia_drm
+      nvidia_modeset
+    dest: /etc/modules-load.d/nvidia.conf
+    mode: '0644'
+
+- name: Update initramfs to include NVIDIA modules
+  ansible.builtin.command: update-initramfs -u
+  when: ansible_os_family == "Debian"
+  changed_when: true
+
+- name: Display post-installation summary
+  ansible.builtin.debug:
+    msg:
+      - "Post-installation configuration complete"
+      - "Persistence mode: {{ 'Enabled' if enable_persistence_mode else 'Disabled' }}"
+      - "Monitoring service: {{ 'Created' if create_monitoring_service else 'Skipped' }}"
+      - "GPU modules loaded: {{ nvidia_modules.stdout_lines | length }}"

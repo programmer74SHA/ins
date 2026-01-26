@@ -7,7 +7,7 @@ all:
     servers:
       hosts:
         ai-server-01:
-          ansible_host: 192.168.166.62
+          ansible_host: 172.25.7.99
           ansible_user: root
 
       vars:

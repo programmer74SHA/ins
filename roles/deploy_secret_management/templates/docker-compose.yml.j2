@@ -1,0 +1,73 @@
+services:
+  vault:
+    image: {{ secret_management_vault_image }}:{{ secret_management_vault_version }}
+    container_name: vault
+    restart: unless-stopped
+    cap_add:
+      - IPC_LOCK
+    command: server
+    ports:
+      - "{{ secret_management_vault_port }}:8200"
+    env_file:
+      - .env
+    volumes:
+      - ./vault/config:/vault/config
+      - ./vault/storage:/vault/storage
+      - ./vault/logs:/vault/logs
+    networks:
+      - {{ secret_management_network_name }}
+    environment:
+      - VAULT_ADDR={{ secret_management_vault_addr }}
+      - VAULT_API_ADDR={{ secret_management_vault_api_addr }}
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: {{ secret_management_log_driver }}
+      options:
+        max-size: {{ secret_management_log_max_size }}
+        max-file: "{{ secret_management_log_max_file }}"
+    tmpfs:
+      - /vault/file
+
+  postgresdb:
+    image: {{ secret_management_postgres_image }}:{{ secret_management_postgres_version }}
+    container_name: postgres
+    restart: unless-stopped
+    ports:
+      - "{{ secret_management_postgres_port }}:5432"
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASS}
+      - POSTGRES_DB=${PG_DB}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/pgdata
+    networks:
+      - {{ secret_management_network_name }}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: {{ secret_management_log_driver }}
+      options:
+        max-size: {{ secret_management_log_max_size }}
+        max-file: "{{ secret_management_log_max_file }}"
+
+volumes:
+  vault_storage:
+    driver: local
+  postgres_data:
+    driver: local
+
+networks:
+  {{ secret_management_network_name }}:
+    external: true

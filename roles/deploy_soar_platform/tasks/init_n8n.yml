@@ -1,0 +1,25 @@
+---
+# n8n initialization tasks
+
+- name: Check if n8n is already initialized
+  ansible.builtin.uri:
+    url: "http://localhost:5678/healthz"
+    method: GET
+    status_code: 200
+  register: n8n_check
+  failed_when: false
+
+- name: Wait additional time for n8n full initialization
+  ansible.builtin.pause:
+    seconds: 15
+    prompt: "Waiting for n8n to fully initialize..."
+
+- name: Display initialization notice
+  ansible.builtin.debug:
+    msg:
+      - "n8n is running and accessible at http://localhost:5678"
+      - "To complete setup, access the web interface and create the first user"
+      - "The admin credentials from the .env file will be available for use"
+      - ""
+      - "Note: n8n may require manual first-time setup through the web interface"
+      - "Automated user creation via API requires n8n to be in setup mode"

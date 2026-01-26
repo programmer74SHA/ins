@@ -1,0 +1,73 @@
+---
+# Pre-deployment validation tasks for SOAR Platform
+
+- name: Check if Docker network exists
+  ansible.builtin.command: docker network ls --format '{{ '{{' }}.Name{{ '}}' }}'
+  register: docker_networks
+  changed_when: false
+
+- name: Display network status
+  ansible.builtin.debug:
+    msg: "Network '{{ soar_network_name }}' {{ 'exists' if soar_network_name in docker_networks.stdout_lines else 'will be created' }}"
+
+- name: Check available disk space
+  ansible.builtin.shell: df -BG {{ soar_deploy_dir | dirname }} | tail -1 | awk '{print $4}' | sed 's/G//'
+  register: available_space
+  changed_when: false
+
+- name: Fail if insufficient disk space
+  ansible.builtin.fail:
+    msg: "Insufficient disk space. Required: 10GB, Available: {{ available_space.stdout }}GB"
+  when: available_space.stdout | int < 10
+
+- name: Check if required ports are available
+  ansible.builtin.wait_for:
+    port: "{{ item }}"
+    state: stopped
+    timeout: 1
+  loop:
+    - 80
+    - 443
+    - 5678
+  failed_when: false
+  register: port_check
+
+- name: Display port availability
+  ansible.builtin.debug:
+    msg: "Port {{ item.item }}: {{ 'Available' if item.failed else 'WARNING: In use' }}"
+  loop: "{{ port_check.results }}"
+
+- name: Verify Docker Compose is available
+  ansible.builtin.command: docker compose version
+  register: docker_compose_version
+  changed_when: false
+  failed_when: docker_compose_version.rc != 0
+
+- name: Check for existing n8n data
+  ansible.builtin.stat:
+    path: "{{ soar_deploy_dir }}/n8n-data"
+  register: existing_n8n_data
+
+- name: Warn about existing data
+  ansible.builtin.debug:
+    msg: "WARNING: Existing n8n data found. Deployment will preserve existing workflows and credentials."
+  when: existing_n8n_data.stat.exists
+
+- name: Validate license key format (basic check)
+  ansible.builtin.assert:
+    that:
+      - soar_license_key is defined
+      - soar_license_key | length > 20
+    fail_msg: "Invalid or missing SOAR license key"
+    success_msg: "License key validation passed"
+  when: soar_validate_license | default(true)
+
+- name: Check minimum RAM available
+  ansible.builtin.shell: free -g | awk '/^Mem:/{print $7}'
+  register: available_ram
+  changed_when: false
+
+- name: Warn about low RAM
+  ansible.builtin.debug:
+    msg: "WARNING: Low available RAM: {{ available_ram.stdout }}GB. Recommended: 8GB+"
+  when: available_ram.stdout | int < 4

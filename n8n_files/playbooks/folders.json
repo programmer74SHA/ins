@@ -1,0 +1,60 @@
+{
+  "folders": [
+    {
+      "id": "5oLM456M3uV3SDMW",
+      "name": "Func1",
+      "parentFolderId": null,
+      "homeProjectId": "ql2NMrkQhceMhQlm",
+      "createdAt": "2025-12-22T05:42:11.468Z",
+      "updatedAt": "2025-12-22T05:42:11.468Z"
+    },
+    {
+      "id": "vlonASEg3xnNQGmN",
+      "name": "Func2",
+      "parentFolderId": null,
+      "homeProjectId": "ql2NMrkQhceMhQlm",
+      "createdAt": "2025-12-23T10:17:13.822Z",
+      "updatedAt": "2025-12-23T10:17:13.822Z"
+    },
+    {
+      "id": "b2jQzQZhGFPsrKW5",
+      "name": "Func3",
+      "parentFolderId": null,
+      "homeProjectId": "ql2NMrkQhceMhQlm",
+      "createdAt": "2025-12-24T07:46:26.817Z",
+      "updatedAt": "2025-12-24T07:46:26.817Z"
+    },
+    {
+      "id": "8kkuoxXDCnzXPtef",
+      "name": "Func4",
+      "parentFolderId": null,
+      "homeProjectId": "ql2NMrkQhceMhQlm",
+      "createdAt": "2025-12-27T06:27:51.201Z",
+      "updatedAt": "2025-12-27T06:27:51.201Z"
+    },
+    {
+      "id": "tpuSKyzHs0wZZ2KP",
+      "name": "Func5",
+      "parentFolderId": null,
+      "homeProjectId": "ql2NMrkQhceMhQlm",
+      "createdAt": "2025-12-27T11:21:33.088Z",
+      "updatedAt": "2025-12-27T11:21:33.088Z"
+    },
+    {
+      "id": "GngKACo9KD8tYrl4",
+      "name": "Func6",
+      "parentFolderId": null,
+      "homeProjectId": "ql2NMrkQhceMhQlm",
+      "createdAt": "2025-12-28T11:54:24.098Z",
+      "updatedAt": "2025-12-28T11:54:24.098Z"
+    },
+    {
+      "id": "dsz0galewAaO6diS",
+      "name": "Func1",
+      "parentFolderId": null,
+      "homeProjectId": "DnyRJEaUvoGmmq7e",
+      "createdAt": "2025-12-30T06:53:18.832Z",
+      "updatedAt": "2025-12-30T06:53:18.832Z"
+    }
+  ]
+}

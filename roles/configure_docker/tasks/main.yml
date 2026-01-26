@@ -1,0 +1,168 @@
+---
+# =============================================================================
+# CONFIGURE DOCKER ROLE - Main Tasks
+# =============================================================================
+# This role configures Docker for AI infrastructure deployment including:
+# - Docker service verification and configuration
+# - Network setup for AI services
+# - Registry authentication
+# - System resource optimization
+# =============================================================================
+
+- name: Verify Docker is installed
+  ansible.builtin.command: docker --version
+  register: docker_version
+  changed_when: false
+  failed_when: docker_version.rc != 0
+
+- name: Display Docker version
+  ansible.builtin.debug:
+    msg: "Docker version: {{ docker_version.stdout }}"
+
+- name: Verify Docker Compose is installed
+  ansible.builtin.command: docker compose version
+  register: docker_compose_version
+  changed_when: false
+  failed_when: docker_compose_version.rc != 0
+
+- name: Display Docker Compose version
+  ansible.builtin.debug:
+    msg: "Docker Compose version: {{ docker_compose_version.stdout }}"
+
+- name: Ensure Docker service is running
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Check if Docker daemon configuration exists
+  ansible.builtin.stat:
+    path: /etc/docker/daemon.json
+  register: docker_daemon_config
+
+- name: Backup existing Docker daemon configuration
+  ansible.builtin.copy:
+    src: /etc/docker/daemon.json
+    dest: /etc/docker/daemon.json.backup
+    remote_src: true
+    mode: '0644'
+  when: docker_daemon_config.stat.exists
+
+- name: Configure Docker daemon settings
+  ansible.builtin.template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    mode: '0644'
+  notify: Restart Docker service
+  when: configure_docker_daemon
+
+- name: Ensure Docker network directories exist
+  ansible.builtin.file:
+    path: /etc/docker/network
+    state: directory
+    mode: '0755'
+
+- name: Create AI infrastructure network
+  community.docker.docker_network:
+    name: "{{ ai_infrastructure_network_name }}"
+    driver: bridge
+    state: present
+    ipam_config:
+      - subnet: "{{ ai_infrastructure_network_subnet | default('172.28.0.0/16') }}"
+        gateway: "{{ ai_infrastructure_network_gateway | default('172.28.0.1') }}"
+  register: ai_network_result
+
+- name: Display network creation result
+  ansible.builtin.debug:
+    msg: "AI Infrastructure network '{{ ai_infrastructure_network_name }}' created/verified successfully"
+  when: ai_network_result is succeeded
+
+- name: Create Elasticsearch network (if needed)
+  community.docker.docker_network:
+    name: "{{ elasticsearch_network_name }}"
+    driver: bridge
+    state: present
+    ipam_config:
+      - subnet: "{{ elasticsearch_network_subnet | default('172.29.0.0/16') }}"
+        gateway: "{{ elasticsearch_network_gateway | default('172.29.0.1') }}"
+  when: create_elasticsearch_network | default(true)
+  register: es_network_result
+
+- name: Display Elasticsearch network result
+  ansible.builtin.debug:
+    msg: "Elasticsearch network '{{ elasticsearch_network_name }}' created/verified successfully"
+  when:
+    - create_elasticsearch_network | default(true)
+    - es_network_result is succeeded
+
+- name: Login to Docker registry
+  community.docker.docker_login:
+    registry_url: "{{ docker_registry_url }}"
+    username: "{{ docker_registry_username }}"
+    password: "{{ docker_registry_password }}"
+    reauthorize: true
+  when:
+    - docker_registry_url is defined
+    - docker_registry_username is defined
+    - docker_registry_password is defined
+  no_log: true
+
+- name: Verify Docker networks
+  ansible.builtin.command: docker network ls
+  register: docker_networks
+  changed_when: false
+
+- name: Display Docker networks
+  ansible.builtin.debug:
+    msg: "{{ docker_networks.stdout_lines }}"
+
+- name: Clean up unused Docker resources
+  ansible.builtin.command: docker system prune -f --volumes
+  when: docker_cleanup_on_configure | default(false)
+  register: cleanup_result
+  changed_when: cleanup_result.stdout != ""
+
+- name: Configure Docker log rotation
+  ansible.builtin.template:
+    src: docker-logrotate.j2
+    dest: /etc/logrotate.d/docker
+    mode: '0644'
+  when: configure_docker_logrotate | default(true)
+
+- name: Set Docker storage driver optimization
+  ansible.builtin.lineinfile:
+    path: /etc/docker/daemon.json
+    line: '  "storage-driver": "{{ docker_storage_driver | default("overlay2") }}",'
+    insertafter: '^\s*{'
+    state: present
+  notify: Restart Docker service
+  when: configure_docker_daemon and docker_storage_driver is defined
+
+- name: Verify NVIDIA runtime (for GPU support)
+  ansible.builtin.command: docker run --rm --gpus all nvidia/cuda:11.8.0-base-ubuntu22.04 nvidia-smi
+  register: nvidia_test
+  changed_when: false
+  failed_when: false
+  when: verify_nvidia_runtime | default(false)
+
+- name: Display NVIDIA runtime status
+  ansible.builtin.debug:
+    msg: "{{ 'NVIDIA runtime is working' if nvidia_test.rc == 0 else 'NVIDIA runtime not available or not configured' }}"
+  when: verify_nvidia_runtime | default(false)
+
+- name: Create Docker data directory
+  ansible.builtin.file:
+    path: "{{ docker_data_root | default('/var/lib/docker') }}"
+    state: directory
+    mode: '0755'
+  when: docker_data_root is defined
+
+- name: Display configuration summary
+  ansible.builtin.debug:
+    msg:
+      - "Docker Configuration Complete"
+      - "================================"
+      - "AI Infrastructure Network: {{ ai_infrastructure_network_name }}"
+      - "Docker Registry: {{ docker_registry_url | default('Not configured') }}"
+      - "Storage Driver: {{ docker_storage_driver | default('overlay2') }}"
+      - "Data Root: {{ docker_data_root | default('/var/lib/docker') }}"

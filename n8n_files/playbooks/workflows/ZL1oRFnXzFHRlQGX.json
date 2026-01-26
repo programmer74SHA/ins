@@ -1,0 +1,113 @@
+{
+  "id": "ZL1oRFnXzFHRlQGX",
+  "name": "ES-AI Authentication",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$vars.SA_API_Base_URL}}/api/v1/auth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"username\": \"{{$vars.SA_API_Login_UserName}}\",\n    \"password\": \"{{$vars.SA_API_Login_Password}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -192,
+        -16
+      ],
+      "id": "0dd27281-e8a3-42ad-967f-984856e06129",
+      "name": "HTTP Request",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "## Trigger and Authentication Request\nThe workflow starts by other workflows, serving as the entry point. Immediately after, an HTTP Request node sends a POST request to an authentication endpoint with a JSON payload containing username and password for user authentication.\n",
+        "height": 320,
+        "width": 520,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -528,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "071db9e2-3f2f-43b9-aacf-608fdecbd1e5",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Elastic AI — ES-AI-5A-Create Time line & Check\n- Elastic AI —ES_Al_Case_Creation_Schaeduler_24h\n",
+        "height": 220,
+        "width": 280,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -816,
+        -320
+      ],
+      "typeVersion": 1,
+      "id": "f365f67f-848c-4130-a04b-c76f8c8f2282",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -464,
+        -16
+      ],
+      "id": "7d309eda-eac6-44c3-863b-dd4ed8aa5d5c",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: AI Authentication\n### Workflow-Version: 1.0.2\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Modifying api path\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1104,
+        -640
+      ],
+      "typeVersion": 1,
+      "id": "68467662-70cb-4fb0-b1d0-980e9b0a1416",
+      "name": "Sticky Note10"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "1feabdd1-08aa-4359-bbf6-1df4ef8d00b3",
+  "owner": {
+    "type": "team",
+    "teamId": "9nwWznMeAvCQHglB",
+    "teamName": "ES"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

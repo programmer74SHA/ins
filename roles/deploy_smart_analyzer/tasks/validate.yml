@@ -1,0 +1,91 @@
+---
+# Pre-deployment validation tasks for Smart Analyzer
+
+- name: Check if NVIDIA drivers are installed
+  ansible.builtin.command: nvidia-smi
+  register: nvidia_check
+  changed_when: false
+  failed_when: false
+
+- name: Display NVIDIA status
+  ansible.builtin.debug:
+    msg: "{{ 'NVIDIA GPU detected' if nvidia_check.rc == 0 else 'WARNING: No NVIDIA GPU detected - AI launchers may fail' }}"
+
+- name: Check NVIDIA Docker runtime
+  ansible.builtin.command: docker run --rm --gpus all nvidia/cuda:11.8.0-base-ubuntu22.04 nvidia-smi
+  register: nvidia_docker_check
+  changed_when: false
+  failed_when: false
+  when: nvidia_check.rc == 0
+
+- name: Fail if NVIDIA Docker runtime not working
+  ansible.builtin.fail:
+    msg: "NVIDIA Docker runtime is not properly configured. Install nvidia-container-toolkit."
+  when:
+    - nvidia_check.rc == 0
+    - nvidia_docker_check.rc != 0
+    - smart_analyzer_require_gpu | default(true)
+
+- name: Check available disk space
+  ansible.builtin.shell: df -BG {{ smart_analyzer_deploy_dir | dirname }} | tail -1 | awk '{print $4}' | sed 's/G//'
+  register: available_space
+  changed_when: false
+
+- name: Fail if insufficient disk space
+  ansible.builtin.fail:
+    msg: "Insufficient disk space. Required: 50GB, Available: {{ available_space.stdout }}GB"
+  when: available_space.stdout | int < 50
+
+- name: Check if required ports are available
+  ansible.builtin.wait_for:
+    port: "{{ item }}"
+    state: stopped
+    timeout: 1
+  loop:
+    - "{{ smart_analyzer_ai_service_port }}"
+    - "{{ smart_analyzer_qdrant_port }}"
+    - "{{ smart_analyzer_haproxy_port }}"
+    - "{{ smart_analyzer_ai_launcher_1_port }}"
+    - "{{ smart_analyzer_ai_launcher_2_port }}"
+    - "{{ smart_analyzer_embeddings_port }}"
+  failed_when: false
+  register: port_check
+
+- name: Display port status
+  ansible.builtin.debug:
+    msg: "Port {{ item.item }}: {{ 'Available' if item.failed else 'WARNING: In use' }}"
+  loop: "{{ port_check.results }}"
+
+- name: Check Docker networks
+  ansible.builtin.command: docker network ls --format '{{ '{{' }}.Name{{ '}}' }}'
+  register: docker_networks
+  changed_when: false
+
+- name: Warn if AI infrastructure network doesn't exist
+  ansible.builtin.debug:
+    msg: "WARNING: Network '{{ smart_analyzer_network_name }}' will be created"
+  when: smart_analyzer_network_name not in docker_networks.stdout_lines
+
+- name: Check Vault connectivity (if configured)
+  ansible.builtin.uri:
+    url: "{{ smart_analyzer_vault_addr }}/v1/sys/health"
+    method: GET
+    status_code: [200, 429, 473, 501, 503]
+  register: vault_check
+  when: smart_analyzer_vault_addr is defined and smart_analyzer_vault_addr != ""
+  failed_when: false
+
+- name: Display Vault status
+  ansible.builtin.debug:
+    msg: "Vault status: {{ 'Connected' if vault_check.status in [200, 429, 473] else 'Not available' }}"
+  when: smart_analyzer_vault_addr is defined and smart_analyzer_vault_addr != ""
+
+- name: Validate minimum RAM available
+  ansible.builtin.shell: free -g | awk '/^Mem:/{print $7}'
+  register: available_ram
+  changed_when: false
+
+- name: Warn about low RAM
+  ansible.builtin.debug:
+    msg: "WARNING: Low available RAM: {{ available_ram.stdout }}GB. Recommended: 32GB+"
+  when: available_ram.stdout | int < 16

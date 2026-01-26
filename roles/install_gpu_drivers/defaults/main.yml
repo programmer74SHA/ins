@@ -1,0 +1,83 @@
+---
+# =============================================================================
+# INSTALL GPU DRIVERS - Default Variables
+# =============================================================================
+
+# Installation Method
+# Options: 'apt' (Ubuntu/Debian repositories) or 'runfile' (NVIDIA installer)
+driver_installation_method: "apt"
+
+# Driver Version Settings
+# Leave undefined to use auto-detected recommended version
+# target_driver_version: "535"
+# driver_runfile_version: "535.183.01"  # For runfile method
+driver_minor_version: "89"  # Used for constructing full runfile version
+
+# APT Method Settings
+use_graphics_ppa: true  # Add graphics-drivers PPA for latest drivers
+nvidia_apt_key_url: "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/3bf863cc.pub"
+
+# Runfile Method Settings
+headless_mode: true  # Skip OpenGL files for server installs
+configure_xorg: false  # Generate xorg.conf (usually not needed for servers)
+stop_display_manager: true  # Stop GUI before installation
+cleanup_runfile: true  # Remove runfile after installation
+
+# Component Installation
+install_cuda_toolkit: false  # Install CUDA toolkit via apt
+install_nvidia_container_toolkit: true  # Required for Docker GPU support
+configure_docker_for_nvidia: true  # Configure Docker to use NVIDIA runtime
+
+# Driver Configuration
+enable_persistence_mode: true  # Keep driver loaded for faster startup
+create_monitoring_service: false  # Create systemd service for GPU monitoring
+
+# GPU Performance Settings (optional)
+# gpu_power_limit: 350  # Watts (example for RTX 4090)
+# gpu_memory_clock: 9501  # MHz
+# gpu_graphics_clock: 2520  # MHz
+
+# Pre-installation Settings
+force_driver_reinstall: false  # Remove existing drivers before install
+
+# Post-installation Settings
+reboot_after_install: false  # Automatically reboot after installation
+require_gpu_detection: true  # Fail if GPU detection didn't run
+
+# Testing Settings
+test_gpu_after_install: true  # Run GPU tests after installation
+test_docker_compose: true  # Test docker-compose GPU access
+run_cuda_samples: false  # Run CUDA samples (takes longer)
+fail_on_test_failure: false  # Fail playbook if tests fail
+
+# File Locations
+gpu_facts_file: "/tmp/gpu_facts.yml"
+gpu_driver_info_file: "/var/log/gpu_driver_info.txt"
+gpu_test_results_file: "/var/log/gpu_test_results.yml"
+driver_backup_dir: "/var/backups/nvidia"
+
+# GPU Model-Specific Settings
+l40s_settings:
+  recommended_driver: "545"
+  power_limit: 350
+  description: "NVIDIA L40s (Ada Lovelace Datacenter)"
+
+rtx_5090_settings:
+  recommended_driver: "560"
+  power_limit: 575
+  description: "NVIDIA RTX 5090 (Blackwell)"
+
+rtx_4090_settings:
+  recommended_driver: "545"
+  power_limit: 450
+  description: "NVIDIA RTX 4090 (Ada Lovelace)"
+
+a100_settings:
+  recommended_driver: "535"
+  power_limit: 400
+  description: "NVIDIA A100 (Ampere)"
+
+h100_settings:
+  recommended_driver: "545"
+  power_limit: 700
+  description: "NVIDIA H100 (Hopper)"

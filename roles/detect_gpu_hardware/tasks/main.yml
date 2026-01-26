@@ -1,0 +1,218 @@
+---
+# =============================================================================
+# DETECT GPU HARDWARE ROLE - Main Tasks
+# =============================================================================
+# This role detects NVIDIA GPU models and sets facts for driver installation
+# Supports: NVIDIA L40s, RTX 5090, RTX 4090
+# =============================================================================
+
+- name: Check if lspci is installed
+  ansible.builtin.command: which lspci
+  register: lspci_check
+  changed_when: false
+  failed_when: false
+
+- name: Install pciutils if needed
+  ansible.builtin.package:
+    name: pciutils
+    state: present
+  when: lspci_check.rc != 0
+
+- name: Detect NVIDIA GPUs using lspci
+  ansible.builtin.shell: |
+    lspci | grep -i nvidia | grep -i vga || lspci | grep -i nvidia | grep -i 3d
+  register: gpu_lspci_raw
+  changed_when: false
+  failed_when: false
+
+- name: Check if nvidia-smi is available
+  ansible.builtin.command: which nvidia-smi
+  register: nvidia_smi_check
+  changed_when: false
+  failed_when: false
+
+- name: Get detailed GPU info from nvidia-smi (if available)
+  ansible.builtin.shell: |
+    nvidia-smi --query-gpu=index,name,driver_version,pci.bus_id,memory.total --format=csv,noheader
+  register: gpu_nvidia_smi_raw
+  changed_when: false
+  failed_when: false
+  when: nvidia_smi_check.rc == 0
+
+- name: Get GPU count
+  ansible.builtin.shell: |
+    if command -v nvidia-smi &> /dev/null; then
+      nvidia-smi --list-gpus | wc -l
+    else
+      lspci | grep -i nvidia | grep -E 'VGA|3D' | wc -l
+    fi
+  register: gpu_count_raw
+  changed_when: false
+
+- name: Set GPU count fact
+  ansible.builtin.set_fact:
+    detected_gpu_count: "{{ gpu_count_raw.stdout | int }}"
+
+- name: Display GPU count
+  ansible.builtin.debug:
+    msg: "Detected {{ detected_gpu_count }} NVIDIA GPU(s)"
+
+- name: Parse GPU information
+  ansible.builtin.set_fact:
+    gpu_detected: "{{ gpu_lspci_raw.rc == 0 }}"
+    gpu_raw_info: "{{ gpu_lspci_raw.stdout_lines | default([]) }}"
+    gpu_nvidia_smi_info: "{{ gpu_nvidia_smi_raw.stdout_lines | default([]) }}"
+
+- name: Detect GPU models from lspci
+  ansible.builtin.shell: |
+    lspci | grep -i nvidia | grep -E 'VGA|3D' | grep -oE 'L40S|L40s|RTX 5090|RTX 4090|A100|H100|A6000' | head -1
+  register: gpu_model_detect
+  changed_when: false
+  failed_when: false
+
+- name: Set detected GPU model
+  ansible.builtin.set_fact:
+    detected_gpu_model: "{{ gpu_model_detect.stdout | upper | default('UNKNOWN') }}"
+  when: gpu_model_detect.rc == 0 and gpu_model_detect.stdout | length > 0
+
+- name: Set unknown GPU model if not detected
+  ansible.builtin.set_fact:
+    detected_gpu_model: "UNKNOWN"
+  when: gpu_model_detect.rc != 0 or gpu_model_detect.stdout | length == 0
+
+- name: Normalize GPU model name
+  ansible.builtin.set_fact:
+    detected_gpu_model: "{{ detected_gpu_model | regex_replace('L40S', 'L40s') }}"
+
+- name: Determine GPU generation and architecture
+  ansible.builtin.set_fact:
+    gpu_generation: >-
+      {% if detected_gpu_model in ['L40s', 'L40S'] %}Ada Lovelace (Datacenter)
+      {% elif detected_gpu_model == 'RTX 5090' %}Blackwell
+      {% elif detected_gpu_model == 'RTX 4090' %}Ada Lovelace
+      {% elif detected_gpu_model == 'A100' %}Ampere
+      {% elif detected_gpu_model == 'H100' %}Hopper
+      {% elif detected_gpu_model == 'A6000' %}Ampere
+      {% else %}Unknown
+      {% endif %}
+    gpu_compute_capability: >-
+      {% if detected_gpu_model in ['L40s', 'RTX 4090'] %}8.9
+      {% elif detected_gpu_model == 'RTX 5090' %}10.0
+      {% elif detected_gpu_model == 'A100' %}8.0
+      {% elif detected_gpu_model == 'H100' %}9.0
+      {% elif detected_gpu_model == 'A6000' %}8.6
+      {% else %}Unknown
+      {% endif %}
+
+- name: Determine recommended driver version
+  ansible.builtin.set_fact:
+    recommended_driver_version: >-
+      {% if detected_gpu_model in ['L40s', 'RTX 4090'] %}535
+      {% elif detected_gpu_model == 'RTX 5090' %}550
+      {% elif detected_gpu_model in ['A100', 'H100', 'A6000'] %}535
+      {% else %}535
+      {% endif %}
+    recommended_driver_branch: >-
+      {% if detected_gpu_model in ['L40s', 'RTX 4090', 'A100', 'A6000'] %}production
+      {% elif detected_gpu_model == 'RTX 5090' %}new-feature
+      {% else %}production
+      {% endif %}
+
+- name: Check current NVIDIA driver version (if installed)
+  ansible.builtin.shell: |
+    nvidia-smi --query-gpu=driver_version --format=csv,noheader | head -1
+  register: current_driver_version
+  changed_when: false
+  failed_when: false
+  when: nvidia_smi_check.rc == 0
+
+- name: Set current driver version fact
+  ansible.builtin.set_fact:
+    current_nvidia_driver: "{{ current_driver_version.stdout | default('Not Installed') }}"
+  when: nvidia_smi_check.rc == 0
+
+- name: Set driver not installed fact
+  ansible.builtin.set_fact:
+    current_nvidia_driver: "Not Installed"
+  when: nvidia_smi_check.rc != 0
+
+- name: Determine if driver installation/update needed
+  ansible.builtin.set_fact:
+    driver_installation_needed: >-
+      {{ current_nvidia_driver == 'Not Installed' or 
+         (current_nvidia_driver.split('.')[0] | int < recommended_driver_version | int) }}
+
+- name: Get PCIe bus information
+  ansible.builtin.shell: |
+    lspci | grep -i nvidia | grep -E 'VGA|3D' | awk '{print $1}'
+  register: gpu_pci_buses
+  changed_when: false
+
+- name: Create GPU inventory
+  ansible.builtin.set_fact:
+    gpu_inventory:
+      detected: "{{ gpu_detected }}"
+      count: "{{ detected_gpu_count | int }}"
+      model: "{{ detected_gpu_model }}"
+      generation: "{{ gpu_generation }}"
+      compute_capability: "{{ gpu_compute_capability }}"
+      current_driver: "{{ current_nvidia_driver }}"
+      recommended_driver: "{{ recommended_driver_version }}"
+      driver_branch: "{{ recommended_driver_branch }}"
+      installation_needed: "{{ driver_installation_needed }}"
+      pci_buses: "{{ gpu_pci_buses.stdout_lines | default([]) }}"
+
+- name: Save GPU facts to file
+  ansible.builtin.copy:
+    content: "{{ gpu_inventory | to_nice_yaml }}"
+    dest: "{{ gpu_facts_file }}"
+    mode: '0644'
+  when: gpu_save_facts | default(true)
+
+- name: Display GPU Detection Summary
+  ansible.builtin.debug:
+    msg:
+      - "=================================="
+      - "GPU Detection Summary"
+      - "=================================="
+      - "GPU Detected: {{ 'Yes' if gpu_detected else 'No' }}"
+      - "GPU Count: {{ detected_gpu_count }}"
+      - "GPU Model: {{ detected_gpu_model }}"
+      - "GPU Generation: {{ gpu_generation }}"
+      - "Compute Capability: {{ gpu_compute_capability }}"
+      - "Current Driver: {{ current_nvidia_driver }}"
+      - "Recommended Driver: {{ recommended_driver_version }}"
+      - "Driver Branch: {{ recommended_driver_branch }}"
+      - "Installation Needed: {{ 'Yes' if driver_installation_needed else 'No' }}"
+      - "PCI Buses: {{ gpu_pci_buses.stdout_lines | join(', ') }}"
+      - "=================================="
+
+- name: Fail if no GPU detected but required
+  ansible.builtin.fail:
+    msg: "No NVIDIA GPU detected, but GPU is required for this deployment"
+  when:
+    - not gpu_detected
+    - gpu_required | default(false)
+
+- name: Display detailed GPU information (if nvidia-smi available)
+  ansible.builtin.debug:
+    msg: "{{ gpu_nvidia_smi_info }}"
+  when:
+    - nvidia_smi_check.rc == 0
+    - gpu_nvidia_smi_info | length > 0
+
+- name: Create GPU detection report
+  ansible.builtin.template:
+    src: gpu_report.txt.j2
+    dest: "{{ gpu_report_file }}"
+    mode: '0644'
+  when: gpu_create_report | default(true)
+
+- name: Display next steps
+  ansible.builtin.debug:
+    msg:
+      - "Next Steps:"
+      - "1. Review GPU detection results above"
+      - "2. Run install_gpu_drivers role if installation is needed"
+      - "3. GPU facts saved to: {{ gpu_facts_file }}"
+      - "4. GPU report saved to: {{ gpu_report_file }}"

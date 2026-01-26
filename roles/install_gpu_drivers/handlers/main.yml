@@ -1,0 +1,23 @@
+---
+# Handlers for install_gpu_drivers role
+
+- name: Update initramfs
+  ansible.builtin.command: update-initramfs -u -k all
+  listen: "Update initramfs"
+
+- name: Update GRUB
+  ansible.builtin.command: update-grub
+  listen: "Update GRUB"
+
+- name: Restart Docker
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+  listen: "Restart Docker"
+
+- name: Restart nvidia-persistenced
+  ansible.builtin.systemd:
+    name: nvidia-persistenced
+    state: restarted
+  when: enable_persistence_mode | default(true)
+  listen: "Restart nvidia-persistenced"

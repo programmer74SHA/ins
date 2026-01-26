@@ -1,0 +1,1482 @@
+{
+  "id": "bIhytqjNLIixIC4e",
+  "name": "SP_AI_Alert_Related_Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "525f8dff-3540-46a0-a44a-2823685dfb3c",
+              "name": "OriginalRule",
+              "value": "={{ $('called by SP-AI-5A-Check').item.json['Original Rule'] }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        400,
+        1920
+      ],
+      "id": "c00b5c75-7544-4070-89d2-aaaaf564abc2",
+      "name": "Original rule"
+    },
+    {
+      "parameters": {
+        "url": "={{$vars.SA_API_Base_URL}}/api/v2/splunk/related_alerts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer  {{ $('called by SP-AI-5A-Check').first().json['Access Token'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"related_alerts\":{{ $('Extract Required fields').item.json.related_alerts.toJsonString() }},\"size\":{{ $json.size }}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1552,
+        1040
+      ],
+      "id": "c11d4647-908f-4f1c-85b6-1c2b40e748e9",
+      "name": "Get Prioritized Related Alerts",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve the data array from the previous node\nconst data = $input.all();\n\n// Initialize empty arrays to store values\nlet sourceip = [];\nlet destinationIP = [];\nlet username = [];\nlet processname = [];\nlet filepath = [];\nlet hostname = [];\nlet rulename = [];\n\n// Helper function to clean values\nfunction clean(value) {\n  if (value === null || value === undefined || value === \"null\") {\n    return \"\";\n  }\n  return value;\n}\n\n// Loop through each item in the data array\nfor (const item of data) {\n  const originalRule = item.json['Original Rule'] || {};\n\n  sourceip.push(clean(originalRule.src_ip));\n  rulename.push(clean(originalRule.search_name));\n  hostname.push(clean(originalRule.dest));\n  destinationIP.push(clean(originalRule.dest_ip));\n  processname.push(clean(originalRule.process_exec));\n  filepath.push(clean(originalRule.process));\n  username.push(clean(originalRule._risk_user));\n}\n\n// Join all values into a single string, separated by comma\nconst SourceIP = sourceip.join(\", \");\nconst HostName = hostname.join(\", \");\nconst DestinationIP = destinationIP.join(\", \");\nconst UserName = username.join(\", \");\nconst ProcessName = processname.join(\", \");\nconst FilePath = filepath.join(\", \");\nconst RuleName = rulename.join(\", \");\n\n// Return all the collected data in a single JSON object\nreturn [\n  {\n    json: {\n      SourceIP,\n      HostName,\n      ProcessName,\n      FilePath,\n      UserName,\n      DestinationIP,\n      RuleName,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        1024
+      ],
+      "id": "98a89ce7-2bd1-4ad4-9dd4-1bcecfe24905",
+      "name": "Extract Field in Alert"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.SourceIP }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "SourceIP"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c60d4292-1fc3-4695-a5e3-489fb22f49b6",
+                    "leftValue": "={{ $json.HostName }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "HostName"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "da033ba8-fef6-424c-acf7-e7fa4b392013",
+                    "leftValue": "={{ $json.ProcessName }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ProcessName"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e74b7a62-11f6-4377-a648-6666daaed5a5",
+                    "leftValue": "={{ $json.FilePath }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "FilePath"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7ca03f7b-5621-42cf-b848-166c74331beb",
+                    "leftValue": "={{ $json.UserName }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "UserName"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "97494940-32ce-4b1d-a569-a95c52ddef6d",
+                    "leftValue": "={{ $json.Destination }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Destination"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a96781da-93dd-420a-bd6c-ad20d2443f43",
+                    "leftValue": "={{ $json.RuleName }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RuleName"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -544,
+        944
+      ],
+      "id": "2132ee0c-3548-46f4-8eea-00d55d94c79f",
+      "name": "Split to Search on Each Field"
+    },
+    {
+      "parameters": {
+        "numberInputs": 8
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        960,
+        944
+      ],
+      "id": "4fa0cd94-d5fd-47fc-83bb-0a0b8b78d32d",
+      "name": "Merge All Related Alerts",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Initialize an array to hold the related alerts\nconst relatedAlerts = [];\n\n// Get input data\nconst items = $input.all(); // Get all input items\n\n// Function to safely extract values from input data and escape newlines\nfunction getValue(fieldName) {\n  const item = items.find(i => i.json && i.json[fieldName] !== undefined);\n  return item ? String(item.json[fieldName]).replace(/\\n/g, '\\\\n') : null; // Escape \\n\n}\n\n// Extract values using the function\nconst ruleName = getValue('rulename');\nconst hostName = getValue('hostname');\nconst processName = getValue('processname');\nconst userName = getValue('username');\nconst sourceIP = getValue('sourceip');\nconst destinationip = getValue('destinationip');\nconst filePath = getValue('filepath');\n\n// Helper function to add alert if value exists\nfunction addAlert(value, name) {\n  if (value) {\n    relatedAlerts.push({\n      alerts: value,\n      name: name\n    });\n  }\n}\n\n// Add alerts to array\naddAlert(ruleName, \"same rulename\");\naddAlert(hostName, \"same hostname\");\naddAlert(processName, \"same processname\");\naddAlert(userName, \"same username\");\naddAlert(sourceIP, \"same sourceip\");\naddAlert(filePath, \"same filepath\");\naddAlert(destinationip, \"same destinationip\");\n\n// Construct the final JSON object\nconst result = {\n  related_alerts: relatedAlerts,\n  size: relatedAlerts.length // Make size dynamic\n};\n\n// Return the result in n8n format\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        1040
+      ],
+      "id": "d8ef0f48-9bb4-49de-a2cd-0de4f714375d",
+      "name": "Extract Required fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "777d14cd-b760-4336-8714-0273a6eb4889",
+              "name": " Get Prioritized Related Alerts",
+              "value": "={{ $json.data }}",
+              "type": "array"
+            },
+            {
+              "id": "a06eaac4-9dd8-4c83-a458-c88f0d1cf8c7",
+              "name": "OriginalRule",
+              "value": "={{ $('Original rule').first().json.OriginalRule }}",
+              "type": "object"
+            },
+            {
+              "id": "5ca240fc-a200-4801-a9c4-0d1454937c1e",
+              "name": "Access Token",
+              "value": "={{ $('called by SP-AI-5A-Check').first().json['Access Token'] }}",
+              "type": "string"
+            },
+            {
+              "id": "9518b568-3534-44f1-b8b9-5b7e6b9d4a36",
+              "name": "TimeLine ID",
+              "value": "={{ $('called by SP-AI-5A-Check').first().json['TimeLine ID'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1760,
+        1040
+      ],
+      "id": "53e53761-0d3c-41bb-b529-d3ccdf6eb97a",
+      "name": "Collect Required Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "const filepath = $input.first().json.FilePath;\n\nfunction escapeFilePathForJSON(filePath) {\n    return filePath.replace(/\\\\/g, \"\\\\\\\\\");\n}\n\n// Escape the file path\nconst escapedFilePath = escapeFilePathForJSON(filepath);\n\n// Return an array of objects (n8n expected format)\nreturn [{ json: { EscapedFilePath: escapedFilePath } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        1024
+      ],
+      "id": "d90f20f1-741e-47f0-9871-54f720e50f6f",
+      "name": "Normalize file path"
+    },
+    {
+      "parameters": {
+        "content": "## Extract Key Alert Fields from Triggered Rule\nThis section of the workflow is triggered by another workflow and is responsible for extracting relevant fields from the original security alert. It parses the alert’s JSON structure to retrieve important attributes such as source and destination IPs, sensor IP, hostname, username, file path and ... The extracted data is consolidated into a single structured JSON object for further analysis or enrichment in the following workflow steps.",
+        "height": 460,
+        "width": 540,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1216,
+        768
+      ],
+      "typeVersion": 1,
+      "id": "e78158e1-db9f-4aaa-8e6c-bfbc3b38c961",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Field-Specific Set Nodes\nStores aggregation results from each search\n",
+        "height": 280,
+        "width": 440
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        224,
+        1808
+      ],
+      "typeVersion": 1,
+      "id": "8606c2ae-a18a-4385-8a53-60faaa850ca1",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Split to Search on Each Field \n\n- Routes data to appropriate search nodes based on available fields\n- 8 possible output branches (one for each field type)",
+        "height": 660,
+        "width": 400,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -656,
+        688
+      ],
+      "typeVersion": 1,
+      "id": "71a80918-dea7-4081-9ea9-ccce942fcfcb",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## AI-Powered Related Alerts Contextualization Flow\nThis nodes enhances alert investigation by extracting key contextual fields from the original alert and formatting them into a structured list of related indicators. These indicators are sent to an internal API that prioritizes and returns related alerts based on contextual similarity. The response, along with critical metadata such as the original rule, timeline instructions, and access token, is consolidated and passed into a downstream AI-driven analysis workflow. \n\n",
+        "height": 440,
+        "width": 960,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        848
+      ],
+      "typeVersion": 1,
+      "id": "1bafcd7a-4a91-4d4a-9bbb-147ff82de3d3",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Merge All Related Alerts\nCombined array of all related alerts",
+        "height": 640,
+        "width": 400,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        784,
+        752
+      ],
+      "typeVersion": 1,
+      "id": "d574196e-ea07-421a-af24-f5d0c6c2adf1",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## Normalize file path\nEscapes backslashes for Elasticsearch query\n",
+        "height": 320,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -240,
+        864
+      ],
+      "typeVersion": 1,
+      "id": "ef593fbd-46c9-445e-a808-f3a15ae7da7b",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "### Called by Workflows:\n- Splunk AI — SP-AI-5A-Check",
+        "height": 220,
+        "width": 280,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1360,
+        528
+      ],
+      "typeVersion": 1,
+      "id": "54688155-b79f-4cfc-9334-40533d10d408",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6b55d3a4-c98b-4a9c-8d89-49d0d65c89f8",
+              "name": "Query",
+              "value": "=|search index=notable src=\"{{ $json.SourceIP }}\" NOT source=\"{{ $('called by SP-AI-5A-Check').item.json['Original Rule'].source }}\" | fillnull value=\"null\" {{ $vars.SP_fillnull }}\n| eval dedupe_key = md5({{ $vars.SP_MD5 }})\n| dedup dedupe_key\n| where _time > relative_time(now(), \"-{{$vars.SP_Related_Alerts_Aggregation_Time}}h\")\n| fields - dedupe_key\n| sort -_time",
+              "type": "string"
+            },
+            {
+              "id": "8d4bbd3e-8c99-4a4a-b055-0b531d4c2e39",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        432
+      ],
+      "id": "393981a9-055d-41a9-8064-86fc9896eeb5",
+      "name": "Source IP Query"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6b55d3a4-c98b-4a9c-8d89-49d0d65c89f8",
+              "name": "Query",
+              "value": "=|search index=notable dest=\"{{ $json.HostName }}\" NOT source=\"{{ $('called by SP-AI-5A-Check').item.json['Original Rule'].source }}\" | fillnull value=\"null\" {{ $vars.SP_fillnull }}\n| eval dedupe_key = md5({{ $vars.SP_MD5 }})\n| dedup dedupe_key\n| where _time > relative_time(now(), \"-{{$vars.SP_Related_Alerts_Aggregation_Time}}h\")\n| fields - dedupe_key\n| sort -_time",
+              "type": "string"
+            },
+            {
+              "id": "3a2892fd-a501-4bdb-aa01-76f0bd760c6d",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        624
+      ],
+      "id": "ccf7dc6d-ddfb-4d1a-afd0-248fafe82bf7",
+      "name": "HostName Query"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6b55d3a4-c98b-4a9c-8d89-49d0d65c89f8",
+              "name": "Query",
+              "value": "=|search index=notable process_exec=\"{{ $json.ProcessName }}\" NOT source=\"{{ $('called by SP-AI-5A-Check').item.json['Original Rule'].source }}\" | fillnull value=\"null\" {{ $vars.SP_fillnull }}\n| eval dedupe_key = md5({{ $vars.SP_MD5 }})\n| dedup dedupe_key\n| where _time > relative_time(now(), \"-{{$vars.SP_Related_Alerts_Aggregation_Time}}h\")\n| fields - dedupe_key\n| sort -_time",
+              "type": "string"
+            },
+            {
+              "id": "b457ae3b-1bb7-4467-a36e-908f14d392c1",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        832
+      ],
+      "id": "61c12b13-30a4-475d-90a9-9b09eda96735",
+      "name": "ProcessName Query"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6b55d3a4-c98b-4a9c-8d89-49d0d65c89f8",
+              "name": "Query",
+              "value": "=|search index=notable process=\"{{ $json.FilePath }}\" NOT source=\"{{ $('called by SP-AI-5A-Check').item.json['Original Rule'].source }}\" | fillnull value=\"null\" {{ $vars.SP_fillnull }}\n| eval dedupe_key = md5({{ $vars.SP_MD5 }})\n| dedup dedupe_key\n| where _time > relative_time(now(), \"-{{$vars.SP_Related_Alerts_Aggregation_Time}}h\")\n| fields - dedupe_key\n| sort -_time",
+              "type": "string"
+            },
+            {
+              "id": "86b4c1a1-0bd4-4799-852b-1fc306f9b411",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        1024
+      ],
+      "id": "0a177eaf-0ce1-40dc-8a5d-1f0a424967a7",
+      "name": "FilePath Query"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6b55d3a4-c98b-4a9c-8d89-49d0d65c89f8",
+              "name": "Query",
+              "value": "=|search index=notable user=\"{{ $json.UserName }}\" NOT source=\"{{ $('called by SP-AI-5A-Check').item.json['Original Rule'].source }}\" | fillnull value=\"null\" {{ $vars.SP_fillnull }}\n| eval dedupe_key = md5({{ $vars.SP_MD5 }})\n| dedup dedupe_key\n| where _time > relative_time(now(), \"-{{$vars.SP_Related_Alerts_Aggregation_Time}}h\")\n| fields - dedupe_key\n| sort -_time",
+              "type": "string"
+            },
+            {
+              "id": "184bf40c-f9af-4d9b-afec-412b4b61202f",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        1232
+      ],
+      "id": "73519ab8-7e24-414a-8b9a-cdd7ce2fca8f",
+      "name": "UserName Query"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6b55d3a4-c98b-4a9c-8d89-49d0d65c89f8",
+              "name": "Query",
+              "value": "=|search index=notable dest=\"{{ $json.DestinationIP }}\" NOT source=\"{{ $('called by SP-AI-5A-Check').item.json['Original Rule'].source }}\" | fillnull value=\"null\" {{ $vars.SP_fillnull }}\n| eval dedupe_key = md5({{ $vars.SP_MD5 }})\n| dedup dedupe_key\n| where _time > relative_time(now(), \"-{{$vars.SP_Related_Alerts_Aggregation_Time}}h\")\n| fields - dedupe_key\n| sort -_time",
+              "type": "string"
+            },
+            {
+              "id": "614dd93a-551e-476f-a733-b2b290519b1f",
+              "name": "SIze",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        1408
+      ],
+      "id": "57084c53-7f65-434d-ba7f-a6ed7feb31a3",
+      "name": "Destination Query"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6b55d3a4-c98b-4a9c-8d89-49d0d65c89f8",
+              "name": "Query",
+              "value": "=|search index=notable source=\"{{ $json.RuleName }}\" NOT orig_sid= {{ $('called by SP-AI-5A-Check').item.json['Original Rule'].orig_sid }} | fillnull value=\"null\" {{ $vars.SP_fillnull }}\n| eval dedupe_key = md5({{ $vars.SP_MD5 }})\n| dedup dedupe_key\n| where _time > relative_time(now(), \"-{{$vars.SP_Related_Alerts_Aggregation_Time}}h\")\n| fields - dedupe_key\n| sort -_time",
+              "type": "string"
+            },
+            {
+              "id": "6c1a728b-d94d-4c78-ab12-888f85844de7",
+              "name": "Size",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        1600
+      ],
+      "id": "4ce1a56e-33e8-4355-8293-99af2cb7e942",
+      "name": "RuleName Query"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2SMIBmK2MeGc47g5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2SMIBmK2MeGc47g5",
+          "cachedResultName": "SP — SP_AI_Query"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        352,
+        624
+      ],
+      "id": "bfb6bdc0-5f43-475d-a818-3e10359bbb01",
+      "name": "Run Query for HostName"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2SMIBmK2MeGc47g5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2SMIBmK2MeGc47g5",
+          "cachedResultName": "SP — SP_AI_Query"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        352,
+        432
+      ],
+      "id": "fa999832-a8b4-412a-a851-d7bd04f9730d",
+      "name": "Run Query for Source IP"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2SMIBmK2MeGc47g5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2SMIBmK2MeGc47g5",
+          "cachedResultName": "SP — SP_AI_Query"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        352,
+        832
+      ],
+      "id": "772e82d2-7524-46aa-934f-5b4845c98f6c",
+      "name": "Run Query for ProcessName"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2SMIBmK2MeGc47g5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2SMIBmK2MeGc47g5",
+          "cachedResultName": "SP — SP_AI_Query"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        352,
+        1024
+      ],
+      "id": "b025aa28-8917-4654-8bf8-6e1e22ed3b0d",
+      "name": "Run Query for FilePath"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2SMIBmK2MeGc47g5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2SMIBmK2MeGc47g5",
+          "cachedResultName": "SP — SP_AI_Query"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        352,
+        1232
+      ],
+      "id": "ad574b22-4286-4fc2-a64b-b4770b13d058",
+      "name": "Run Query for UserName"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2SMIBmK2MeGc47g5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2SMIBmK2MeGc47g5",
+          "cachedResultName": "SP — SP_AI_Query"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        352,
+        1408
+      ],
+      "id": "0ae2f37a-8771-4a3a-8b5b-d05b9d8153cb",
+      "name": "Run Query for Destination"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2SMIBmK2MeGc47g5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2SMIBmK2MeGc47g5",
+          "cachedResultName": "SP — SP_AI_Query"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        352,
+        1600
+      ],
+      "id": "a22ac018-dcc6-4a11-b65b-20438d46a1db",
+      "name": "Run Query for RuleName"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5af85b57-df1c-4ddc-8de1-49d1148fc57d",
+              "name": "rulename",
+              "value": "={{ $json.results }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        1600
+      ],
+      "id": "dd8c759e-ab7d-47c7-b673-f572192adefa",
+      "name": "Same RuleName"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5af85b57-df1c-4ddc-8de1-49d1148fc57d",
+              "name": "destinationip",
+              "value": "={{ $json.results }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        1408
+      ],
+      "id": "f237b5c7-dcd4-45ed-9771-315746ed6262",
+      "name": "Same Destination"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5af85b57-df1c-4ddc-8de1-49d1148fc57d",
+              "name": "username",
+              "value": "={{ $json.results }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        1232
+      ],
+      "id": "f4004fda-664e-4ac5-95ab-1bc6ea7b8afa",
+      "name": "Same username"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5af85b57-df1c-4ddc-8de1-49d1148fc57d",
+              "name": "filepath",
+              "value": "={{ $json.results }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        1024
+      ],
+      "id": "b4a83564-ee21-4bdb-831b-466a572d8e87",
+      "name": "Same filepath"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5af85b57-df1c-4ddc-8de1-49d1148fc57d",
+              "name": "processname",
+              "value": "={{ $json.results }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        832
+      ],
+      "id": "748471f9-9cd2-4811-abd2-4e85be2921b6",
+      "name": "Same processname"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5af85b57-df1c-4ddc-8de1-49d1148fc57d",
+              "name": "hostname",
+              "value": "={{ $json.results }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        624
+      ],
+      "id": "94b92126-f738-4b00-a2e8-b48c7a334b8e",
+      "name": "Same hostname"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5af85b57-df1c-4ddc-8de1-49d1148fc57d",
+              "name": "sourceip",
+              "value": "={{ $json.results }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        544,
+        432
+      ],
+      "id": "2f8ba242-0b35-405c-9838-9a38e130887d",
+      "name": "Same sourceip"
+    },
+    {
+      "parameters": {
+        "content": "## Field-Specific Search Nodes\n1. **same Source IP** - Searches by `source.ip`\n2. **same HostName** - Searches by `host.hostname`\n3. **same Process Name** - Searches by `process.name`\n4. **same File Path** - Uses normalized path from \"Normalize file path\" node\n5. **same User Name** - Searches by `user.name`\n6. **same DestinationIP** - Searches by `destination.ip`\n7. **same RuleName** - Searches by `kibana.alert.rule.name`\n",
+        "height": 1620,
+        "width": 740,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        32,
+        160
+      ],
+      "typeVersion": 1,
+      "id": "df7d29d0-ab6f-46be-ba68-dd7835de2e8e",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1120,
+        1024
+      ],
+      "id": "22d12708-0cc2-4cad-9af2-72136f57af05",
+      "name": "called by SP-AI-5A-Check"
+    },
+    {
+      "parameters": {
+        "content": "# Version Info:\n\n### Workflow: SP_AI_Alert_Related_Alerts\n### Workflow-Version: 1.0.1\n### Last Updated: 1404-10-20\n### Author: A&A\n### Change: Create for first time\n### Status: InActive",
+        "height": 300,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1360,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "518ead4d-7362-4d38-a131-c41c746e816e",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "GtkJlH7GuV5wtIH0",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/GtkJlH7GuV5wtIH0",
+          "cachedResultName": "SP — SP-AI-Alert-Related Alerts-AI analysis"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1968,
+        1040
+      ],
+      "id": "f774974f-820a-4eb6-854d-1de66af415a2",
+      "name": "Call 'SP-AI-Alert-Related Alerts-AI analysis'",
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Original rule": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "Get Prioritized Related Alerts": {
+      "main": [
+        [
+          {
+            "node": "Collect Required Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Field in Alert": {
+      "main": [
+        [
+          {
+            "node": "Split to Search on Each Field",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Original rule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split to Search on Each Field": {
+      "main": [
+        [
+          {
+            "node": "Source IP Query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HostName Query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ProcessName Query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Normalize file path",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "UserName Query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Destination Query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "RuleName Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Related Alerts": {
+      "main": [
+        [
+          {
+            "node": "Extract Required fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Required fields": {
+      "main": [
+        [
+          {
+            "node": "Get Prioritized Related Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Required Items": {
+      "main": [
+        [
+          {
+            "node": "Call 'SP-AI-Alert-Related Alerts-AI analysis'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize file path": {
+      "main": [
+        [
+          {
+            "node": "FilePath Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HostName Query": {
+      "main": [
+        [
+          {
+            "node": "Run Query for HostName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Source IP Query": {
+      "main": [
+        [
+          {
+            "node": "Run Query for Source IP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ProcessName Query": {
+      "main": [
+        [
+          {
+            "node": "Run Query for ProcessName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FilePath Query": {
+      "main": [
+        [
+          {
+            "node": "Run Query for FilePath",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UserName Query": {
+      "main": [
+        [
+          {
+            "node": "Run Query for UserName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Destination Query": {
+      "main": [
+        [
+          {
+            "node": "Run Query for Destination",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RuleName Query": {
+      "main": [
+        [
+          {
+            "node": "Run Query for RuleName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Query for Source IP": {
+      "main": [
+        [
+          {
+            "node": "Same sourceip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Query for HostName": {
+      "main": [
+        [
+          {
+            "node": "Same hostname",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Query for ProcessName": {
+      "main": [
+        [
+          {
+            "node": "Same processname",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Query for FilePath": {
+      "main": [
+        [
+          {
+            "node": "Same filepath",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Query for UserName": {
+      "main": [
+        [
+          {
+            "node": "Same username",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Query for Destination": {
+      "main": [
+        [
+          {
+            "node": "Same Destination",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Query for RuleName": {
+      "main": [
+        [
+          {
+            "node": "Same RuleName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Same sourceip": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Same hostname": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Same processname": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Same filepath": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Same username": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Same Destination": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Same RuleName": {
+      "main": [
+        [
+          {
+            "node": "Merge All Related Alerts",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "called by SP-AI-5A-Check": {
+      "main": [
+        [
+          {
+            "node": "Extract Field in Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "triggerCount": 0,
+  "versionId": "6c5b3da4-b10d-4366-8c2c-6aca8989c91a",
+  "owner": {
+    "type": "team",
+    "teamId": "VkJ1fWswpm3ZmsSH",
+    "teamName": "SP"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

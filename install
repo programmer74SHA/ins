@@ -4,10 +4,10 @@ AI_VERSION=0.0.1
 INSTALLER_TMP_PATH="/var/ai/tmp/installer"
 LOCAL_REPOSITORY_DESTINATION_PATH="$INSTALLER_TMP_PATH/repository"
 INSTALLER_PATH=$(pwd)
-INVENTORY_FILE_NAME="inventory.ini"
+INVENTORY_FILE_NAME="inventory.yml"
 SSH_KEY_PATH="$HOME/.ssh/id_rsa"
 LOCAL_REPOSITORY_ARCHIVE_FILE_PATH="roles/deploy_apt_repository/files"
-LOCAL_REPOSITORY_ARCHIVE_FILE_NAME="repo.tar.gz"
+LOCAL_REPOSITORY_ARCHIVE_FILE_NAME="localrepository.tar.gz"
 LOCAL_REPOSITORY_DIRECTORY_NAME="repository"
 
 function RedLinePrinter() {
@@ -62,49 +62,36 @@ function CreateDirectory() {
 }
 
 function COPY_REPOSITORY_ARCHIVE_FILE() {
-    YellowLinePrinter "Prepare local repository..."
+    YellowLinePrinter "Prepare Dependencies..."
     CreateDirectory $INSTALLER_TMP_PATH
     CreateDirectory $LOCAL_REPOSITORY_DESTINATION_PATH
-
-    # Copy repo.tar.gz to destination
     cp ${INSTALLER_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_NAME} ${LOCAL_REPOSITORY_DESTINATION_PATH}
-    PStatus "Local repository archive copied" "Failed to copy repository file"
-
+    PStatus "Local repository archive copied" "Faild to copy repository file"
     separator
-    YellowLinePrinter "Extract local repository from repo.tar.gz"
+    YellowLinePrinter "Extract local Repository"
     tar -xzf ${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_NAME} -C ${LOCAL_REPOSITORY_DESTINATION_PATH}
     PStatus "Local repository archive extracted" "Failed to extract local repository archive"
-
-    # Ensure repository structure is correct (rename siem to ai if needed)
-    if [ -d "${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_DIRECTORY_NAME}/dists/siem" ]; then
-        mv ${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_DIRECTORY_NAME}/dists/siem ${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_DIRECTORY_NAME}/dists/ai
-        PStatus "Repository distribution renamed to 'ai'" "Failed to rename distribution"
-    fi
-
+    mv /var/ai/tmp/installer/repository/repository/dists/siem /var/ai/tmp/installer/repository/repository/dists/ai
     separator
 }
 
 function INSTALL_ANSIBLE_DEPENDENCIES() {
-    YellowLinePrinter "Configure APT sources.list to use local repository from repo.tar.gz"
+    YellowLinePrinter "Install Dependencies"
 
-    # Configure local repository as APT source in sources.list
-    # This uses the extracted repo.tar.gz as the local APT repository
+    # Configure local repository as APT source
     echo "deb [trusted=yes] file://${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_DIRECTORY_NAME} ai main" > /etc/apt/sources.list
-    PStatus "sources.list configured with local repository" "Failed to configure sources.list"
 
-    YellowLinePrinter "Update APT cache from local repository"
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
-    PStatus "APT cache updated from local repository" "Failed to update APT cache"
+    PStatus "Repository configured and updated" "Failed to update repository"
 
-    YellowLinePrinter "Install Ansible from local repository"
-    # Install ansible and dependencies from the local repository (repo.tar.gz)
+    # Install ansible and dependencies from the local repository
     apt-get -y --allow-downgrades \
       -o Dpkg::Options::="--force-confdef" \
       -o Dpkg::Options::="--force-confold" \
       install ansible
 
-    PStatus "Ansible installed from local repository" "Failed to install Ansible"
+    PStatus "Dependencies Installed" "Failed to install Dependencies"
     separator
 }
 
@@ -136,32 +123,15 @@ function COPY_SSH_ID() {
 }
 
 function SetupPythonModule() {
-    # Create directory on remote host
     ssh $1@$2 mkdir -p ${LOCAL_REPOSITORY_DESTINATION_PATH} < /dev/null | tee -a /var/log/$2.log
-
-    # Copy repo.tar.gz to remote host
     scp ${INSTALLER_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_NAME} $1@$2:${LOCAL_REPOSITORY_DESTINATION_PATH} < /dev/null | tee -a /var/log/$2.log
-
-    # Extract repo.tar.gz on remote host
     ssh $1@$2 tar -xzf ${LOCAL_REPOSITORY_DESTINATION_PATH}/${LOCAL_REPOSITORY_ARCHIVE_FILE_NAME} -C ${LOCAL_REPOSITORY_DESTINATION_PATH} < /dev/null | tee -a /var/log/$2.log
 
-    # Configure sources.list on remote host to use local repository and install ansible
     ssh $1@$2 bash -lc '
         set -e
-
-        # Rename siem to ai if needed
-        if [ -d "/var/ai/tmp/installer/repository/repository/dists/siem" ]; then
-            mv /var/ai/tmp/installer/repository/repository/dists/siem /var/ai/tmp/installer/repository/repository/dists/ai
-        fi
-
-        # Configure sources.list to use local repository from repo.tar.gz
         echo "deb [trusted=yes] file:///var/ai/tmp/installer/repository/repository ai main" > /etc/apt/sources.list
-
-        # Update APT cache from local repository
         export DEBIAN_FRONTEND=noninteractive
         apt-get update
-
-        # Install ansible from local repository
         apt-get -y --allow-downgrades \
           -o Dpkg::Options::="--force-confdef" \
           -o Dpkg::Options::="--force-confold" \
@@ -230,3 +200,4 @@ function MAIN() {
 }
 
 MAIN
+

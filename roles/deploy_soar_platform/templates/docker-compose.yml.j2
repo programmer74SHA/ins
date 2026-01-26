@@ -1,16 +1,17 @@
-version: "3.8"
 volumes:
   db_storage:
   apksoar_storage:
   redis_storage:
+  template:
+
 x-shared: &shared
   restart: always
-  image: {{ soar_n8n_image }}
+  image: registry.apk-group.net/automation/apksoar/apksoar:1.1.0
   environment:
     - N8N_LICENSE_TOKEN=${license_key}
     - WEB_DRIVER_URL=web_driver
     - WEB_DRIVER_PORT=4444
-#    - TZ=${TIMEZONE}
+    - TZ=${TIMEZONE}
     - DB_TYPE=postgresdb
     - DB_POSTGRESDB_HOST=postgres
     - DB_POSTGRESDB_PORT=5432
@@ -20,7 +21,7 @@ x-shared: &shared
     - EXECUTIONS_MODE=queue
     - QUEUE_BULL_REDIS_HOST=redis
     - QUEUE_HEALTH_CHECK_ACTIVE=true
-#    - GENERIC_TIMEZONE=${TIMEZONE}
+    - GENERIC_TIMEZONE=${TIMEZONE}
     - N8N_PERSONALIZATION_ENABLED=false
     - WEBHOOK_URL=https://${APKSOAR_HOST}/
     - N8N_HOST=${APKSOAR_HOST}
@@ -36,15 +37,12 @@ x-shared: &shared
     - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
     - N8N_RUNNERS_ENABLED=true
     - N8N_RUNNERS_MODE=internal
-    - N8N_CUSTOM_EXTENSIONS=/home/node/apk
-    - GENERIC_TIMEZONE={{ soar_timezone }}
-    - TZ={{ soar_timezone }}
   links:
     - postgres
     - redis
   volumes:
     - apksoar_storage:/home/node/.n8n
-    - ./n8n-nodes:/home/node/apk
+    - ./template:/home/node/template
   healthcheck:
     test:
       [
@@ -63,10 +61,11 @@ x-shared: &shared
     postgres:
       condition: service_healthy
   networks:
-    - {{ soar_network_name }}
+    - apksoar
+
 services:
   postgres:
-    image: {{ soar_postgres_image }}
+    image: registry.apk-group.net/library/postgres:16
     restart: always
     environment:
       - POSTGRES_USER
@@ -84,13 +83,11 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - {{ soar_network_name }}
+      - apksoar
+
   redis:
-    image: {{ soar_redis_image }}
+    image: registry.apk-group.net/library/redis:6-alpine
     restart: always
-    environment:
-      - GENERIC_TIMEZONE={{ soar_timezone }}
-      - TZ={{ soar_timezone }}
     volumes:
       - redis_storage:/data
     healthcheck:
@@ -99,12 +96,14 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - {{ soar_network_name }}
+      - apksoar
+
   apksoar:
     <<: *shared
     container_name: "apksoar-main"
     ports:
       - "127.0.0.1:5678:5678"
+
   apksoar-worker:
     <<: *shared
     command: worker
@@ -112,7 +111,7 @@ services:
     depends_on:
       - apksoar
   nginx:
-    image: {{ soar_nginx_image }}
+    image: registry.apk-group.net/mirror/library/nginx:alpine
     restart: always
     ports:
       - "80:80"
@@ -124,7 +123,7 @@ services:
       - ./nginx-data/ssl_certs:/certs
       - ./nginx.conf:/etc/nginx/nginx.conf
     networks:
-      - {{ soar_network_name }}
+      - apksoar
     depends_on:
       - apksoar
     healthcheck:
@@ -133,19 +132,17 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+
   web_driver:
     profiles: ["web_driver"]
     restart: always
-    image: {{ soar_web_driver_image }}
+    image: registry.apk-group.net/mirror/zenika/alpine-chrome:with-selenoid
     ports:
       - "127.0.0.1:4444:4444"
     shm_size: "2gb"
     container_name: "web_driver"
     networks:
-      - {{ soar_network_name }}
+      - apksoar
+
 networks:
-  {{ soar_network_name }}:
-{% if soar_network_external %}
-    external: true
-    name: {{ soar_network_name }}
-{% endif %}
+  apksoar:
